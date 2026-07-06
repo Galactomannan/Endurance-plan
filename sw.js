@@ -6,7 +6,7 @@
 
    Bump CACHE whenever you ship a new index.html so old shells are evicted. */
 
-const CACHE = "fuji-v4-2026-07";
+const CACHE = "fuji-v5-2026-07";
 const ASSETS = [
   "./",
   "./index.html",
@@ -40,6 +40,13 @@ function isCacheable(req, resp) {
 self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET") return;
+  const url = new URL(req.url);
+
+  // Never cache authenticated API responses.
+  if (url.origin === self.location.origin && url.pathname.startsWith("/api/")) {
+    e.respondWith(fetch(req));
+    return;
+  }
 
   // Network-first for navigations / HTML so users see new versions immediately.
   if (req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html")) {

@@ -778,6 +778,86 @@ body{
   letter-spacing:-0.03em;
 }
 .detail-sub{color:var(--text-2);font-size:13px;margin-top:4px}
+
+/* === INTEGRATIONS === */
+.integration-shell{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px;
+}
+.integration-main{
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  min-width:0;
+}
+.integration-logo{
+  width:46px;height:46px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  background:linear-gradient(180deg,#FC4C02,#E04700);
+  color:#fff;
+  font-family:var(--font-display);
+  font-weight:900;
+  font-size:22px;
+  letter-spacing:-0.05em;
+}
+.integration-title{
+  font-family:var(--font-display);
+  font-weight:780;
+  font-size:17px;
+  letter-spacing:-0.02em;
+}
+.integration-meta{
+  color:var(--text-2);
+  font-size:12.5px;
+  line-height:1.5;
+  margin-top:5px;
+}
+.integration-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.sync-result{
+  margin-top:16px;
+  padding:14px 16px;
+  border-radius:12px;
+  background:var(--bg-elev);
+  border:1px solid var(--hairline-soft);
+}
+.sync-result-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.sync-stat{
+  padding:12px;
+  border-radius:11px;
+  background:rgba(255,255,255,0.035);
+}
+.sync-stat-num{
+  font-family:var(--font-display);
+  font-size:24px;
+  font-weight:850;
+  line-height:1;
+  letter-spacing:-0.035em;
+  font-variant-numeric:tabular-nums;
+}
+.sync-stat-label{
+  color:var(--text-2);
+  font-size:10px;
+  font-weight:780;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  margin-top:7px;
+}
+
+@media(max-width:700px){
+  .integration-shell{flex-direction:column}
+  .integration-actions{justify-content:flex-start}
+  .sync-result-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media(max-width:1100px){
   .poster-hero,.poster-content{min-height:760px}
   .poster-main{grid-template-columns:1fr;align-items:start}
@@ -1664,7 +1744,8 @@ const STORAGE = {
   strength:"fuji_strength_log",
   longruns:"fuji_long_runs",
   readiness:"fuji_readiness",
-  settings:"fuji_settings"
+  settings:"fuji_settings",
+  strava:"fuji_strava_sync"
 };
 
 const NAV = [
@@ -4704,9 +4785,244 @@ function renderRaceWeek(){
 /* =========================================================================
    19. SETTINGS VIEW
    ========================================================================= */
+function isStravaTrainingActivity(activity){
+  const sport=String(activity.sportType||"");
+  return ["Run","TrailRun","VirtualRun","Workout"].includes(sport);
+}
+
+function typeFromStravaActivity(activity, planned){
+  if(planned && planned.type && planned.type!=="rest")return planned.type;
+  const sport=String(activity.sportType||"");
+  if(sport==="TrailRun")return "long_run";
+  if(sport==="Workout")return "speed";
+  return "easy_z1";
+}
+
+function stravaActivityNotes(activity){
+  const parts=[`Strava: ${activity.name}`];
+  if(activity.avgWatts)parts.push(`power ${activity.avgWatts}W`);
+  if(activity.weightedWatts)parts.push(`weighted ${activity.weightedWatts}W`);
+  if(activity.avgCadence)parts.push(`cadence ${activity.avgCadence}`);
+  if(activity.elevationGain)parts.push(`gain +${activity.elevationGain}m`);
+  if(activity.maxHR)parts.push(`max HR ${activity.maxHR}`);
+  if(activity.url)parts.push(activity.url);
+  return parts.join(" · ");
+}
+
+function bestStravaActivitiesByDate(activities){
+  const byDate=new Map();
+  activities.filter(isStravaTrainingActivity).forEach(activity=>{
+    if(!activity.localDate)return;
+    const current=byDate.get(activity.localDate);
+    if(!current || (activity.durationMin||0)>(current.durationMin||0))byDate.set(activity.localDate,activity);
+  });
+  return [...byDate.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+}
+
+function applyStravaActivitiesToSessions(activities){
+  const log=Store.get(STORAGE.sessions,{});
+  const summary={
+    imported:0,updated:0,duplicates:0,manualSkipped:0,outsidePlan:0,ignored:0,total:activities.length,
+    examples:[]
+  };
+  const picked=bestStravaActivitiesByDate(activities);
+  summary.ignored=Math.max(0,activities.filter(isStravaTrainingActivity).length-picked.length);
+
+  picked.forEach(([date,activity])=>{
+    const dateObj=parseISO(date);
+    if(Number.isNaN(dateObj.getTime())){summary.ignored++;return;}
+    const weekIndex=weekIndexForDate(dateObj);
+    if(weekIndex<1||weekIndex>ATHLETE.totalWeeks){summary.outsidePlan++;return;}
+
+    const dayIndex=(dateObj.getUTCDay()+6)%7;
+    const planned=PLAN[weekIndex-1]?.days?.[dayIndex];
+    if(!planned){summary.outsidePlan++;return;}
+
+    const existing=log[date]||{};
+    const importedBefore=String(existing.stravaId||"")===String(activity.id);
+    if(importedBefore){summary.duplicates++;return;}
+    if(existing.status && existing.source!=="strava"){summary.manualSkipped++;return;}
+
+    const isUpdate=existing.source==="strava";
+    const entry={
+      ...existing,
+      status:"done",
+      source:"strava",
+      stravaId:String(activity.id),
+      stravaName:activity.name,
+      stravaSport:activity.sportType,
+      stravaUrl:activity.url,
+      type:typeFromStravaActivity(activity,planned),
+      title:planned.title||activity.name,
+      actualDuration:activity.durationMin||planned.duration||"",
+      actualDistance:activity.distanceKm?activity.distanceKm.toFixed(1):"",
+      pace:activity.pace||"",
+      avgHR:activity.avgHR||"",
+      maxHR:activity.maxHR||"",
+      hrTarget:planned.hrTarget||existing.hrTarget||"",
+      notes:stravaActivityNotes(activity)
+    };
+    log[date]=entry;
+    if(isUpdate)summary.updated++;
+    else summary.imported++;
+    if(summary.examples.length<4){
+      const km=Number(activity.distanceKm||0).toFixed(1);
+      summary.examples.push(`${fmtShort(dateObj)} · ${km} km · ${activity.durationMin||0} min`);
+    }
+  });
+
+  Store.set(STORAGE.sessions,log);
+  const syncState=Store.get(STORAGE.strava,{});
+  Store.set(STORAGE.strava,{
+    ...syncState,
+    lastSync:new Date().toISOString(),
+    lastSummary:summary
+  });
+  return summary;
+}
+
+async function stravaFetch(path,options={}){
+  if(location.protocol==="file:")throw new Error("Open the deployed Vercel app to connect Strava.");
+  const res=await fetch(path,{
+    credentials:"include",
+    ...options,
+    headers:{...(options.headers||{})}
+  });
+  const data=await res.json().catch(()=>({ok:false,error:"Invalid response from Strava API"}));
+  if(!res.ok||data.ok===false)throw new Error(data.error||"Strava request failed");
+  return data;
+}
+
+function stravaAthleteLabel(meta){
+  const athlete=meta?.athlete||{};
+  const name=[athlete.firstname,athlete.lastname].filter(Boolean).join(" ").trim();
+  return name||athlete.username||"Connected athlete";
+}
+
+function syncSummaryMarkup(summary){
+  if(!summary)return `<div class="small muted mt-12">No sync yet.</div>`;
+  return `
+    <div class="sync-result">
+      <div class="sync-result-grid">
+        <div class="sync-stat"><div class="sync-stat-num" style="color:var(--green)">${summary.imported||0}</div><div class="sync-stat-label">Imported</div></div>
+        <div class="sync-stat"><div class="sync-stat-num" style="color:var(--blue)">${summary.updated||0}</div><div class="sync-stat-label">Updated</div></div>
+        <div class="sync-stat"><div class="sync-stat-num" style="color:var(--text)">${summary.manualSkipped||0}</div><div class="sync-stat-label">Manual kept</div></div>
+        <div class="sync-stat"><div class="sync-stat-num" style="color:var(--text-2)">${summary.outsidePlan||0}</div><div class="sync-stat-label">Outside plan</div></div>
+      </div>
+      ${summary.examples?.length?`<div class="small muted mt-12">${summary.examples.map(escapeHtml).join(" · ")}</div>`:""}
+    </div>`;
+}
+
+async function renderStravaSettings(){
+  const el=document.getElementById("strava-card");
+  if(!el)return;
+  const local=Store.get(STORAGE.strava,{});
+  let status;
+  try{
+    status=await stravaFetch("/api/strava/status");
+  }catch(err){
+    el.innerHTML=`
+      <div class="card-h">Strava Sync</div>
+      <div class="integration-shell">
+        <div class="integration-main">
+          <div class="integration-logo">S</div>
+          <div>
+            <div class="integration-title">Strava</div>
+            <div class="integration-meta">${escapeHtml(err.message)} Add Vercel env vars before connecting.</div>
+          </div>
+        </div>
+        <div class="integration-actions"><button class="btn" disabled>Unavailable</button></div>
+      </div>
+      ${syncSummaryMarkup(local.lastSummary)}
+    `;
+    return;
+  }
+
+  if(!status.connected){
+    el.innerHTML=`
+      <div class="card-h">Strava Sync</div>
+      <div class="integration-shell">
+        <div class="integration-main">
+          <div class="integration-logo">S</div>
+          <div>
+            <div class="integration-title">Strava</div>
+            <div class="integration-meta">Not connected · run data will stay manual until OAuth is approved.</div>
+          </div>
+        </div>
+        <div class="integration-actions"><button class="btn btn-primary" id="btn-strava-connect">Connect Strava</button></div>
+      </div>
+      ${syncSummaryMarkup(local.lastSummary)}
+    `;
+    document.getElementById("btn-strava-connect").addEventListener("click",()=>{
+      window.location.href="/api/strava/auth";
+    });
+    return;
+  }
+
+  el.innerHTML=`
+    <div class="card-h">Strava Sync</div>
+    <div class="integration-shell">
+      <div class="integration-main">
+        <div class="integration-logo">S</div>
+        <div>
+          <div class="integration-title">Strava connected</div>
+          <div class="integration-meta">${escapeHtml(stravaAthleteLabel(status.meta))}${local.lastSync?` · last sync ${new Date(local.lastSync).toLocaleString()}`:""}</div>
+        </div>
+      </div>
+      <div class="integration-actions">
+        <button class="btn btn-primary" id="btn-strava-sync">Sync latest 60 days</button>
+        <button class="btn" id="btn-strava-disconnect">Disconnect</button>
+      </div>
+    </div>
+    ${syncSummaryMarkup(local.lastSummary)}
+  `;
+  document.getElementById("btn-strava-sync").addEventListener("click",syncStravaActivities);
+  document.getElementById("btn-strava-disconnect").addEventListener("click",disconnectStrava);
+}
+
+async function syncStravaActivities(){
+  const btn=document.getElementById("btn-strava-sync");
+  if(btn){btn.disabled=true;btn.textContent="Syncing...";}
+  try{
+    const data=await stravaFetch("/api/strava/activities?days=60");
+    const summary=applyStravaActivitiesToSessions(data.activities||[]);
+    flash(`Strava sync: ${summary.imported} imported, ${summary.updated} updated`);
+    renderSettings();
+  }catch(err){
+    alert(err.message||"Strava sync failed");
+    renderStravaSettings();
+  }
+}
+
+async function disconnectStrava(){
+  if(!confirm("Disconnect Strava from this browser?"))return;
+  try{
+    await stravaFetch("/api/strava/disconnect",{method:"POST"});
+    const local=Store.get(STORAGE.strava,{});
+    Store.set(STORAGE.strava,{...local,disconnectedAt:new Date().toISOString()});
+    flash("Strava disconnected");
+    renderSettings();
+  }catch(err){
+    alert(err.message||"Could not disconnect Strava");
+  }
+}
+
 function renderSettings(){
   document.getElementById("view-settings").innerHTML=`
-    <div class="view-head"><div><div class="view-title">Settings</div><div class="view-sub">Backup, restore, and reset</div></div></div>
+    <div class="view-head"><div><div class="view-title">Settings</div><div class="view-sub">Integrations, backup, restore, and reset</div></div></div>
+
+    <div class="card mb-16" id="strava-card">
+      <div class="card-h">Strava Sync</div>
+      <div class="integration-shell">
+        <div class="integration-main">
+          <div class="integration-logo">S</div>
+          <div>
+            <div class="integration-title">Strava</div>
+            <div class="integration-meta">Checking connection...</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="card mb-16">
       <div class="card-h">Plan Configuration</div>
@@ -4736,11 +5052,13 @@ function renderSettings(){
         const sess=Object.keys(Store.get(STORAGE.sessions,{})).length;
         const str=(Store.get(STORAGE.strength,[])||[]).length;
         const re=Object.keys(Store.get(STORAGE.readiness,{})).length;
+        const st=Store.get(STORAGE.strava,{});
         return `
           <div class="grid grid-3 mt-12">
             <div class="metric"><div class="metric-label">Sessions logged</div><div class="metric-value">${sess}</div></div>
             <div class="metric"><div class="metric-label">Strength logs</div><div class="metric-value">${str}</div></div>
             <div class="metric"><div class="metric-label">Readiness entries</div><div class="metric-value">${re}</div></div>
+            <div class="metric"><div class="metric-label">Last Strava import</div><div class="metric-value">${st.lastSummary?.imported??"—"}</div><div class="metric-sub">${st.lastSync?new Date(st.lastSync).toLocaleDateString():"not synced"}</div></div>
           </div>`;
       })()}
     </div>
@@ -4782,6 +5100,7 @@ function renderSettings(){
       renderSettings();flash("All data cleared");
     }
   });
+  renderStravaSettings();
 }
 
 /* =========================================================================
@@ -4837,7 +5156,16 @@ function init(){
     showWelcome();
     Store.set("fuji_first_run",true);
   }
-  switchView("weekly");
+  const urlParams=new URLSearchParams(window.location.search);
+  const stravaResult=urlParams.get("strava");
+  if(stravaResult){
+    switchView("settings");
+    if(stravaResult==="connected")flash("Strava connected");
+    else if(stravaResult==="denied")flash("Strava connection cancelled");
+    window.history.replaceState({},document.title,window.location.pathname+window.location.hash);
+  }else{
+    switchView("weekly");
+  }
   // Recompute countdown hourly. Clear any prior timer in case init runs twice.
   if(__countdownTimer)clearInterval(__countdownTimer);
   __countdownTimer=setInterval(renderCountdown,3600000);

@@ -26,6 +26,20 @@ Half and Full goals are the exact same pace (7:06/km) — the Bangkok Half doubl
 
 Vanilla HTML/CSS/JS + Chart.js (CDN). Data lives in `localStorage` (JSON export/import in Settings). Service worker (`sw.js`) gives offline support — bump `CACHE` when shipping a new `index.html`.
 
+## Strava Sync
+
+The app can connect Strava through Vercel serverless functions in `api/strava/*`. Stryd and Apple Health can keep syncing into Strava; this app then imports the Strava activity summaries into the existing session log.
+
+Required Vercel environment variables:
+
+| Variable | Value |
+|---|---|
+| `STRAVA_CLIENT_ID` | Strava API application client ID |
+| `STRAVA_CLIENT_SECRET` | Strava API application client secret |
+| `STRAVA_REDIRECT_ORIGIN` | Optional. Production origin, e.g. `https://endurance-plan.vercel.app` |
+
+In the Strava API application settings, set the authorization callback domain to the deployed Vercel domain, for example `endurance-plan.vercel.app`. The callback route is `/api/strava/callback`.
+
 ## Visual Asset
 
 Dashboard hero photo: Mount Fuji above Lake Kawaguchi, Japan, by Marion & Christoph Aistleitner (`Fuji_Kawaguchi_357.JPG`) via Wikimedia Commons. The image is released under CC0 1.0 Public Domain Dedication.
