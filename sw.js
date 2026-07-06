@@ -6,7 +6,7 @@
 
    Bump CACHE whenever you ship a new index.html so old shells are evicted. */
 
-const CACHE = "fuji-v6-2026-07";
+const CACHE = "fuji-v7-2026-07";
 const ASSETS = [
   "./",
   "./index.html",
