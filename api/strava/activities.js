@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
     }
     const url = new URL(req.url, `https://${req.headers.host}`);
     const rawDays = Number.parseInt(url.searchParams.get("days") || "45", 10);
-    const days = Math.max(1, Math.min(Number.isFinite(rawDays) ? rawDays : 45, 180));
+    const days = Math.max(1, Math.min(Number.isFinite(rawDays) ? rawDays : 45, 365));
     const after = Math.floor((Date.now() - days * 86400000) / 1000);
     const accessToken = await refreshAccessToken(req, res);
     const all = [];

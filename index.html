@@ -1695,6 +1695,7 @@ input,textarea,select{-webkit-appearance:none;appearance:none;border-radius:11px
     <div class="view" data-view="dashboard" id="view-dashboard"></div>
     <div class="view" data-view="weekly" id="view-weekly"></div>
     <div class="view" data-view="longrun" id="view-longrun"></div>
+    <div class="view" data-view="archive" id="view-archive"></div>
     <div class="view" data-view="strength" id="view-strength"></div>
     <div class="view" data-view="speed" id="view-speed"></div>
     <div class="view" data-view="profile" id="view-profile"></div>
@@ -1789,13 +1790,141 @@ const PHASES = [
     focus:"2-week taper off the Half. Volume down, intensity touches, carb load D-3. Fuji on W23 Sunday."}
 ];
 
+const ARCHIVE_32_PHASES = [
+  {name:"Base Building",short:"Base",weeks:[1,8],kmRange:[35,46],tid:[82,3,15],color:"#30D158",
+    focus:"Original POL base block: protect Z1 volume, add a controlled Z3 dose, avoid gray-zone drift."},
+  {name:"Build",short:"Build",weeks:[9,18],kmRange:[44,58],tid:[78,12,10],color:"#FF9F0A",
+    focus:"Original bridge block: keep VO2 touch while introducing sustained threshold and marathon-pace feel."},
+  {name:"Race Specific",short:"Spec",weeks:[19,27],kmRange:[54,64],tid:[77,18,5],color:"#FF453A",
+    focus:"Original marathon-specific block: longer MP segments, gut practice, and half-marathon rehearsal."},
+  {name:"Taper",short:"Taper",weeks:[28,32],kmRange:[64,28],tid:[80,12,8],color:"#0A84FF",
+    focus:"Original taper: reduce volume, keep intensity touches, narrow focus toward Fuji."}
+];
+
+function archive32PhaseForWeek(w){
+  for(const p of ARCHIVE_32_PHASES){if(w>=p.weeks[0]&&w<=p.weeks[1])return p;}
+  return ARCHIVE_32_PHASES[ARCHIVE_32_PHASES.length-1];
+}
+
+function archive32IsRecoveryWeek(w){return w%3===0 && w<28;}
+function archive32IsTuneRaceWeek(w){return w===26;}
+function archive32IsHillWeek(w){return [8,14,20].includes(w);}
+
+function archive32TargetKmFor(w){
+  const p=archive32PhaseForWeek(w);
+  const len=p.weeks[1]-p.weeks[0];
+  const wIn=w-p.weeks[0];
+  let km=p.kmRange[0]+(p.kmRange[1]-p.kmRange[0])*(len?wIn/len:0);
+  if(archive32IsRecoveryWeek(w))km*=0.7;
+  if(archive32IsTuneRaceWeek(w))km*=0.85;
+  return Math.round(km);
+}
+
+function archive32LongRunMinFor(w){
+  let m;
+  if(w<=8)m=80+(w-1)*(30/7);
+  else if(w<=18)m=105+(w-9)*(40/9);
+  else if(w<=27)m=135+(w-19)*(25/8);
+  else m=150-(w-28)*(95/4);
+  if(archive32IsRecoveryWeek(w))m*=0.7;
+  if(archive32IsTuneRaceWeek(w))m=110;
+  return Math.min(180,Math.max(35,Math.round(m/5)*5));
+}
+
+function archive32DateForWeekDay(weekIndex,dayIndex){
+  const d=new Date(2026,4,4);
+  d.setDate(d.getDate()+(weekIndex-1)*7+dayIndex);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function archive32QualityForWeek(w){
+  if(archive32IsRecoveryWeek(w))return "Easy fartlek recovery touch";
+  if(archive32IsHillWeek(w))return "Hill repeats 8 x 60s";
+  if(w<=2)return "Fartlek 6 x 2min";
+  if(w<=5)return "VO2max 5 x 3min";
+  if(w<=8)return "VO2max 5 x 4min";
+  if(w===10||w===11)return "VO2max 4 x 4min";
+  if(w===13)return "Tempo 2 x 10min";
+  if(w===16)return "Threshold 3 x 8min";
+  if(w===17)return "Threshold 4 x 7min";
+  if(w<=22)return "Marathon-pace tempo 3 x 12min";
+  if(w<=25)return "VO2max 4 x 4min + MP cooldown";
+  if(w===26)return "Tune-up half marathon";
+  if(w<=27)return "Race sharpener 5 x 3min";
+  if(w<=30)return "Easy fartlek 4 x 2min";
+  return "Sharpness 3 x 3min";
+}
+
+function archive32RaceForWeek(w){
+  if(w===8)return "Trail 25k";
+  if(w===15)return "Hyrox";
+  if(w===26)return "Tune-up Half";
+  if(w===32)return "Fuji Marathon";
+  return "";
+}
+
+function archive32BuildWeekSummary(w){
+  const phase=archive32PhaseForWeek(w);
+  return {
+    week:w,
+    startDate:archive32DateForWeekDay(w,0),
+    endDate:archive32DateForWeekDay(w,6),
+    phase:phase.name,
+    phaseShort:phase.short,
+    color:phase.color,
+    targetKm:archive32TargetKmFor(w),
+    tid:phase.tid.join(" / "),
+    quality:archive32QualityForWeek(w),
+    longRunMin:archive32LongRunMinFor(w),
+    race:archive32RaceForWeek(w),
+    isRecovery:archive32IsRecoveryWeek(w),
+    isHill:archive32IsHillWeek(w)
+  };
+}
+
+const ARCHIVE_32_WEEKS = Array.from({length:32},(_,i)=>archive32BuildWeekSummary(i+1));
+
+function isLegacyArchiveDateKey(date){
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) && date>="2026-05-04" && date<="2026-12-13";
+}
+
+function isPreResetCurrentSessionDate(date){
+  return isLegacyArchiveDateKey(date) && date<"2026-07-06";
+}
+
+function archive32LongRuns(log){
+  log=log||{};
+  return ARCHIVE_32_WEEKS
+    .filter(w=>!w.isHill)
+    .map(w=>{
+      const day=w.week===32?6:5;
+      const date=archive32DateForWeekDay(w.week,day);
+      const entry=log[date]||{};
+      const type=w.week===26||w.week===32?"tune_race":(w.week>=9&&w.week<=29?"mp_long":"long_run");
+      return {
+        week:w.week,date,type,phase:w.phase,phaseShort:w.phaseShort,color:w.color,
+        plannedDuration:w.longRunMin,
+        title:w.week===32?"Fuji Marathon":w.week===26?"Tune-up half marathon":`Long run ${w.longRunMin}min`,
+        actualDuration:entry.actualDuration?parseInt(entry.actualDuration,10):null,
+        actualDistance:entry.actualDistance||"",
+        pace:entry.pace||"",
+        avgHR:entry.avgHR||"",
+        source:entry.source||"",
+        stravaId:entry.stravaId||"",
+        notes:entry.notes||"",
+        done:entry.status==="done"||entry.status==="modified"
+      };
+    });
+}
+
 const STORAGE = {
   sessions:"fuji_sessions",
   strength:"fuji_strength_log",
   longruns:"fuji_long_runs",
   readiness:"fuji_readiness",
   settings:"fuji_settings",
-  strava:"fuji_strava_sync"
+  strava:"fuji_strava_sync",
+  archiveSessions:"fuji_archive_sessions"
 };
 
 const SESSION_STRAVA_FIELDS = [
@@ -1807,6 +1936,7 @@ const NAV = [
   {id:"dashboard",label:"Dashboard",icon:iconHome},
   {id:"weekly",   label:"Weekly Plan",icon:iconCal},
   {id:"longrun",  label:"Long Run Log",icon:iconChart},
+  {id:"archive",  label:"Plan Lab",icon:iconLayers},
   {id:"strength", label:"Strength & Plyo",icon:iconDumb},
   {id:"speed",    label:"Speed Sessions",icon:iconBolt},
   {id:"sideraces",label:"Side Races",icon:iconMountain},
@@ -1860,7 +1990,7 @@ function storageDefaultForKey(key){
 
 function normalizeStorageValue(key,value){
   if(key===STORAGE.strength)return Array.isArray(value)?value:[];
-  if([STORAGE.sessions,STORAGE.longruns,STORAGE.readiness,STORAGE.settings,STORAGE.strava].includes(key)){
+  if([STORAGE.sessions,STORAGE.longruns,STORAGE.readiness,STORAGE.settings,STORAGE.strava,STORAGE.archiveSessions].includes(key)){
     return isPlainRecord(value)?value:{};
   }
   return value;
@@ -1901,6 +2031,9 @@ function auditStoredData(){
       if(entry.source!=="strava" && hasSessionStravaMetadata(entry)){
         issues.push({code:"manual_strava_metadata",key:STORAGE.sessions,date,message:`Manual session ${date} still has Strava metadata`,safeFix:true});
       }
+      if(isPreResetCurrentSessionDate(date)){
+        issues.push({code:"legacy_session_in_current_store",key:STORAGE.sessions,date,message:`Pre-reset session ${date} belongs to the restored 32-week archive, not the current 23-week plan`,safeFix:true});
+      }
       if(entry.source==="strava" && !entry.stravaId){
         issues.push({code:"strava_missing_id",key:STORAGE.sessions,date,message:`Strava session ${date} is missing stravaId`,safeFix:false});
       }
@@ -1933,14 +2066,24 @@ function auditStoredData(){
 function repairStoredData(){
   let fixedCount=0;
   const sessions=Store.get(STORAGE.sessions,{});
+  const archiveSessions=Store.get(STORAGE.archiveSessions,{});
   if(isPlainRecord(sessions)){
     Object.entries(sessions).forEach(([date,entry])=>{
-      if(isPlainRecord(entry) && entry.source!=="strava" && hasSessionStravaMetadata(entry)){
-        sessions[date]=clearStravaSessionFields({...entry,source:entry.source||"manual"});
+      if(!isPlainRecord(entry))return;
+      let nextEntry=entry;
+      if(entry.source!=="strava" && hasSessionStravaMetadata(entry)){
+        nextEntry=clearStravaSessionFields({...entry,source:entry.source||"manual"});
+        sessions[date]=nextEntry;
+        fixedCount++;
+      }
+      if(isPreResetCurrentSessionDate(date)){
+        archiveSessions[date]={...nextEntry,...(archiveSessions[date]||{}),archivePlan:"legacy-32-week"};
+        delete sessions[date];
         fixedCount++;
       }
     });
     Store.set(STORAGE.sessions,sessions);
+    Store.set(STORAGE.archiveSessions,archiveSessions);
   }
   return {fixedCount,audit:auditStoredData()};
 }
@@ -2356,6 +2499,7 @@ const VIEW_RENDERERS={
   dashboard:renderDashboard,
   weekly:renderWeekly,
   longrun:renderLongRun,
+  archive:renderArchive,
   strength:renderStrength,
   speed:renderSpeed,
   profile:renderProfile,
@@ -2913,7 +3057,7 @@ function openSessionModal(wIdx,dIdx,date){
     if(btn){btn.disabled=true;btn.textContent="Loading...";}
     stravaStatus.textContent="Loading latest Strava activities...";
     try{
-      const data=await stravaFetch("/api/strava/activities?days=180");
+      const data=await stravaFetch("/api/strava/activities?days=365");
       renderStravaActivityPicker(data.activities||[]);
     }catch(err){
       stravaStatus.textContent=err.message||"Could not load Strava activities";
@@ -3497,6 +3641,168 @@ function renderLongRun(){
         x:{grid:{display:false},ticks:{color:"#9A9AA0",font:{size:10,weight:"600"}}},
         y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#5A5A60",font:{size:10},callback:v=>v+"m"},border:{display:false}}
       }
+    }
+  });
+}
+
+/* =========================================================================
+   14b. PLAN LAB / LEGACY ARCHIVE VIEW
+   ========================================================================= */
+function archiveActivityRows(log={}){
+  return Object.entries(log)
+    .filter(([date,entry])=>isLegacyArchiveDateKey(date)&&isPlainRecord(entry))
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([date,entry])=>({date,...entry}));
+}
+
+function archiveCompletionLabel(row){
+  if(row.done)return row.source==="strava"?'<span class="status-done">Strava</span>':'<span class="status-done">Logged</span>';
+  return '<span class="muted">Open</span>';
+}
+
+function renderArchive(){
+  const currentLog=Store.get(STORAGE.sessions,{});
+  const archiveLog=Store.get(STORAGE.archiveSessions,{});
+  const mergedLog={...currentLog,...archiveLog};
+  const longRuns=archive32LongRuns(mergedLog);
+  const doneLongRuns=longRuns.filter(r=>r.done).length;
+  const activities=archiveActivityRows(mergedLog);
+  const archiveKm=activities.reduce((sum,row)=>sum+(parseFloat(row.actualDistance)||0),0);
+  const preResetInCurrent=Object.keys(currentLog).filter(isPreResetCurrentSessionDate).length;
+
+  document.getElementById("view-archive").innerHTML=`
+    <div class="view-head">
+      <div>
+        <div class="view-title">Plan Lab</div>
+        <div class="view-sub">Restored 32-week archive · Strava comparison workspace · brain-endurance audit notes</div>
+      </div>
+      <div class="row">
+        ${preResetInCurrent?`<button class="btn" id="btn-archive-repair">Move old logs to archive</button>`:""}
+        <button class="btn btn-primary" id="btn-archive-strava">Import Strava to archive</button>
+      </div>
+    </div>
+
+    <div class="grid grid-3 mb-16">
+      <div class="metric">
+        <div class="metric-label">Restored archive</div>
+        <div class="metric-value">32</div>
+        <div class="metric-sub">weeks · 4 May → 13 Dec 2026 · original sub 4:30 structure</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Long-run rows filled</div>
+        <div class="metric-value">${doneLongRuns}<span style="font-size:18px;color:var(--text-2)">/${longRuns.length}</span></div>
+        <div class="metric-sub">${archiveKm.toFixed(1)} km in archive ledger</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Current reset plan</div>
+        <div class="metric-value">${ATHLETE.totalWeeks}</div>
+        <div class="metric-sub">weeks · ${fmtShort(parseISO(ATHLETE.planStart))} → Fuji · sub 5:00 target</div>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-h">Brain-endurance checks before editing the table</div>
+      <div class="grid grid-3 mt-12">
+        <div class="macro-card"><div class="ml">TID</div><div class="ms">Do not freeze one model year-round. Use PYR/POL shifts by phase and avoid the moderate-intensity trap.</div></div>
+        <div class="macro-card"><div class="ml">Marathon</div><div class="ms">Prioritize fatigue resistance after 20 miles: durable volume, recoverable quality, and long-run specificity.</div></div>
+        <div class="macro-card"><div class="ml">Race feedback</div><div class="ms">Use Trail, Hyrox, Bangkok Half, and Fuji rehearsals as data checkpoints, then adjust the next block.</div></div>
+        <div class="macro-card"><div class="ml">Strength</div><div class="ms">HL + plyo supports durability and economy, but do not let it steal recovery from Q days or long runs.</div></div>
+        <div class="macro-card"><div class="ml">Taper</div><div class="ms">Endurance taper is focus narrowing, not disappearing. Reduce volume moderately while keeping race-specific touches.</div></div>
+        <div class="macro-card"><div class="ml">Data hygiene</div><div class="ms">Archive imports are stored separately so old May/June work does not inflate the current Dashboard.</div></div>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-h">Legacy macrocycle — all 32 weeks</div>
+      <div class="tbl-wrap mt-12">
+        <table class="tbl">
+          <thead><tr><th>Wk</th><th>Date</th><th>Phase</th><th>Target</th><th>TID</th><th>Quality</th><th>Long run</th><th>Race</th></tr></thead>
+          <tbody>
+            ${ARCHIVE_32_WEEKS.map(w=>`
+              <tr>
+                <td><b>W${w.week}</b>${w.isRecovery?`<div class="small muted">recovery</div>`:""}</td>
+                <td>${fmtShort(parseISO(w.startDate))}–${fmtShort(parseISO(w.endDate))}</td>
+                <td><span class="chip" style="background:${w.color}33;color:${w.color};font-size:10px;padding:2px 8px">${w.phaseShort}</span></td>
+                <td>${w.targetKm} km</td>
+                <td>${w.tid}</td>
+                <td>${escapeHtml(w.quality)}</td>
+                <td>${w.isHill?'<span class="muted">Hill week</span>':`${w.longRunMin} min`}</td>
+                <td>${w.race?`<b style="color:${w.color}">${escapeHtml(w.race)}</b>`:"—"}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-h">Legacy long-run progression — Strava/manual fill</div>
+      <div class="tbl-wrap mt-12">
+        <table class="tbl">
+          <thead><tr><th>Wk</th><th>Date</th><th>Phase</th><th>Planned</th><th>Actual</th><th>Dist</th><th>Pace</th><th>HR</th><th>Source</th><th>Notes</th></tr></thead>
+          <tbody>
+            ${longRuns.map(row=>`
+              <tr>
+                <td><b>W${row.week}</b></td>
+                <td>${fmtShort(parseISO(row.date))}</td>
+                <td><span class="chip" style="background:${row.color}33;color:${row.color};font-size:10px;padding:2px 8px">${row.phaseShort}</span></td>
+                <td>${row.plannedDuration}min</td>
+                <td>${row.actualDuration?`${row.actualDuration}min`:"—"}</td>
+                <td>${row.actualDistance?`${row.actualDistance} km`:"—"}</td>
+                <td>${row.pace?`${escapeHtml(row.pace)}/km`:"—"}</td>
+                <td>${row.avgHR||"—"}</td>
+                <td>${archiveCompletionLabel(row)}</td>
+                <td style="max-width:240px;color:var(--text-2);font-size:12px">${row.notes?escapeHtml(row.notes).slice(0,90):""}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Archive activity ledger</div>
+      ${activities.length?`
+        <div class="tbl-wrap mt-12">
+          <table class="tbl">
+            <thead><tr><th>Date</th><th>Activity</th><th>Type</th><th>Duration</th><th>Distance</th><th>Pace</th><th>HR</th><th>Source</th></tr></thead>
+            <tbody>
+              ${activities.map(row=>`
+                <tr>
+                  <td>${fmtShort(parseISO(row.date))}</td>
+                  <td>${escapeHtml(row.stravaName||row.title||"Archived activity")}</td>
+                  <td>${escapeHtml(row.stravaSport||row.type||"")}</td>
+                  <td>${row.actualDuration?`${row.actualDuration}min`:"—"}</td>
+                  <td>${row.actualDistance?`${row.actualDistance} km`:"—"}</td>
+                  <td>${row.pace?`${escapeHtml(row.pace)}/km`:"—"}</td>
+                  <td>${row.avgHR||"—"}</td>
+                  <td>${row.source==="strava"?'<span class="status-done">Strava</span>':escapeHtml(row.source||"manual")}</td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`:`
+        <div class="small muted mt-12">No archive activities yet. Import Strava here, or run Data Health repair if old May/June logs are still mixed into current session storage.</div>`}
+    </div>
+  `;
+
+  const repairBtn=document.getElementById("btn-archive-repair");
+  if(repairBtn)repairBtn.addEventListener("click",()=>{
+    const result=repairStoredData();
+    flash(`Moved/repaired ${result.fixedCount} issue${result.fixedCount===1?"":"s"}`);
+    renderArchive();
+  });
+
+  document.getElementById("btn-archive-strava").addEventListener("click",async()=>{
+    const btn=document.getElementById("btn-archive-strava");
+    const oldText=btn.textContent;
+    btn.disabled=true;btn.textContent="Importing...";
+    try{
+      const data=await stravaFetch("/api/strava/activities?days=365");
+      const summary=applyStravaActivitiesToArchive(data.activities||[]);
+      flash(`Archive Strava import: ${summary.imported} new · ${summary.updated} updated · ${summary.skipped} skipped`);
+      renderArchive();
+    }catch(err){
+      alert(err.message||"Could not import Strava archive");
+    }finally{
+      btn.disabled=false;btn.textContent=oldText;
     }
   });
 }
@@ -5233,6 +5539,47 @@ function applyStravaActivitiesToSessions(activities){
   return summary;
 }
 
+function applyStravaActivitiesToArchive(activities){
+  const archiveLog=Store.get(STORAGE.archiveSessions,{});
+  const summary={imported:0,updated:0,duplicates:0,manualSkipped:0,outsideArchive:0,ignored:0,skipped:0,total:activities.length};
+  const picked=bestStravaActivitiesByDate(activities);
+  summary.ignored=Math.max(0,activities.filter(isStravaTrainingActivity).length-picked.length);
+
+  picked.forEach(([date,activity])=>{
+    if(!isLegacyArchiveDateKey(date)){summary.outsideArchive++;return;}
+    const existing=archiveLog[date]||{};
+    const importedBefore=String(existing.stravaId||"")===String(activity.id);
+    if(importedBefore){summary.duplicates++;return;}
+    if(existing.status && existing.source!=="strava"){summary.manualSkipped++;return;}
+
+    const longRun=archive32LongRuns({}).find(row=>row.date===date);
+    const planned={
+      title:longRun?.title||activity.name||"Archived Strava activity",
+      duration:longRun?.plannedDuration||activity.durationMin||"",
+      type:longRun?.type||"easy_z1",
+      hrTarget:longRun?.type==="tune_race"?"race effort":""
+    };
+    const isUpdate=existing.source==="strava";
+    archiveLog[date]={
+      ...sessionPatchFromStravaActivity(activity,planned,{...existing,status:"done"}),
+      archivePlan:"legacy-32-week",
+      archiveWeek:longRun?.week||""
+    };
+    if(isUpdate)summary.updated++;
+    else summary.imported++;
+  });
+
+  summary.skipped=summary.duplicates+summary.manualSkipped+summary.outsideArchive+summary.ignored;
+  Store.set(STORAGE.archiveSessions,archiveLog);
+  const syncState=Store.get(STORAGE.strava,{});
+  Store.set(STORAGE.strava,{
+    ...syncState,
+    lastArchiveSync:new Date().toISOString(),
+    lastArchiveSummary:summary
+  });
+  return summary;
+}
+
 async function stravaFetch(path,options={}){
   if(location.protocol==="file:")throw new Error("Open the deployed Vercel app to connect Strava.");
   const res=await fetch(path,{
@@ -5422,7 +5769,7 @@ function renderSettings(){
       ${(()=>{
         const audit=auditStoredData();
         if(!audit.summary.issueCount){
-          return `<div class="small muted mt-12">No storage issues found. Session logs, strength logs, readiness, settings, and Strava sync state have valid saved shapes.</div>`;
+          return `<div class="small muted mt-12">No storage issues found. Current sessions, archive logs, strength logs, readiness, settings, and Strava sync state have valid saved shapes.</div>`;
         }
         return `
           <div class="row mt-12">
@@ -5446,12 +5793,14 @@ function renderSettings(){
       <div class="card-h">Storage Stats</div>
       ${(()=>{
         const sess=Object.keys(Store.get(STORAGE.sessions,{})).length;
+        const archiveSess=Object.keys(Store.get(STORAGE.archiveSessions,{})).length;
         const str=(Store.get(STORAGE.strength,[])||[]).length;
         const re=Object.keys(Store.get(STORAGE.readiness,{})).length;
         const st=Store.get(STORAGE.strava,{});
         return `
           <div class="grid grid-3 mt-12">
             <div class="metric"><div class="metric-label">Sessions logged</div><div class="metric-value">${sess}</div></div>
+            <div class="metric"><div class="metric-label">Archive logs</div><div class="metric-value">${archiveSess}</div></div>
             <div class="metric"><div class="metric-label">Strength logs</div><div class="metric-value">${str}</div></div>
             <div class="metric"><div class="metric-label">Readiness entries</div><div class="metric-value">${re}</div></div>
             <div class="metric"><div class="metric-label">Last Strava import</div><div class="metric-value">${st.lastSummary?.imported??"—"}</div><div class="metric-sub">${st.lastSync?new Date(st.lastSync).toLocaleDateString():"not synced"}</div></div>
@@ -5463,6 +5812,7 @@ function renderSettings(){
       <div class="card-h" style="color:var(--red)">Danger Zone</div>
       <div class="row mt-12">
         <button class="btn" id="btn-clear-sess">Clear session log</button>
+        <button class="btn" id="btn-clear-archive">Clear archive log</button>
         <button class="btn" id="btn-clear-strength">Clear strength log</button>
         <button class="btn" id="btn-clear-all" style="background:rgba(255,69,58,0.15);color:var(--red)">Clear EVERYTHING</button>
       </div>
@@ -5495,6 +5845,7 @@ function renderSettings(){
     renderSettings();
   });
   document.getElementById("btn-clear-sess").addEventListener("click",()=>{if(confirm("Clear all session logs?")){Store.clear(STORAGE.sessions);renderSettings();}});
+  document.getElementById("btn-clear-archive").addEventListener("click",()=>{if(confirm("Clear all archive logs?")){Store.clear(STORAGE.archiveSessions);renderSettings();}});
   document.getElementById("btn-clear-strength").addEventListener("click",()=>{if(confirm("Clear all strength logs?")){Store.clear(STORAGE.strength);renderSettings();}});
   document.getElementById("btn-clear-all").addEventListener("click",()=>{
     if(confirm("⚠ This will delete ALL data permanently. Continue?")){
@@ -5615,6 +5966,7 @@ function showWelcome(){
         <ul style="padding-left:18px;line-height:1.8;margin-top:8px;color:var(--text-2)">
           <li><b style="color:var(--text)">Weekly Plan</b> — 23-week schedule. Tap any session to log.</li>
           <li><b style="color:var(--text)">Dashboard</b> — race countdowns, ACWR load, Z1%, sparklines.</li>
+          <li><b style="color:var(--text)">Plan Lab</b> — restored 32-week archive + Strava comparison workspace.</li>
           <li><b style="color:var(--text)">Knowledge</b> — warmup, mobility, glossary, emergencies.</li>
           <li><b style="color:var(--text)">Settings → Export</b> regularly for JSON backup.</li>
         </ul>
