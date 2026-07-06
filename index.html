@@ -1029,6 +1029,56 @@ body{
 .seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;border:1px solid var(--hairline)}
 .seg button{flex:1;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--text-2);min-height:36px;transition:all 0.12s var(--ease);letter-spacing:-0.005em}
 .seg button.active{background:var(--card-hover);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.strava-import-panel{
+  margin:0 0 16px;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid var(--hairline-soft);
+  background:var(--bg-elev);
+}
+.strava-import-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:10px;
+}
+.strava-activity-list{
+  display:grid;
+  gap:8px;
+  max-height:260px;
+  overflow:auto;
+  padding-right:4px;
+}
+.strava-activity-item{
+  width:100%;
+  text-align:left;
+  padding:11px 12px;
+  border-radius:10px;
+  border:1px solid var(--hairline);
+  background:rgba(255,255,255,0.035);
+  color:var(--text);
+  cursor:pointer;
+  transition:background 0.12s var(--ease),border-color 0.12s var(--ease),transform 0.12s var(--ease);
+}
+.strava-activity-item:hover{background:var(--card-hover);transform:translateY(-1px)}
+.strava-activity-item.active{border-color:rgba(252,76,2,0.72);box-shadow:0 0 0 1px rgba(252,76,2,0.24) inset}
+.strava-activity-title{display:flex;justify-content:space-between;gap:10px;font-weight:760;font-size:13px}
+.strava-activity-meta{margin-top:5px;color:var(--text-2);font-size:11.5px;line-height:1.45}
+.audit-list{
+  display:grid;
+  gap:8px;
+  margin-top:12px;
+}
+.audit-item{
+  padding:11px 12px;
+  border-radius:10px;
+  border:1px solid var(--hairline-soft);
+  background:rgba(255,255,255,0.035);
+  font-size:12.5px;
+  line-height:1.45;
+}
+.audit-item.fixable{border-color:rgba(52,211,153,0.25)}
 
 /* === STRENGTH === */
 .ex-card{
@@ -1748,6 +1798,11 @@ const STORAGE = {
   strava:"fuji_strava_sync"
 };
 
+const SESSION_STRAVA_FIELDS = [
+  "stravaId","stravaName","stravaSport","stravaUrl","stravaStartDate",
+  "maxHR","avgWatts","weightedWatts","elevationGain"
+];
+
 const NAV = [
   {id:"dashboard",label:"Dashboard",icon:iconHome},
   {id:"weekly",   label:"Weekly Plan",icon:iconCal},
@@ -1784,9 +1839,111 @@ const Store = {
     return o;
   },
   importAll(obj){
-    for(const k in obj){if(obj[k]!==null)Store.set(k,obj[k])}
+    if(!isPlainRecord(obj))throw new Error("Backup must be a JSON object");
+    for(const key of Object.values(STORAGE)){
+      if(Object.prototype.hasOwnProperty.call(obj,key) && obj[key]!==null){
+        Store.set(key,normalizeStorageValue(key,obj[key]));
+      }
+    }
   }
 };
+
+function isPlainRecord(value){
+  return !!value && typeof value==="object" && !Array.isArray(value);
+}
+
+function storageDefaultForKey(key){
+  if(key===STORAGE.strength)return [];
+  if(Object.values(STORAGE).includes(key))return {};
+  return null;
+}
+
+function normalizeStorageValue(key,value){
+  if(key===STORAGE.strength)return Array.isArray(value)?value:[];
+  if([STORAGE.sessions,STORAGE.longruns,STORAGE.readiness,STORAGE.settings,STORAGE.strava].includes(key)){
+    return isPlainRecord(value)?value:{};
+  }
+  return value;
+}
+
+function hasSessionStravaMetadata(entry){
+  if(!isPlainRecord(entry))return false;
+  return SESSION_STRAVA_FIELDS.some(field=>entry[field]!==undefined&&entry[field]!==null&&entry[field]!=="");
+}
+
+function clearStravaSessionFields(entry){
+  const next={...entry};
+  SESSION_STRAVA_FIELDS.forEach(field=>{delete next[field];});
+  return next;
+}
+
+function auditStoredData(){
+  const issues=[];
+  Object.values(STORAGE).forEach(key=>{
+    const value=Store.get(key,storageDefaultForKey(key));
+    const expectedArray=key===STORAGE.strength;
+    const valid=expectedArray?Array.isArray(value):isPlainRecord(value);
+    if(!valid){
+      issues.push({code:"storage_shape",key,message:`${key} has the wrong saved shape`,safeFix:false});
+    }
+  });
+
+  const sessions=Store.get(STORAGE.sessions,{});
+  if(isPlainRecord(sessions)){
+    Object.entries(sessions).forEach(([date,entry])=>{
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){
+        issues.push({code:"invalid_session_date",key:STORAGE.sessions,date,message:`Session key ${date} is not YYYY-MM-DD`,safeFix:false});
+      }
+      if(!isPlainRecord(entry)){
+        issues.push({code:"invalid_session_entry",key:STORAGE.sessions,date,message:`Session ${date} is not an object`,safeFix:false});
+        return;
+      }
+      if(entry.source!=="strava" && hasSessionStravaMetadata(entry)){
+        issues.push({code:"manual_strava_metadata",key:STORAGE.sessions,date,message:`Manual session ${date} still has Strava metadata`,safeFix:true});
+      }
+      if(entry.source==="strava" && !entry.stravaId){
+        issues.push({code:"strava_missing_id",key:STORAGE.sessions,date,message:`Strava session ${date} is missing stravaId`,safeFix:false});
+      }
+      ["actualDuration","actualDistance","avgHR","rpe","cadence"].forEach(field=>{
+        if(entry[field]!==null && entry[field]!==undefined && entry[field]!=="" && Number(entry[field])<0){
+          issues.push({code:"negative_session_value",key:STORAGE.sessions,date,field,message:`Session ${date} has a negative ${field}`,safeFix:false});
+        }
+      });
+    });
+  }
+
+  const strength=Store.get(STORAGE.strength,[]);
+  if(Array.isArray(strength)){
+    strength.forEach((entry,index)=>{
+      if(!isPlainRecord(entry)){
+        issues.push({code:"invalid_strength_entry",key:STORAGE.strength,index,message:`Strength entry ${index+1} is not an object`,safeFix:false});
+      }
+    });
+  }
+
+  return {
+    summary:{
+      issueCount:issues.length,
+      safeFixableCount:issues.filter(issue=>issue.safeFix).length
+    },
+    issues
+  };
+}
+
+function repairStoredData(){
+  let fixedCount=0;
+  const sessions=Store.get(STORAGE.sessions,{});
+  if(isPlainRecord(sessions)){
+    Object.entries(sessions).forEach(([date,entry])=>{
+      if(isPlainRecord(entry) && entry.source!=="strava" && hasSessionStravaMetadata(entry)){
+        sessions[date]=clearStravaSessionFields({...entry,source:entry.source||"manual"});
+        fixedCount++;
+      }
+    });
+    Store.set(STORAGE.sessions,sessions);
+  }
+  return {fixedCount,audit:auditStoredData()};
+}
 
 // quick test on load
 let __storageOK=true;
@@ -2320,9 +2477,9 @@ function getSessionLog(date){
   const all=Store.get(STORAGE.sessions,{});
   return all[date]||null;
 }
-function saveSessionLog(date,data){
+function saveSessionLog(date,data,options={}){
   const all=Store.get(STORAGE.sessions,{});
-  all[date]={...(all[date]||{}),...data};
+  all[date]=options.replace?data:{...(all[date]||{}),...data};
   Store.set(STORAGE.sessions,all);
 }
 function deleteSessionLog(date){
@@ -2556,11 +2713,12 @@ function toggleDone(date,wIdx,dIdx){
   } else {
     saveSessionLog(date,{
       status:"done",
+      source:"manual",
       type:session.type,
       title:session.title,
       actualDuration:session.duration,
       timestamp:Date.now()
-    });
+    },{replace:true});
   }
   renderWeekly();renderCountdown();
 }
@@ -2573,6 +2731,7 @@ function openSessionModal(wIdx,dIdx,date){
   const session=PLAN[wIdx-1].days[dIdx];
   const lg=getSessionLog(date)||{};
   const status=lg.status||"";
+  const initialSource=lg.source==="strava"?"strava":"manual";
   const html=`
     <div class="modal-h">
       <div>
@@ -2588,6 +2747,25 @@ function openSessionModal(wIdx,dIdx,date){
           <button data-v="done" class="${status==="done"?"active":""}">Done</button>
           <button data-v="modified" class="${status==="modified"?"active":""}">Modified</button>
           <button data-v="skipped" class="${status==="skipped"?"active":""}">Skipped</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Input source</label>
+        <div class="seg" id="seg-source">
+          <button data-v="manual" class="${initialSource==="manual"?"active":""}">Manual</button>
+          <button data-v="strava" class="${initialSource==="strava"?"active":""}">Strava</button>
+        </div>
+      </div>
+      <div id="strava-import-panel" class="strava-import-panel ${initialSource==="strava"?"":"hide"}">
+        <div class="strava-import-head">
+          <div>
+            <div class="integration-title">Import from Strava</div>
+            <div class="integration-meta" id="strava-import-status">${lg.source==="strava"&&lg.stravaName?`Selected: ${escapeHtml(lg.stravaName)}`:"Choose any recent run/workout. Your manual edits stay editable after import."}</div>
+          </div>
+          <button class="btn" id="btn-load-strava" type="button">Load activities</button>
+        </div>
+        <div class="strava-activity-list" id="strava-activity-list">
+          <div class="small muted">Tap Load activities to choose from Strava.</div>
         </div>
       </div>
       <div class="field">
@@ -2638,6 +2816,118 @@ function openSessionModal(wIdx,dIdx,date){
   const segBtns=document.querySelectorAll("#seg-status button");
   let curStatus=status||"done";
   segBtns.forEach(b=>{b.addEventListener("click",()=>{segBtns.forEach(x=>x.classList.remove("active"));b.classList.add("active");curStatus=b.dataset.v;});});
+  const sourceBtns=document.querySelectorAll("#seg-source button");
+  const stravaPanel=document.getElementById("strava-import-panel");
+  const stravaStatus=document.getElementById("strava-import-status");
+  const stravaList=document.getElementById("strava-activity-list");
+  let sourceMode=initialSource;
+  let loadedStravaActivities=[];
+  let selectedStravaActivity=lg.source==="strava"&&lg.stravaId?{
+    id:lg.stravaId,
+    name:lg.stravaName||"Imported Strava activity",
+    sportType:lg.stravaSport||"",
+    startDateLocal:lg.stravaStartDate||date,
+    localDate:date,
+    distanceKm:lg.actualDistance?Number(lg.actualDistance):null,
+    durationMin:lg.actualDuration?Number(lg.actualDuration):null,
+    pace:lg.pace||"",
+    avgHR:lg.avgHR?Number(lg.avgHR):null,
+    maxHR:lg.maxHR?Number(lg.maxHR):null,
+    avgCadence:lg.cadence?Number(lg.cadence):null,
+    avgWatts:lg.avgWatts?Number(lg.avgWatts):null,
+    weightedWatts:lg.weightedWatts?Number(lg.weightedWatts):null,
+    elevationGain:lg.elevationGain?Number(lg.elevationGain):null,
+    url:lg.stravaUrl||""
+  }:null;
+
+  function setSourceMode(mode){
+    sourceMode=mode;
+    sourceBtns.forEach(x=>x.classList.toggle("active",x.dataset.v===mode));
+    stravaPanel.classList.toggle("hide",mode!=="strava");
+    if(mode==="manual"){
+      selectedStravaActivity=null;
+      stravaStatus.textContent="Manual entry. Strava metadata will be cleared when saved.";
+      stravaList.innerHTML='<div class="small muted">Switch back to Strava to choose an activity.</div>';
+    }else if(loadedStravaActivities.length){
+      renderStravaActivityPicker(loadedStravaActivities);
+    }else if(selectedStravaActivity){
+      stravaStatus.textContent=`Selected: ${selectedStravaActivity.name} · ${stravaActivityMeta(selectedStravaActivity)}`;
+      stravaList.innerHTML='<div class="small muted">Reload activities to choose a different Strava activity.</div>';
+    }else if(!loadedStravaActivities.length && !selectedStravaActivity){
+      stravaStatus.textContent="Choose any recent run/workout. Your manual edits stay editable after import.";
+    }
+  }
+
+  function setFieldValue(id,value){
+    const el=document.getElementById(id);
+    if(el)el.value=value??"";
+  }
+
+  function markSelectedStravaActivity(){
+    stravaList.querySelectorAll(".strava-activity-item").forEach(btn=>{
+      btn.classList.toggle("active",selectedStravaActivity && String(btn.dataset.id)===String(selectedStravaActivity.id));
+    });
+  }
+
+  function applyStravaActivityToForm(activity){
+    selectedStravaActivity=activity;
+    const patch=sessionPatchFromStravaActivity(activity,session,lg);
+    setFieldValue("f-type",patch.type);
+    setFieldValue("f-dur",patch.actualDuration);
+    setFieldValue("f-dist",patch.actualDistance);
+    setFieldValue("f-pace",patch.pace);
+    setFieldValue("f-hr",patch.avgHR);
+    setFieldValue("f-cad",patch.cadence);
+    setFieldValue("f-hrt",patch.hrTarget);
+    setFieldValue("f-notes",patch.notes);
+    const paceEl=document.getElementById("f-pace");
+    if(paceEl)paceEl.dataset.touched="1";
+    stravaStatus.textContent=`Selected: ${activity.name} · ${stravaActivityMeta(activity)}`;
+    markSelectedStravaActivity();
+  }
+
+  function renderStravaActivityPicker(activities){
+    const picked=stravaActivitiesForPicker(activities);
+    loadedStravaActivities=picked;
+    if(!picked.length){
+      stravaList.innerHTML='<div class="small muted">No Strava run/workout activities found in the latest 180 days.</div>';
+      return;
+    }
+    stravaStatus.textContent=`${picked.length} activities loaded · choose the one for this session`;
+    stravaList.innerHTML=picked.map(activity=>`
+      <button class="strava-activity-item" type="button" data-id="${escapeHtml(String(activity.id))}">
+        <div class="strava-activity-title"><span>${escapeHtml(activity.name||"Strava activity")}</span><span>${escapeHtml(stravaActivityDateLabel(activity))}</span></div>
+        <div class="strava-activity-meta">${escapeHtml(stravaActivityMeta(activity)||"No activity details")}</div>
+      </button>`).join("");
+    stravaList.querySelectorAll(".strava-activity-item").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const activity=loadedStravaActivities.find(item=>String(item.id)===String(btn.dataset.id));
+        if(activity)applyStravaActivityToForm(activity);
+      });
+    });
+    markSelectedStravaActivity();
+  }
+
+  async function loadStravaActivitiesForModal(){
+    const btn=document.getElementById("btn-load-strava");
+    if(btn){btn.disabled=true;btn.textContent="Loading...";}
+    stravaStatus.textContent="Loading latest Strava activities...";
+    try{
+      const data=await stravaFetch("/api/strava/activities?days=180");
+      renderStravaActivityPicker(data.activities||[]);
+    }catch(err){
+      stravaStatus.textContent=err.message||"Could not load Strava activities";
+      stravaList.innerHTML='<div class="small muted">Connect Strava in Settings, then come back here to import.</div>';
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent="Reload activities";}
+    }
+  }
+
+  sourceBtns.forEach(b=>b.addEventListener("click",()=>{
+    setSourceMode(b.dataset.v);
+    if(sourceMode==="strava"&&!loadedStravaActivities.length&&!selectedStravaActivity)loadStravaActivitiesForModal();
+  }));
+  document.getElementById("btn-load-strava").addEventListener("click",loadStravaActivitiesForModal);
   // auto-compute pace when distance/duration change and pace empty
   function autoPace(){
     const dur=document.getElementById("f-dur").value;
@@ -2670,7 +2960,18 @@ function openSessionModal(wIdx,dIdx,date){
   }
   ["f-hr1","f-pace1","f-hr2","f-pace2"].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener("input",updateDecoupling);});
   updateDecoupling();
+  function rerenderAfterSessionChange(){
+    if(State.view==="weekly")renderWeekly();
+    else if(State.view==="dashboard")renderDashboard();
+    else if(State.view==="speed")renderSpeed();
+    else if(State.view==="longrun")renderLongRun();
+    renderCountdown();
+  }
   document.getElementById("btn-save").addEventListener("click",()=>{
+    if(sourceMode==="strava"&&!selectedStravaActivity){
+      alert("Choose a Strava activity first, or switch Input source to Manual.");
+      return;
+    }
     const dur=document.getElementById("f-dur").value||null;
     const dist=document.getElementById("f-dist").value||null;
     let pace=document.getElementById("f-pace").value||null;
@@ -2680,7 +2981,7 @@ function openSessionModal(wIdx,dIdx,date){
     const hr2=document.getElementById("f-hr2")?.value||null;
     const pace2=document.getElementById("f-pace2")?.value||null;
     const decoupling=calcDecoupling(hr1,pace1,hr2,pace2);
-    saveSessionLog(date,{
+    let entry={
       status:curStatus||"done",
       type:document.getElementById("f-type").value,
       actualDuration:dur,
@@ -2696,15 +2997,28 @@ function openSessionModal(wIdx,dIdx,date){
       reason:document.getElementById("f-reason").value||"",
       title:session.title,
       timestamp:Date.now()
-    });
+    };
+    if(sourceMode==="strava"&&selectedStravaActivity){
+      const stravaPatch=sessionPatchFromStravaActivity(selectedStravaActivity,session,{});
+      entry={
+        ...stravaPatch,
+        ...entry,
+        source:"strava",
+        stravaId:String(selectedStravaActivity.id),
+        stravaName:selectedStravaActivity.name,
+        stravaSport:selectedStravaActivity.sportType,
+        stravaUrl:selectedStravaActivity.url,
+        stravaStartDate:selectedStravaActivity.startDateLocal||selectedStravaActivity.startDate||""
+      };
+    }else{
+      entry=clearStravaSessionFields({...entry,source:"manual"});
+    }
+    saveSessionLog(date,entry,{replace:true});
     closeModal();
-    if(State.view==="weekly")renderWeekly();
-    else if(State.view==="dashboard")renderDashboard();
-    else if(State.view==="speed")renderSpeed();
-    else if(State.view==="longrun")renderLongRun();
+    rerenderAfterSessionChange();
   });
   const del=document.getElementById("btn-delete");
-  if(del)del.addEventListener("click",()=>{deleteSessionLog(date);closeModal();renderWeekly();});
+  if(del)del.addEventListener("click",()=>{deleteSessionLog(date);closeModal();rerenderAfterSessionChange();});
 }
 
 function typeLabel(t){return {easy_z1:"Easy Z1 run",speed:"Speed / Intervals",long_run:"Long run",mp_long:"Long run + MP",strength_a:"Strength A",strength_b:"Strength B",hill:"Hill repeats",recovery:"Recovery jog",tune_race:"Race / Tune-up",rest:"Rest day"}[t]||t;}
@@ -4809,6 +5123,58 @@ function stravaActivityNotes(activity){
   return parts.join(" · ");
 }
 
+function stravaActivitiesForPicker(activities){
+  return (activities||[])
+    .filter(isStravaTrainingActivity)
+    .slice()
+    .sort((a,b)=>String(b.startDateLocal||b.startDate||b.localDate||"").localeCompare(String(a.startDateLocal||a.startDate||a.localDate||"")));
+}
+
+function stravaActivityDateLabel(activity){
+  const raw=activity.startDateLocal||activity.startDate||activity.localDate||"";
+  if(!raw)return "No date";
+  const date=raw.slice(0,10);
+  const time=raw.includes("T")?raw.slice(11,16):"";
+  const parsed=parseISO(date);
+  return `${fmtShort(parsed)}${time?` · ${time}`:""}`;
+}
+
+function stravaActivityMeta(activity){
+  const parts=[];
+  if(activity.sportType)parts.push(activity.sportType);
+  if(activity.distanceKm)parts.push(`${Number(activity.distanceKm).toFixed(1)} km`);
+  if(activity.durationMin)parts.push(`${activity.durationMin} min`);
+  if(activity.pace)parts.push(`${activity.pace}/km`);
+  if(activity.avgHR)parts.push(`HR ${activity.avgHR}`);
+  if(activity.avgWatts)parts.push(`${activity.avgWatts}W`);
+  return parts.join(" · ");
+}
+
+function sessionPatchFromStravaActivity(activity,planned,existing={}){
+  return {
+    ...existing,
+    source:"strava",
+    stravaId:String(activity.id),
+    stravaName:activity.name,
+    stravaSport:activity.sportType,
+    stravaUrl:activity.url,
+    stravaStartDate:activity.startDateLocal||activity.startDate||"",
+    type:typeFromStravaActivity(activity,planned),
+    title:planned.title||activity.name,
+    actualDuration:activity.durationMin||planned.duration||"",
+    actualDistance:activity.distanceKm?Number(activity.distanceKm).toFixed(1):"",
+    pace:activity.pace||"",
+    avgHR:activity.avgHR||"",
+    maxHR:activity.maxHR||"",
+    avgWatts:activity.avgWatts||"",
+    weightedWatts:activity.weightedWatts||"",
+    elevationGain:activity.elevationGain||"",
+    cadence:activity.avgCadence||existing.cadence||"",
+    hrTarget:planned.hrTarget||existing.hrTarget||"",
+    notes:stravaActivityNotes(activity)
+  };
+}
+
 function bestStravaActivitiesByDate(activities){
   const byDate=new Map();
   activities.filter(isStravaTrainingActivity).forEach(activity=>{
@@ -4844,24 +5210,10 @@ function applyStravaActivitiesToSessions(activities){
     if(existing.status && existing.source!=="strava"){summary.manualSkipped++;return;}
 
     const isUpdate=existing.source==="strava";
-    const entry={
+    const entry=sessionPatchFromStravaActivity(activity,planned,{
       ...existing,
       status:"done",
-      source:"strava",
-      stravaId:String(activity.id),
-      stravaName:activity.name,
-      stravaSport:activity.sportType,
-      stravaUrl:activity.url,
-      type:typeFromStravaActivity(activity,planned),
-      title:planned.title||activity.name,
-      actualDuration:activity.durationMin||planned.duration||"",
-      actualDistance:activity.distanceKm?activity.distanceKm.toFixed(1):"",
-      pace:activity.pace||"",
-      avgHR:activity.avgHR||"",
-      maxHR:activity.maxHR||"",
-      hrTarget:planned.hrTarget||existing.hrTarget||"",
-      notes:stravaActivityNotes(activity)
-    };
+    });
     log[date]=entry;
     if(isUpdate)summary.updated++;
     else summary.imported++;
@@ -5066,6 +5418,31 @@ function renderSettings(){
     </div>
 
     <div class="card mb-16">
+      <div class="card-h">Data Health</div>
+      ${(()=>{
+        const audit=auditStoredData();
+        if(!audit.summary.issueCount){
+          return `<div class="small muted mt-12">No storage issues found. Session logs, strength logs, readiness, settings, and Strava sync state have valid saved shapes.</div>`;
+        }
+        return `
+          <div class="row mt-12">
+            <span class="chip chip-orange">${audit.summary.issueCount} issue${audit.summary.issueCount===1?"":"s"}</span>
+            ${audit.summary.safeFixableCount?`<span class="chip chip-green">${audit.summary.safeFixableCount} safe fix</span>`:""}
+          </div>
+          <div class="audit-list">
+            ${audit.issues.slice(0,8).map(issue=>`
+              <div class="audit-item ${issue.safeFix?"fixable":""}">
+                <b>${escapeHtml(issue.code)}</b>${issue.date?` · ${escapeHtml(issue.date)}`:""}${issue.field?` · ${escapeHtml(issue.field)}`:""}
+                <div class="muted">${escapeHtml(issue.message)}</div>
+              </div>`).join("")}
+            ${audit.issues.length>8?`<div class="small muted">+ ${audit.issues.length-8} more issues</div>`:""}
+          </div>
+          ${audit.summary.safeFixableCount?`<button class="btn mt-12" id="btn-data-repair">Repair safe issues</button>`:""}
+        `;
+      })()}
+    </div>
+
+    <div class="card mb-16">
       <div class="card-h">Storage Stats</div>
       ${(()=>{
         const sess=Object.keys(Store.get(STORAGE.sessions,{})).length;
@@ -5110,6 +5487,12 @@ function renderSettings(){
         catch(err){alert("Invalid JSON file");}
       };r.readAsText(f);
     };inp.click();
+  });
+  const repairBtn=document.getElementById("btn-data-repair");
+  if(repairBtn)repairBtn.addEventListener("click",()=>{
+    const result=repairStoredData();
+    flash(`Repaired ${result.fixedCount} safe issue${result.fixedCount===1?"":"s"}`);
+    renderSettings();
   });
   document.getElementById("btn-clear-sess").addEventListener("click",()=>{if(confirm("Clear all session logs?")){Store.clear(STORAGE.sessions);renderSettings();}});
   document.getElementById("btn-clear-strength").addEventListener("click",()=>{if(confirm("Clear all strength logs?")){Store.clear(STORAGE.strength);renderSettings();}});
