@@ -3,6 +3,8 @@ const {
   STRAVA_AUTHORIZE_URL,
   COOKIE_STATE,
   getConfig,
+  getMissingConfigNames,
+  getBaseUrl,
   getRedirectUri,
   serializeCookie,
   setCookies,
@@ -15,6 +17,12 @@ module.exports = async function handler(req, res) {
       res.setHeader("Allow", "GET");
       res.statusCode = 405;
       res.end("Method Not Allowed");
+      return;
+    }
+    if (getMissingConfigNames().length) {
+      res.statusCode = 302;
+      res.setHeader("Location", `${getBaseUrl(req)}/?strava=setup`);
+      res.end();
       return;
     }
     const { clientId } = getConfig();
