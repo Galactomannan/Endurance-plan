@@ -4938,6 +4938,25 @@ async function renderStravaSettings(){
     return;
   }
 
+  if(status.setupRequired){
+    const missing=(status.missingEnv||[]).join(", ");
+    el.innerHTML=`
+      <div class="card-h">Strava Sync</div>
+      <div class="integration-shell">
+        <div class="integration-main">
+          <div class="integration-logo">S</div>
+          <div>
+            <div class="integration-title">Strava setup required</div>
+            <div class="integration-meta">Vercel is missing ${escapeHtml(missing||"Strava environment variables")}. Add the Strava API keys before connecting.</div>
+          </div>
+        </div>
+        <div class="integration-actions"><button class="btn" disabled>Setup required</button></div>
+      </div>
+      ${syncSummaryMarkup(local.lastSummary)}
+    `;
+    return;
+  }
+
   if(!status.connected){
     el.innerHTML=`
       <div class="card-h">Strava Sync</div>
@@ -5162,6 +5181,7 @@ function init(){
     switchView("settings");
     if(stravaResult==="connected")flash("Strava connected");
     else if(stravaResult==="denied")flash("Strava connection cancelled");
+    else if(stravaResult==="setup")flash("Add Strava API keys in Vercel before connecting");
     window.history.replaceState({},document.title,window.location.pathname+window.location.hash);
   }else{
     switchView("weekly");
