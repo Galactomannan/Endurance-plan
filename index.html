@@ -444,6 +444,353 @@ body{
   margin-top:10px;
 }
 
+/* === DASHBOARD SHOWCASE === */
+.dashboard-showcase{display:grid;gap:18px}
+.poster-hero{
+  position:relative;
+  min-height:720px;
+  border-radius:24px;
+  overflow:hidden;
+  isolation:isolate;
+  background:#03070D;
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow:0 24px 80px rgba(0,0,0,0.52);
+}
+.poster-hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:url("assets/fuji-kawaguchi.jpg") center 44% / cover no-repeat;
+  transform:scale(1.01);
+  z-index:-2;
+}
+.poster-hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg,rgba(2,5,10,0.96) 0%,rgba(2,5,10,0.78) 36%,rgba(2,5,10,0.28) 68%,rgba(2,5,10,0.06) 100%),
+    linear-gradient(180deg,rgba(2,5,10,0.08) 0%,rgba(2,5,10,0.16) 46%,rgba(2,5,10,0.9) 100%);
+  z-index:-1;
+}
+.poster-content{
+  min-height:720px;
+  padding:34px;
+  display:flex;
+  flex-direction:column;
+  gap:28px;
+}
+.poster-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+}
+.poster-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.poster-mark{
+  width:38px;height:38px;
+  border-radius:50%;
+  background:#fff;
+  color:#05080D;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:var(--font-display);
+  font-weight:900;
+  font-size:17px;
+  flex-shrink:0;
+}
+.poster-brand-title{
+  font-family:var(--font-display);
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:-0.02em;
+  line-height:1.05;
+}
+.poster-brand-meta{
+  margin-top:4px;
+  color:rgba(255,255,255,0.68);
+  font-size:11px;
+  font-weight:650;
+  letter-spacing:0.04em;
+}
+.poster-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.poster-tool{
+  min-height:38px;
+  padding:10px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.18);
+  color:#fff;
+  font-size:12px;
+  font-weight:750;
+  transition:background 0.16s var(--ease),transform 0.16s var(--ease),border-color 0.16s var(--ease);
+}
+.poster-tool:hover{background:rgba(255,255,255,0.16);border-color:rgba(255,255,255,0.3);transform:translateY(-1px)}
+.poster-main{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(240px,330px);
+  gap:28px;
+  align-items:end;
+  flex:1;
+}
+.poster-kicker{
+  color:rgba(255,255,255,0.72);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+.poster-title{
+  margin-top:12px;
+  max-width:720px;
+  font-family:var(--font-display);
+  font-size:clamp(52px,7.2vw,94px);
+  line-height:0.94;
+  letter-spacing:-0.038em;
+  font-weight:900;
+  text-wrap:balance;
+}
+.poster-copy{
+  margin-top:18px;
+  max-width:620px;
+  color:rgba(255,255,255,0.76);
+  font-size:16px;
+  line-height:1.58;
+}
+.poster-meta-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:24px;
+}
+.poster-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:34px;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.16);
+  color:rgba(255,255,255,0.84);
+  font-size:12px;
+  font-weight:750;
+  font-variant-numeric:tabular-nums;
+}
+.poster-countdown{
+  justify-self:end;
+  width:100%;
+  max-width:330px;
+  padding:22px;
+  border-radius:18px;
+  background:rgba(3,7,13,0.82);
+  border:1px solid rgba(255,255,255,0.15);
+}
+.poster-count-label{
+  color:rgba(255,255,255,0.64);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.09em;
+  text-transform:uppercase;
+}
+.poster-count-num{
+  margin-top:8px;
+  color:#fff;
+  font-family:var(--font-display);
+  font-size:clamp(70px,8vw,112px);
+  font-weight:900;
+  line-height:0.86;
+  letter-spacing:-0.055em;
+  font-variant-numeric:tabular-nums;
+}
+.poster-count-sub{
+  margin-top:14px;
+  color:rgba(255,255,255,0.74);
+  font-size:13px;
+  line-height:1.45;
+}
+.poster-progress{
+  margin-top:18px;
+  height:6px;
+  border-radius:999px;
+  overflow:hidden;
+  background:rgba(255,255,255,0.12);
+}
+.poster-progress-fill{
+  height:100%;
+  border-radius:999px;
+  background:#fff;
+  box-shadow:0 0 18px rgba(255,255,255,0.35);
+}
+.poster-race-strip{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.poster-race-card{
+  min-height:138px;
+  padding:16px;
+  border-radius:15px;
+  background:rgba(3,7,13,0.84);
+  border:1px solid rgba(255,255,255,0.13);
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:16px;
+  transition:transform 0.16s var(--ease),border-color 0.16s var(--ease),background 0.16s var(--ease);
+}
+.poster-race-card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--race-color,#fff) 55%,rgba(255,255,255,0.18));background:rgba(5,12,20,0.9)}
+.poster-race-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+}
+.poster-race-dot{
+  width:9px;height:9px;
+  border-radius:50%;
+  background:var(--race-color,#fff);
+  box-shadow:0 0 14px color-mix(in srgb,var(--race-color,#fff) 65%,transparent);
+  margin-top:3px;
+  flex-shrink:0;
+}
+.poster-race-status{
+  color:var(--race-color,#fff);
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+.poster-race-date{
+  color:rgba(255,255,255,0.62);
+  font-size:11px;
+  font-weight:750;
+  white-space:nowrap;
+}
+.poster-race-name{
+  margin-top:8px;
+  font-family:var(--font-display);
+  color:#fff;
+  font-size:15px;
+  line-height:1.18;
+  font-weight:820;
+  letter-spacing:-0.018em;
+}
+.poster-race-detail{
+  margin-top:6px;
+  color:rgba(255,255,255,0.62);
+  font-size:11.5px;
+  line-height:1.35;
+}
+.poster-race-value{
+  color:#fff;
+  font-family:var(--font-display);
+  font-size:24px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:-0.038em;
+  font-variant-numeric:tabular-nums;
+}
+.poster-race-unit{
+  margin-top:4px;
+  color:rgba(255,255,255,0.58);
+  font-size:10.5px;
+  font-weight:750;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+}
+.dashboard-detail{
+  display:grid;
+  gap:16px;
+}
+.detail-head{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:flex-end;
+  margin:8px 0 2px;
+  flex-wrap:wrap;
+}
+.detail-title{
+  font-family:var(--font-display);
+  font-size:24px;
+  font-weight:850;
+  letter-spacing:-0.03em;
+}
+.detail-sub{color:var(--text-2);font-size:13px;margin-top:4px}
+.capture-exit{
+  display:none;
+  position:fixed;
+  top:16px;right:16px;
+  z-index:120;
+  min-height:36px;
+  padding:9px 12px;
+  border-radius:999px;
+  background:rgba(0,0,0,0.42);
+  border:1px solid rgba(255,255,255,0.18);
+  color:#fff;
+  font-size:12px;
+  font-weight:750;
+  opacity:0;
+  transition:opacity 0.16s var(--ease),background 0.16s var(--ease);
+}
+.capture-exit:hover,.capture-exit:focus-visible{opacity:1;background:rgba(0,0,0,0.7)}
+body.social-capture{background:#02050A}
+.social-capture #sidebar,
+.social-capture .mobile-topbar,
+.social-capture .mobile-tabs,
+.social-capture .drawer-backdrop{display:none!important}
+.social-capture #app{display:block;min-height:100vh;min-height:100svh}
+.social-capture #main{max-width:none;padding:0;margin:0}
+.social-capture .dashboard-showcase{min-height:100vh;min-height:100svh}
+.social-capture .poster-hero{
+  min-height:100vh;
+  min-height:100svh;
+  border-radius:0;
+  border:none;
+  box-shadow:none;
+}
+.social-capture .poster-content{
+  min-height:100vh;
+  min-height:100svh;
+  padding:clamp(28px,4vw,58px);
+}
+.social-capture .poster-tools,
+.social-capture .after-poster{display:none!important}
+.social-capture .capture-exit{display:flex}
+
+@media(max-width:1100px){
+  .poster-hero,.poster-content{min-height:760px}
+  .poster-main{grid-template-columns:1fr;align-items:start}
+  .poster-countdown{justify-self:start}
+  .poster-race-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .poster-hero{min-height:auto;border-radius:18px}
+  .poster-hero::after{
+    background:
+      linear-gradient(180deg,rgba(2,5,10,0.62) 0%,rgba(2,5,10,0.74) 42%,rgba(2,5,10,0.94) 100%),
+      linear-gradient(90deg,rgba(2,5,10,0.92) 0%,rgba(2,5,10,0.48) 100%);
+  }
+  .poster-content{min-height:auto;padding:22px;gap:24px}
+  .poster-top{flex-direction:column;align-items:stretch}
+  .poster-tools{justify-content:flex-start}
+  .poster-title{font-size:clamp(44px,15vw,62px);letter-spacing:-0.034em}
+  .poster-copy{font-size:14px;line-height:1.55}
+  .poster-countdown{max-width:none}
+  .poster-race-strip{grid-template-columns:1fr}
+  .poster-race-card{min-height:124px}
+  .poster-race-value{font-size:22px}
+  .social-capture .poster-hero{border-radius:0}
+}
+
 /* === WEEKLY VIEW === */
 .week-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:14px;flex-wrap:wrap}
 .week-nav{display:flex;align-items:center;gap:6px}
@@ -1860,6 +2207,7 @@ function fmtPaceFromSec(sec){
 
 let __viewAniTimer=null;
 function switchView(id){
+  if(id!=="dashboard")setDashboardCaptureMode(false);
   State.view=id;
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.dataset.view===id));
   renderNav();
@@ -1871,6 +2219,17 @@ function switchView(id){
   if(isMobileLayout())toggleDrawer(false);
   window.scrollTo({top:0,behavior:"instant"});
 }
+
+function setDashboardCaptureMode(on){
+  const active=!!on;
+  document.body.classList.toggle("social-capture",active);
+  document.querySelectorAll("[data-capture]").forEach(btn=>{
+    btn.setAttribute("aria-pressed",active?"true":"false");
+  });
+}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&document.body.classList.contains("social-capture"))setDashboardCaptureMode(false);
+});
 
 /* =========================================================================
    9. SESSIONS LOG ACCESS
@@ -2372,162 +2731,192 @@ function renderDashboard(){
     if(nextKey)break;
   }
 
+  const currentPhase=phaseForWeek(wIdx);
+  const planPct=Math.round(wIdx/ATHLETE.totalWeeks*100);
+  const firstCompleted=COMPLETED_RACES[0];
+  const hyrox=SECONDARY_RACES.find(r=>r.id==="hyrox");
+  const half=SECONDARY_RACES.find(r=>r.id==="atmbkk");
+  const raceCards=[
+    {
+      color:firstCompleted.color,status:"Finished",name:firstCompleted.name,date:fmtShort(parseISO(firstCompleted.date)),
+      detail:`${firstCompleted.specs.distance} trail · ${firstCompleted.specs.gain}`,
+      value:firstCompleted.result,unit:"official time",go:"sideraces"
+    },
+    {
+      color:hyrox.color,status:"W6 Sunday",name:hyrox.name,date:fmtShort(parseISO(hyrox.date)),
+      detail:"Doubles Men · 8 x 1 km + stations",
+      value:hyrox.estimate.replace(/\s+/g," "),unit:"estimate",go:"sideraces"
+    },
+    {
+      color:half.color,status:"W21 Saturday",name:"Bangkok Half",date:fmtShort(parseISO(half.date)),
+      detail:"Fuji pace rehearsal · 21.1 km",
+      value:"Sub 2:30",unit:ATHLETE.halfRace.goalPace,go:"sideraces"
+    },
+    {
+      color:"#FF6B00",status:"A-race",name:ATHLETE.race.name,date:fmtShort(parseISO(ATHLETE.race.date)),
+      detail:`${ATHLETE.race.elevation} · HR ${ATHLETE.race.targetHR}`,
+      value:"Sub 5:00",unit:ATHLETE.race.goalPace,go:"raceweek"
+    }
+  ];
+
   document.getElementById("view-dashboard").innerHTML=`
-    <div class="view-head">
-      <div>
-        <div class="view-title">Command Center</div>
-        <div class="tagline">Evidence-Based Endurance Training</div>
-        <div class="view-sub" style="margin-top:8px">${fmtLong(todayUTC())} · ${ATHLETE.name}</div>
-      </div>
-      <div class="row">
-        <span class="chip chip-blue">HALF SUB 2:30</span>
-        <span class="chip chip-orange">FULL SUB 5:00 · 7:06/KM</span>
-      </div>
-    </div>
-
-    <!-- ===== HERO: FUJI RACE COUNTDOWN ===== -->
-    <div class="race-hero mb-16" data-go="raceweek" role="button" tabindex="0" style="cursor:pointer">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;position:relative;z-index:1">
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--orange);box-shadow:0 0 12px var(--orange-glow);animation:pulse 2s infinite"></span>
-            <span style="font-size:10px;color:var(--orange);font-weight:800;letter-spacing:0.18em;text-transform:uppercase">A-Race · Primary Goal</span>
-          </div>
-          <div style="font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-0.025em;line-height:1.1">🏔 Fuji Marathon</div>
-          <div style="font-size:13px;color:var(--text-2);margin-top:6px">Sun 13 December 2026 · Sub 5:00 · 7:06/km · HR 150–160</div>
-        </div>
-        <div style="text-align:right">
-          <div class="race-hero-num ani-num">${Math.max(0,days)}</div>
-          <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.18em;font-weight:800;margin-top:4px">DAYS REMAINING</div>
-        </div>
-      </div>
-      <div style="margin-top:24px;position:relative;z-index:1">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.14em;font-weight:700;margin-bottom:8px">
-          <span>Plan Progress</span>
-          <span style="color:var(--orange)">Week ${wIdx} / ${ATHLETE.totalWeeks} · ${Math.round(wIdx/ATHLETE.totalWeeks*100)}%</span>
-        </div>
-        <div class="progress" style="height:5px"><div class="progress-fill" style="width:${wIdx/ATHLETE.totalWeeks*100}%"></div></div>
-      </div>
-    </div>
-
-    <!-- ===== RACE CALENDAR ===== -->
-    <div class="grid grid-3 mb-24">
-      ${COMPLETED_RACES.map(r=>`
-        <div class="race-mini" data-go="sideraces" role="button" tabindex="0" style="--accent:${r.color}">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-            <div style="min-width:0">
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.color};box-shadow:0 0 10px ${r.color}66"></span>
-                <span style="font-size:9.5px;color:${r.color};font-weight:800;letter-spacing:0.16em;text-transform:uppercase">Finished ✓</span>
+    <div class="dashboard-showcase">
+      <section class="poster-hero" aria-label="Road to Fuji dashboard poster">
+        <button type="button" class="capture-exit" data-capture-exit aria-label="Exit capture mode">Exit</button>
+        <div class="poster-content">
+          <div class="poster-top">
+            <div class="poster-brand">
+              <div class="poster-mark">J</div>
+              <div>
+                <div class="poster-brand-title">${ATHLETE.name} Endurance 2026</div>
+                <div class="poster-brand-meta">${fmtLong(todayUTC())} · Week ${wIdx} / ${ATHLETE.totalWeeks}</div>
               </div>
-              <div style="font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:-0.02em;margin-top:8px">${r.icon} ${r.name}</div>
-              <div style="font-size:11.5px;color:var(--text-2);margin-top:5px">${fmtLong(parseISO(r.date)).split(",")[1].trim()} · ${r.specs.gain}</div>
             </div>
-            <div style="text-align:right;flex-shrink:0">
-              <div style="font-family:var(--font-display);font-size:23px;font-weight:800;color:${r.color};letter-spacing:-0.03em;font-variant-numeric:tabular-nums;line-height:1;margin-top:10px">${r.result}</div>
-              <div style="font-size:9.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.14em;font-weight:700;margin-top:4px">official time</div>
+            <div class="poster-tools">
+              <button type="button" class="poster-tool" data-capture aria-pressed="false">Capture mode</button>
+              <button type="button" class="poster-tool" data-go="raceweek">Fuji race week</button>
             </div>
           </div>
-        </div>`).join("")}
-      ${SECONDARY_RACES.map(r=>{
-        const d=daysUntil(r.date);
-        return `<div class="race-mini" data-go="sideraces" role="button" tabindex="0" style="--accent:${r.color}">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-            <div style="min-width:0">
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.color};box-shadow:0 0 10px ${r.color}66"></span>
-                <span style="font-size:9.5px;color:${r.color};font-weight:800;letter-spacing:0.16em;text-transform:uppercase">${r.tier||"B-Race"}</span>
+
+          <div class="poster-main">
+            <div>
+              <div class="poster-kicker">Fuji Marathon · 13 December 2026</div>
+              <h1 class="poster-title">Road to Fuji</h1>
+              <p class="poster-copy">A 23-week rebuild from the post-trail reset to a sub-5 Fuji Marathon, with Hyrox and the Bangkok Half kept inside the same season plan.</p>
+              <div class="poster-meta-row">
+                <span class="poster-pill">Current block: ${currentPhase.name}</span>
+                <span class="poster-pill">This week: ${curKm.toFixed(0)} / ${curTarget} km</span>
+                <span class="poster-pill">Goal pace: ${ATHLETE.race.goalPace}</span>
+                <span class="poster-pill">Fuji temp: ${ATHLETE.race.temp}</span>
               </div>
-              <div style="font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:-0.02em;margin-top:8px">${r.icon} ${r.name}</div>
-              <div style="font-size:11.5px;color:var(--text-2);margin-top:5px">${fmtLong(parseISO(r.date)).split(",")[1].trim()} · ${r.goal?"goal "+r.goal:"est. "+r.estimate}</div>
             </div>
-            <div style="text-align:right;flex-shrink:0">
-              <div class="race-mini-num ani-num" style="color:${r.color}">${Math.max(0,d)}</div>
-              <div style="font-size:9.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.14em;font-weight:700;margin-top:2px">days</div>
-            </div>
+
+            <aside class="poster-countdown">
+              <div class="poster-count-label">Days to A-race</div>
+              <div class="poster-count-num ani-num">${Math.max(0,days)}</div>
+              <div class="poster-count-sub">${ATHLETE.race.goal} · ${ATHLETE.race.cutoff} cutoff<br>${planPct}% through the plan</div>
+              <div class="poster-progress" aria-label="Plan progress">
+                <div class="poster-progress-fill" style="width:${wIdx/ATHLETE.totalWeeks*100}%"></div>
+              </div>
+            </aside>
           </div>
-        </div>`;
-      }).join("")}
-    </div>
 
-    <!-- ===== KEY METRICS ===== -->
-    <div class="grid grid-4 mb-16">
-      <div class="metric card card-elev">
-        <div class="metric-label">TOTAL VOLUME</div>
-        <div class="metric-value"><span class="ani-num">${totalKm.toFixed(0)}</span><span style="font-size:14px;color:var(--text-2);font-weight:500"> km</span></div>
-        <div class="metric-sub">${totalPlanned?Math.round(totalKm/totalPlanned*100):0}% of ${totalPlanned} planned</div>
-        <div class="spark-row">${sparkline(sparkVol,{color:"#FF6B00",fill:true})}</div>
-      </div>
-      <div class="metric card card-elev">
-        <div class="metric-label">Z1 INTENSITY · 4WK</div>
-        <div class="metric-value" style="color:${z1Pct>=78?"var(--green)":"var(--orange)"}"><span class="ani-num">${z1Pct}</span><span style="font-size:18px">%</span></div>
-        <div class="metric-sub ${z1Pct>=78?"up":"down"}">${z1Pct>=78?"✓ Target ≥78%":"⚠ Below 78% target"}</div>
-        <div class="spark-row">${sparkline(sparkZ1,{color:z1Pct>=78?"#34D399":"#FF6B00",fill:true})}</div>
-      </div>
-      <div class="metric card card-elev">
-        <div class="metric-label">THIS WEEK</div>
-        <div class="metric-value"><span class="ani-num">${curKm.toFixed(0)}</span><span style="font-size:18px;color:var(--text-2);font-weight:500"> / ${curTarget}</span></div>
-        <div class="metric-sub">km logged · ${curTarget?Math.round(curKm/curTarget*100):0}%</div>
-        <div class="spark-row">${sparkline(sparkDailyKm,{color:"#60A5FA",fill:true})}</div>
-      </div>
-      <div class="metric card card-elev" style="border-color:${acwr.color==='var(--green)'?'rgba(52,211,153,0.3)':acwr.color==='var(--red)'?'rgba(244,63,94,0.3)':acwr.color==='var(--orange)'?'rgba(255,107,0,0.3)':'var(--hairline-soft)'}">
-        <div class="metric-label">LOAD · ACWR</div>
-        <div class="metric-value" style="color:${acwr.color}">${acwr.ratio}</div>
-        <div class="metric-sub" style="color:${acwr.color}">${acwr.zone}</div>
-        <div style="font-size:10px;color:var(--text-3);margin-top:8px;font-variant-numeric:tabular-nums">Acute 7d ${acwr.acute}min · Chronic 28d ${acwr.chronic}min</div>
-        <div style="font-size:9.5px;color:var(--text-3);margin-top:4px;font-style:italic">Gabbett 2016 · sweet spot 0.8–1.3</div>
-      </div>
-    </div>
-
-    <!-- ===== VOLUME CHART (full width) ===== -->
-    <div class="card mb-16">
-      <div class="card-h">12-WEEK VOLUME · LAST 8 + NEXT 4</div>
-      <div style="height:240px"><canvas id="ch-volume"></canvas></div>
-    </div>
-
-    <!-- ===== THREE PANEL ROW ===== -->
-    <div class="grid grid-3 mb-16">
-      <div class="card">
-        <div class="card-h">THIS WEEK · W${wIdx}</div>
-        ${sessionList}
-        <div class="mt-12"><button class="btn btn-ghost" style="width:100%" data-go="weekly">Open weekly plan →</button></div>
-      </div>
-      <div class="card" style="border:1px solid rgba(255,107,0,0.18)">
-        <div class="card-h" style="color:var(--orange)">⚡ NEXT KEY SESSION</div>
-        ${nextKey?`
-          <div style="font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:-0.02em;line-height:1.2">${nextKey.session.title}</div>
-          <div style="font-size:11.5px;color:var(--orange);margin-top:6px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase">${fmtShort(parseISO(nextKey.date))} · ${DAY_NAMES_FULL[(parseISO(nextKey.date).getUTCDay()+6)%7]}</div>
-          <div class="small mt-12" style="color:var(--text-2);line-height:1.5">${nextKey.session.detail}</div>
-          <div class="row mt-12">
-            <span class="chip">⏱ ${nextKey.session.duration} MIN</span>
-            <span class="chip">♥ ${nextKey.session.hrTarget}</span>
+          <div class="poster-race-strip">
+            ${raceCards.map(r=>`
+              <article class="poster-race-card" data-go="${r.go}" role="button" tabindex="0" style="--race-color:${r.color}">
+                <div>
+                  <div class="poster-race-top">
+                    <div style="display:flex;align-items:flex-start;gap:8px;min-width:0">
+                      <span class="poster-race-dot"></span>
+                      <span class="poster-race-status">${r.status}</span>
+                    </div>
+                    <span class="poster-race-date">${r.date}</span>
+                  </div>
+                  <div class="poster-race-name">${r.name}</div>
+                  <div class="poster-race-detail">${r.detail}</div>
+                </div>
+                <div>
+                  <div class="poster-race-value">${r.value}</div>
+                  <div class="poster-race-unit">${r.unit}</div>
+                </div>
+              </article>
+            `).join("")}
           </div>
-          ${nextKey.session.evidence?`<div class="day-evidence mt-12">📚 ${nextKey.session.evidence}</div>`:""}
-        `:`<div class="muted">No upcoming key session.</div>`}
-      </div>
-      <div class="card">
-        <div class="card-h">PHASE PROGRESS · ${phaseForWeek(wIdx).name}</div>
-        ${PHASES.map(p=>{
-          const isCur=phaseForWeek(wIdx)===p;
-          const pct=Math.max(0,Math.min(100,(wIdx-p.weeks[0]+1)/(p.weeks[1]-p.weeks[0]+1)*100));
-          return `<div class="mt-12">
-            <div style="display:flex;justify-content:space-between;font-size:11.5px;align-items:baseline">
-              <span style="color:${isCur?p.color:"var(--text-2)"};font-weight:${isCur?"700":"500"};letter-spacing:-0.005em">${isCur?"▸ ":""}${p.name}</span>
-              <span style="color:var(--text-3);font-variant-numeric:tabular-nums;font-weight:600;font-size:10.5px">W${p.weeks[0]}–${p.weeks[1]}</span>
-            </div>
-            <div class="progress mt-8" style="height:4px"><div class="progress-fill" style="width:${wIdx<p.weeks[0]?0:wIdx>p.weeks[1]?100:pct}%;background:${p.color};box-shadow:0 0 8px ${p.color}66"></div></div>
-          </div>`;
-        }).join("")}
-      </div>
-    </div>
-
-    <div class="card mt-16" data-go="biometrics" role="button" tabindex="0" style="cursor:pointer">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <div class="card-h" style="margin:0">Daily Readiness · Biometrics</div>
-          <div class="small muted mt-8">${(()=>{const t=todayISO();const r=Store.get(STORAGE.readiness,{})[t];if(!r)return "No entry yet today — tap to log weight, RHR, HRV, sleep, soreness";const parts=[];if(r.weight)parts.push(r.weight+" kg");if(r.rhr)parts.push("RHR "+r.rhr);if(r.hrv)parts.push("HRV "+r.hrv);if(r.sleep)parts.push(r.sleep+"h sleep");if(r.soreness)parts.push("sore "+r.soreness+"/5");return "Today: "+(parts.join(" · ")||"saved");})()}</div>
         </div>
-        <div style="color:var(--orange);font-size:14px;font-weight:600">Open →</div>
+      </section>
+
+      <div class="after-poster dashboard-detail">
+        <div class="detail-head">
+          <div>
+            <div class="detail-title">Training detail</div>
+            <div class="detail-sub">${currentPhase.focus}</div>
+          </div>
+          <div class="row">
+            <span class="chip chip-blue">Half sub 2:30</span>
+            <span class="chip chip-orange">Full sub 5:00 · 7:06/km</span>
+          </div>
+        </div>
+
+        <!-- ===== KEY METRICS ===== -->
+        <div class="grid grid-4 mb-16">
+          <div class="metric card card-elev">
+            <div class="metric-label">TOTAL VOLUME</div>
+            <div class="metric-value"><span class="ani-num">${totalKm.toFixed(0)}</span><span style="font-size:14px;color:var(--text-2);font-weight:500"> km</span></div>
+            <div class="metric-sub">${totalPlanned?Math.round(totalKm/totalPlanned*100):0}% of ${totalPlanned} planned</div>
+            <div class="spark-row">${sparkline(sparkVol,{color:"#FF6B00",fill:true})}</div>
+          </div>
+          <div class="metric card card-elev">
+            <div class="metric-label">Z1 INTENSITY · 4WK</div>
+            <div class="metric-value" style="color:${z1Pct>=78?"var(--green)":"var(--orange)"}"><span class="ani-num">${z1Pct}</span><span style="font-size:18px">%</span></div>
+            <div class="metric-sub ${z1Pct>=78?"up":"down"}">${z1Pct>=78?"✓ Target ≥78%":"⚠ Below 78% target"}</div>
+            <div class="spark-row">${sparkline(sparkZ1,{color:z1Pct>=78?"#34D399":"#FF6B00",fill:true})}</div>
+          </div>
+          <div class="metric card card-elev">
+            <div class="metric-label">THIS WEEK</div>
+            <div class="metric-value"><span class="ani-num">${curKm.toFixed(0)}</span><span style="font-size:18px;color:var(--text-2);font-weight:500"> / ${curTarget}</span></div>
+            <div class="metric-sub">km logged · ${curTarget?Math.round(curKm/curTarget*100):0}%</div>
+            <div class="spark-row">${sparkline(sparkDailyKm,{color:"#60A5FA",fill:true})}</div>
+          </div>
+          <div class="metric card card-elev" style="border-color:${acwr.color==='var(--green)'?'rgba(52,211,153,0.3)':acwr.color==='var(--red)'?'rgba(244,63,94,0.3)':acwr.color==='var(--orange)'?'rgba(255,107,0,0.3)':'var(--hairline-soft)'}">
+            <div class="metric-label">LOAD · ACWR</div>
+            <div class="metric-value" style="color:${acwr.color}">${acwr.ratio}</div>
+            <div class="metric-sub" style="color:${acwr.color}">${acwr.zone}</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:8px;font-variant-numeric:tabular-nums">Acute 7d ${acwr.acute}min · Chronic 28d ${acwr.chronic}min</div>
+            <div style="font-size:9.5px;color:var(--text-3);margin-top:4px;font-style:italic">Gabbett 2016 · sweet spot 0.8–1.3</div>
+          </div>
+        </div>
+
+        <!-- ===== VOLUME CHART ===== -->
+        <div class="card mb-16">
+          <div class="card-h">12-WEEK VOLUME · LAST 8 + NEXT 4</div>
+          <div style="height:240px"><canvas id="ch-volume"></canvas></div>
+        </div>
+
+        <!-- ===== THREE PANEL ROW ===== -->
+        <div class="grid grid-3 mb-16">
+          <div class="card">
+            <div class="card-h">THIS WEEK · W${wIdx}</div>
+            ${sessionList}
+            <div class="mt-12"><button class="btn btn-ghost" style="width:100%" data-go="weekly">Open weekly plan →</button></div>
+          </div>
+          <div class="card" style="border:1px solid rgba(255,107,0,0.18)">
+            <div class="card-h" style="color:var(--orange)">NEXT KEY SESSION</div>
+            ${nextKey?`
+              <div style="font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:-0.02em;line-height:1.2">${nextKey.session.title}</div>
+              <div style="font-size:11.5px;color:var(--orange);margin-top:6px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase">${fmtShort(parseISO(nextKey.date))} · ${DAY_NAMES_FULL[(parseISO(nextKey.date).getUTCDay()+6)%7]}</div>
+              <div class="small mt-12" style="color:var(--text-2);line-height:1.5">${nextKey.session.detail}</div>
+              <div class="row mt-12">
+                <span class="chip">${nextKey.session.duration} min</span>
+                <span class="chip">${nextKey.session.hrTarget}</span>
+              </div>
+              ${nextKey.session.evidence?`<div class="day-evidence mt-12">${nextKey.session.evidence}</div>`:""}
+            `:`<div class="muted">No upcoming key session.</div>`}
+          </div>
+          <div class="card">
+            <div class="card-h">PHASE PROGRESS · ${currentPhase.name}</div>
+            ${PHASES.map(p=>{
+              const isCur=currentPhase===p;
+              const pct=Math.max(0,Math.min(100,(wIdx-p.weeks[0]+1)/(p.weeks[1]-p.weeks[0]+1)*100));
+              return `<div class="mt-12">
+                <div style="display:flex;justify-content:space-between;font-size:11.5px;align-items:baseline">
+                  <span style="color:${isCur?p.color:"var(--text-2)"};font-weight:${isCur?"700":"500"};letter-spacing:-0.005em">${isCur?"▸ ":""}${p.name}</span>
+                  <span style="color:var(--text-3);font-variant-numeric:tabular-nums;font-weight:600;font-size:10.5px">W${p.weeks[0]}–${p.weeks[1]}</span>
+                </div>
+                <div class="progress mt-8" style="height:4px"><div class="progress-fill" style="width:${wIdx<p.weeks[0]?0:wIdx>p.weeks[1]?100:pct}%;background:${p.color};box-shadow:0 0 8px ${p.color}66"></div></div>
+              </div>`;
+            }).join("")}
+          </div>
+        </div>
+
+        <div class="card mt-16" data-go="biometrics" role="button" tabindex="0" style="cursor:pointer">
+          <div class="row" style="justify-content:space-between">
+            <div>
+              <div class="card-h" style="margin:0">Daily Readiness · Biometrics</div>
+              <div class="small muted mt-8">${(()=>{const t=todayISO();const r=Store.get(STORAGE.readiness,{})[t];if(!r)return "No entry yet today — tap to log weight, RHR, HRV, sleep, soreness";const parts=[];if(r.weight)parts.push(r.weight+" kg");if(r.rhr)parts.push("RHR "+r.rhr);if(r.hrv)parts.push("HRV "+r.hrv);if(r.sleep)parts.push(r.sleep+"h sleep");if(r.soreness)parts.push("sore "+r.soreness+"/5");return "Today: "+(parts.join(" · ")||"saved");})()}</div>
+            </div>
+            <div style="color:var(--orange);font-size:14px;font-weight:600">Open →</div>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -2539,6 +2928,12 @@ function renderDashboard(){
     el.addEventListener("keydown",e=>{
       if(e.key==="Enter"||e.key===" "){e.preventDefault();switchView(target);}
     });
+  });
+  document.querySelectorAll("#view-dashboard [data-capture]").forEach(btn=>{
+    btn.addEventListener("click",()=>setDashboardCaptureMode(!document.body.classList.contains("social-capture")));
+  });
+  document.querySelectorAll("#view-dashboard [data-capture-exit]").forEach(btn=>{
+    btn.addEventListener("click",()=>setDashboardCaptureMode(false));
   });
 
   drawVolumeChart(wIdx,log);

@@ -25,3 +25,7 @@ Half and Full goals are the exact same pace (7:06/km) — the Bangkok Half doubl
 ## App
 
 Vanilla HTML/CSS/JS + Chart.js (CDN). Data lives in `localStorage` (JSON export/import in Settings). Service worker (`sw.js`) gives offline support — bump `CACHE` when shipping a new `index.html`.
+
+## Visual Asset
+
+Dashboard hero photo: Mount Fuji above Lake Kawaguchi, Japan, by Marion & Christoph Aistleitner (`Fuji_Kawaguchi_357.JPG`) via Wikimedia Commons. The image is released under CC0 1.0 Public Domain Dedication.
