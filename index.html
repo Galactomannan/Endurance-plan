@@ -519,19 +519,22 @@ body{
   font-weight:650;
   letter-spacing:0.04em;
 }
-.poster-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.poster-tool{
-  min-height:38px;
-  padding:10px 14px;
+.poster-season{
+  align-self:flex-start;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:34px;
+  padding:8px 12px;
   border-radius:999px;
-  background:rgba(255,255,255,0.1);
-  border:1px solid rgba(255,255,255,0.18);
-  color:#fff;
-  font-size:12px;
-  font-weight:750;
-  transition:background 0.16s var(--ease),transform 0.16s var(--ease),border-color 0.16s var(--ease);
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.14);
+  color:rgba(255,255,255,0.74);
+  font-size:11px;
+  font-weight:780;
+  letter-spacing:0.03em;
+  font-variant-numeric:tabular-nums;
 }
-.poster-tool:hover{background:rgba(255,255,255,0.16);border-color:rgba(255,255,255,0.3);transform:translateY(-1px)}
 .poster-main{
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(240px,330px);
@@ -634,11 +637,12 @@ body{
   gap:10px;
 }
 .poster-race-card{
-  min-height:138px;
+  position:relative;
+  min-height:156px;
   padding:16px;
   border-radius:15px;
   background:rgba(3,7,13,0.84);
-  border:1px solid rgba(255,255,255,0.13);
+  border:1px solid color-mix(in srgb,var(--race-color,#fff) 22%,rgba(255,255,255,0.1));
   cursor:pointer;
   display:flex;
   flex-direction:column;
@@ -646,7 +650,23 @@ body{
   gap:16px;
   transition:transform 0.16s var(--ease),border-color 0.16s var(--ease),background 0.16s var(--ease);
 }
-.poster-race-card:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--race-color,#fff) 55%,rgba(255,255,255,0.18));background:rgba(5,12,20,0.9)}
+.poster-race-card>div{position:relative;z-index:1}
+.poster-race-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 0%,color-mix(in srgb,var(--race-color,#fff) 18%,transparent),transparent 46%),
+    linear-gradient(180deg,color-mix(in srgb,var(--race-color,#fff) 8%,transparent),transparent 42%);
+  opacity:0.72;
+}
+.poster-race-card:hover{
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--race-color,#fff) 58%,rgba(255,255,255,0.18));
+  background:rgba(5,12,20,0.9);
+}
 .poster-race-top{
   display:flex;
   justify-content:space-between;
@@ -689,14 +709,47 @@ body{
   font-size:11.5px;
   line-height:1.35;
 }
+.poster-race-bottom{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:end;
+  position:relative;
+  z-index:1;
+}
+.poster-race-count{
+  color:#fff;
+  font-family:var(--font-display);
+  font-size:32px;
+  font-weight:900;
+  line-height:0.96;
+  letter-spacing:-0.045em;
+  font-variant-numeric:tabular-nums;
+}
+.poster-race-count span{
+  color:var(--race-color,#fff);
+}
+.poster-race-count-label{
+  margin-top:4px;
+  color:rgba(255,255,255,0.58);
+  font-size:10.5px;
+  font-weight:760;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+}
+.poster-race-goal{
+  text-align:right;
+  min-width:0;
+}
 .poster-race-value{
   color:#fff;
   font-family:var(--font-display);
-  font-size:24px;
+  font-size:20px;
   font-weight:900;
   line-height:1;
   letter-spacing:-0.038em;
   font-variant-numeric:tabular-nums;
+  white-space:nowrap;
 }
 .poster-race-unit{
   margin-top:4px;
@@ -725,47 +778,6 @@ body{
   letter-spacing:-0.03em;
 }
 .detail-sub{color:var(--text-2);font-size:13px;margin-top:4px}
-.capture-exit{
-  display:none;
-  position:fixed;
-  top:16px;right:16px;
-  z-index:120;
-  min-height:36px;
-  padding:9px 12px;
-  border-radius:999px;
-  background:rgba(0,0,0,0.42);
-  border:1px solid rgba(255,255,255,0.18);
-  color:#fff;
-  font-size:12px;
-  font-weight:750;
-  opacity:0;
-  transition:opacity 0.16s var(--ease),background 0.16s var(--ease);
-}
-.capture-exit:hover,.capture-exit:focus-visible{opacity:1;background:rgba(0,0,0,0.7)}
-body.social-capture{background:#02050A}
-.social-capture #sidebar,
-.social-capture .mobile-topbar,
-.social-capture .mobile-tabs,
-.social-capture .drawer-backdrop{display:none!important}
-.social-capture #app{display:block;min-height:100vh;min-height:100svh}
-.social-capture #main{max-width:none;padding:0;margin:0}
-.social-capture .dashboard-showcase{min-height:100vh;min-height:100svh}
-.social-capture .poster-hero{
-  min-height:100vh;
-  min-height:100svh;
-  border-radius:0;
-  border:none;
-  box-shadow:none;
-}
-.social-capture .poster-content{
-  min-height:100vh;
-  min-height:100svh;
-  padding:clamp(28px,4vw,58px);
-}
-.social-capture .poster-tools,
-.social-capture .after-poster{display:none!important}
-.social-capture .capture-exit{display:flex}
-
 @media(max-width:1100px){
   .poster-hero,.poster-content{min-height:760px}
   .poster-main{grid-template-columns:1fr;align-items:start}
@@ -781,14 +793,14 @@ body.social-capture{background:#02050A}
   }
   .poster-content{min-height:auto;padding:22px;gap:24px}
   .poster-top{flex-direction:column;align-items:stretch}
-  .poster-tools{justify-content:flex-start}
+  .poster-season{align-self:flex-start}
   .poster-title{font-size:clamp(44px,15vw,62px);letter-spacing:-0.034em}
   .poster-copy{font-size:14px;line-height:1.55}
   .poster-countdown{max-width:none}
   .poster-race-strip{grid-template-columns:1fr}
-  .poster-race-card{min-height:124px}
-  .poster-race-value{font-size:22px}
-  .social-capture .poster-hero{border-radius:0}
+  .poster-race-card{min-height:142px}
+  .poster-race-count{font-size:30px}
+  .poster-race-value{font-size:18px}
 }
 
 /* === WEEKLY VIEW === */
@@ -2207,7 +2219,6 @@ function fmtPaceFromSec(sec){
 
 let __viewAniTimer=null;
 function switchView(id){
-  if(id!=="dashboard")setDashboardCaptureMode(false);
   State.view=id;
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.dataset.view===id));
   renderNav();
@@ -2219,17 +2230,6 @@ function switchView(id){
   if(isMobileLayout())toggleDrawer(false);
   window.scrollTo({top:0,behavior:"instant"});
 }
-
-function setDashboardCaptureMode(on){
-  const active=!!on;
-  document.body.classList.toggle("social-capture",active);
-  document.querySelectorAll("[data-capture]").forEach(btn=>{
-    btn.setAttribute("aria-pressed",active?"true":"false");
-  });
-}
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape"&&document.body.classList.contains("social-capture"))setDashboardCaptureMode(false);
-});
 
 /* =========================================================================
    9. SESSIONS LOG ACCESS
@@ -2736,33 +2736,38 @@ function renderDashboard(){
   const firstCompleted=COMPLETED_RACES[0];
   const hyrox=SECONDARY_RACES.find(r=>r.id==="hyrox");
   const half=SECONDARY_RACES.find(r=>r.id==="atmbkk");
+  const countdownForRace=iso=>{
+    const d=daysUntil(iso);
+    if(d>0)return {count:`D-${d}`,label:"days to race"};
+    if(d===0)return {count:"Today",label:"race day"};
+    return {count:`D+${Math.abs(d)}`,label:"days since race"};
+  };
   const raceCards=[
     {
-      color:firstCompleted.color,status:"Finished",name:firstCompleted.name,date:fmtShort(parseISO(firstCompleted.date)),
+      color:"var(--green)",status:"Finished",name:firstCompleted.name,date:fmtShort(parseISO(firstCompleted.date)),
       detail:`${firstCompleted.specs.distance} trail · ${firstCompleted.specs.gain}`,
-      value:firstCompleted.result,unit:"official time",go:"sideraces"
+      value:firstCompleted.result,unit:"official time",go:"sideraces",...countdownForRace(firstCompleted.date)
     },
     {
-      color:hyrox.color,status:"W6 Sunday",name:hyrox.name,date:fmtShort(parseISO(hyrox.date)),
+      color:"var(--purple)",status:"Hyrox · W6",name:hyrox.name,date:fmtShort(parseISO(hyrox.date)),
       detail:"Doubles Men · 8 x 1 km + stations",
-      value:hyrox.estimate.replace(/\s+/g," "),unit:"estimate",go:"sideraces"
+      value:hyrox.estimate.replace(/\s+/g," "),unit:"estimate",go:"sideraces",...countdownForRace(hyrox.date)
     },
     {
-      color:half.color,status:"W21 Saturday",name:"Bangkok Half",date:fmtShort(parseISO(half.date)),
+      color:"var(--blue)",status:"Bangkok · W21",name:"Bangkok Half",date:fmtShort(parseISO(half.date)),
       detail:"Fuji pace rehearsal · 21.1 km",
-      value:"Sub 2:30",unit:ATHLETE.halfRace.goalPace,go:"sideraces"
+      value:"Sub 2:30",unit:ATHLETE.halfRace.goalPace,go:"sideraces",...countdownForRace(half.date)
     },
     {
-      color:"#FF6B00",status:"A-race",name:ATHLETE.race.name,date:fmtShort(parseISO(ATHLETE.race.date)),
+      color:"var(--orange)",status:"A-race · W23",name:ATHLETE.race.name,date:fmtShort(parseISO(ATHLETE.race.date)),
       detail:`${ATHLETE.race.elevation} · HR ${ATHLETE.race.targetHR}`,
-      value:"Sub 5:00",unit:ATHLETE.race.goalPace,go:"raceweek"
+      value:"Sub 5:00",unit:ATHLETE.race.goalPace,go:"raceweek",...countdownForRace(ATHLETE.race.date)
     }
   ];
 
   document.getElementById("view-dashboard").innerHTML=`
     <div class="dashboard-showcase">
       <section class="poster-hero" aria-label="Road to Fuji dashboard poster">
-        <button type="button" class="capture-exit" data-capture-exit aria-label="Exit capture mode">Exit</button>
         <div class="poster-content">
           <div class="poster-top">
             <div class="poster-brand">
@@ -2772,10 +2777,7 @@ function renderDashboard(){
                 <div class="poster-brand-meta">${fmtLong(todayUTC())} · Week ${wIdx} / ${ATHLETE.totalWeeks}</div>
               </div>
             </div>
-            <div class="poster-tools">
-              <button type="button" class="poster-tool" data-capture aria-pressed="false">Capture mode</button>
-              <button type="button" class="poster-tool" data-go="raceweek">Fuji race week</button>
-            </div>
+            <div class="poster-season">Trail → Hyrox → Half → Fuji</div>
           </div>
 
           <div class="poster-main">
@@ -2816,8 +2818,16 @@ function renderDashboard(){
                   <div class="poster-race-detail">${r.detail}</div>
                 </div>
                 <div>
-                  <div class="poster-race-value">${r.value}</div>
-                  <div class="poster-race-unit">${r.unit}</div>
+                  <div class="poster-race-bottom">
+                    <div>
+                      <div class="poster-race-count"><span>${r.count}</span></div>
+                      <div class="poster-race-count-label">${r.label}</div>
+                    </div>
+                    <div class="poster-race-goal">
+                      <div class="poster-race-value">${r.value}</div>
+                      <div class="poster-race-unit">${r.unit}</div>
+                    </div>
+                  </div>
                 </div>
               </article>
             `).join("")}
@@ -2928,12 +2938,6 @@ function renderDashboard(){
     el.addEventListener("keydown",e=>{
       if(e.key==="Enter"||e.key===" "){e.preventDefault();switchView(target);}
     });
-  });
-  document.querySelectorAll("#view-dashboard [data-capture]").forEach(btn=>{
-    btn.addEventListener("click",()=>setDashboardCaptureMode(!document.body.classList.contains("social-capture")));
-  });
-  document.querySelectorAll("#view-dashboard [data-capture-exit]").forEach(btn=>{
-    btn.addEventListener("click",()=>setDashboardCaptureMode(false));
   });
 
   drawVolumeChart(wIdx,log);
