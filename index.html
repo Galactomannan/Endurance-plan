@@ -12,6 +12,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23FF6B00' rx='22'/%3E%3Ctext x='50' y='68' font-family='-apple-system' font-size='56' font-weight='800' text-anchor='middle' fill='%230A0A0B'%3EJ%3C/text%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23FF6B00' rx='40'/%3E%3Ctext x='90' y='124' font-family='-apple-system' font-size='102' font-weight='800' text-anchor='middle' fill='%230A0A0B'%3EJ%3C/text%3E%3C/svg%3E">
 <link rel="manifest" href="manifest.json">
+<link rel="preload" as="image" href="assets/fuji-kawaguchi.jpg" media="(min-width:821px)">
+<link rel="preload" as="image" href="assets/fuji-kawaguchi-960.jpg" media="(max-width:820px)">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 /* ============================================================
@@ -157,11 +159,12 @@ body{
   letter-spacing:-0.025em;
 }
 .brand-sub{
-  font-size:9.5px;
+  font-family:var(--font-mono);
+  font-size:8.5px;
   color:var(--orange);
   margin-top:4px;
-  font-weight:800;
-  letter-spacing:0.16em;
+  font-weight:600;
+  letter-spacing:0.2em;
   text-transform:uppercase;
 }
 
@@ -222,12 +225,13 @@ body{
   text-shadow:0 0 28px rgba(255,107,0,0.5);
 }
 .countdown-label{
-  font-size:9.5px;
+  font-family:var(--font-mono);
+  font-size:8.5px;
   color:var(--text-2);
   margin-top:7px;
   text-transform:uppercase;
-  letter-spacing:0.18em;
-  font-weight:700;
+  letter-spacing:0.2em;
+  font-weight:600;
 }
 .progress{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:14px;overflow:hidden}
 .progress-fill{
@@ -237,7 +241,7 @@ body{
   box-shadow:0 0 10px var(--orange-glow);
   transition:width 0.6s var(--ease);
 }
-.countdown-meta{font-size:10px;color:var(--text-3);margin-top:9px;letter-spacing:0.04em;font-weight:600}
+.countdown-meta{font-family:var(--font-mono);font-size:9px;color:var(--text-3);margin-top:9px;letter-spacing:0.08em;font-weight:500}
 
 /* === VIEWS === */
 .view{display:none;animation:fadeup 0.32s var(--ease)}
@@ -275,11 +279,12 @@ body{
     0 8px 28px rgba(0,0,0,0.35);
 }
 .card-h{
-  font-size:10.5px;
-  font-weight:800;
+  font-family:var(--font-mono);
+  font-size:9.5px;
+  font-weight:600;
   color:var(--text-2);
   text-transform:uppercase;
-  letter-spacing:0.16em;
+  letter-spacing:0.2em;
   margin-bottom:16px;
   display:flex;
   align-items:center;
@@ -350,11 +355,12 @@ body{
 /* === METRIC === */
 .metric{padding:18px 20px}
 .metric-label{
-  font-size:10px;
+  font-family:var(--font-mono);
+  font-size:9px;
   color:var(--text-2);
   text-transform:uppercase;
-  letter-spacing:0.16em;
-  font-weight:800;
+  letter-spacing:0.18em;
+  font-weight:600;
 }
 .metric-value{
   font-family:var(--font-display);
@@ -463,6 +469,9 @@ body{
   background:url("assets/fuji-kawaguchi.jpg") center 44% / cover no-repeat;
   transform:scale(1.01);
   z-index:-2;
+}
+@media(max-width:820px){
+  .poster-hero::before{background-image:url("assets/fuji-kawaguchi-960.jpg")}
 }
 .poster-hero::after{
   content:"";
@@ -897,7 +906,7 @@ body{
 }
 .wk-arrow:hover{background:var(--card-hover);color:var(--text);transform:scale(1.05)}
 .wk-label{padding:0 14px;font-weight:700;font-size:15px;min-width:240px;text-align:center;font-family:var(--font-display);letter-spacing:-0.015em}
-.wk-range{font-size:11px;color:var(--text-2);font-weight:500;margin-top:3px;letter-spacing:0.03em;text-transform:uppercase}
+.wk-range{font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);font-weight:500;margin-top:4px;letter-spacing:0.1em;text-transform:uppercase}
 
 .week-layout{display:grid;grid-template-columns:1fr 264px;gap:20px}
 @media(max-width:1100px){.week-layout{grid-template-columns:1fr}}
@@ -921,7 +930,7 @@ body{
 .day-row.modified{border-style:dashed;border-color:var(--orange)}
 .day-stripe{width:4px;flex-shrink:0;background:var(--gray)}
 .day-label{padding:18px 0 18px 16px;width:74px;flex-shrink:0}
-.day-name{font-size:9.5px;color:var(--text-2);font-weight:800;text-transform:uppercase;letter-spacing:0.16em}
+.day-name{font-family:var(--font-mono);font-size:8.5px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:0.18em}
 .day-date{font-family:var(--font-display);font-size:24px;font-weight:800;margin-top:5px;font-variant-numeric:tabular-nums;letter-spacing:-0.04em;line-height:1}
 .day-body{flex:1;padding:16px 18px;min-width:0}
 .day-type-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap}
@@ -971,7 +980,7 @@ body{
 /* TID bars */
 .tid-row{margin-bottom:14px}
 .tid-head{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;margin-bottom:6px}
-.tid-head .label{font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:0.14em}
+.tid-head .label{font-family:var(--font-mono);font-weight:600;font-size:9px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.16em}
 .tid-head .pct{color:var(--text);font-variant-numeric:tabular-nums;font-weight:700;font-family:var(--font-display)}
 .tid-track{height:8px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden;position:relative}
 .tid-fill{height:100%;border-radius:4px;transition:width 0.6s var(--ease);box-shadow:0 0 10px currentColor}
@@ -1007,7 +1016,7 @@ body{
 .modal-foot{padding:18px 24px;border-top:1px solid var(--hairline);display:flex;justify-content:flex-end;gap:8px}
 
 .field{margin-bottom:16px}
-.field label{display:block;font-size:10px;color:var(--text-2);font-weight:800;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.14em}
+.field label{display:block;font-family:var(--font-mono);font-size:9px;color:var(--text-2);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.16em}
 .field input,.field select,.field textarea{
   width:100%;padding:12px 14px;
   background:var(--bg);
@@ -1092,7 +1101,7 @@ body{
 .ex-card:hover{border-color:var(--hairline)}
 .ex-name{font-family:var(--font-display);font-size:14.5px;font-weight:700;letter-spacing:-0.015em}
 .ex-prescription{font-size:13px;color:var(--text-2);margin-top:7px;font-variant-numeric:tabular-nums;letter-spacing:-0.005em}
-.ex-tag{display:inline-block;font-size:9.5px;color:var(--text-3);margin-top:11px;padding:4px 10px;border-radius:6px;background:var(--bg);font-weight:700;letter-spacing:0.06em;text-transform:uppercase}
+.ex-tag{display:inline-block;font-family:var(--font-mono);font-size:8.5px;color:var(--text-3);margin-top:11px;padding:4px 9px;border-radius:6px;background:var(--bg);font-weight:600;letter-spacing:0.12em;text-transform:uppercase}
 .ex-card.plyo{
   border:1px solid rgba(192,132,252,0.4);
   background:linear-gradient(135deg,rgba(192,132,252,0.05),var(--card-elev));
@@ -1127,7 +1136,7 @@ body{
 
 .ev-table{width:100%;border-collapse:collapse;font-size:12.5px}
 .ev-table th,.ev-table td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--hairline)}
-.ev-table th{font-size:10px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.14em;font-weight:800}
+.ev-table th{font-family:var(--font-mono);font-size:9px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.16em;font-weight:600}
 .ev-table td{color:var(--text-2)}
 .ev-table td:first-child{color:var(--text);font-weight:600}
 
@@ -1158,11 +1167,13 @@ body{
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
 .tbl th,.tbl td{padding:13px 12px;text-align:left;border-bottom:1px solid var(--hairline-soft)}
 .tbl th{
-  font-size:10px;color:var(--text-2);font-weight:800;
-  text-transform:uppercase;letter-spacing:0.14em;
+  font-family:var(--font-mono);
+  font-size:9px;color:var(--text-2);font-weight:600;
+  text-transform:uppercase;letter-spacing:0.16em;
   background:var(--bg-elev);
   position:sticky;top:0;
 }
+.tbl td{font-variant-numeric:tabular-nums}
 .tbl tr:hover td{background:rgba(255,255,255,0.025)}
 .tbl-wrap{overflow-x:auto;border-radius:14px;background:var(--card);border:1px solid var(--hairline-soft)}
 .status-done{color:var(--green);font-weight:700}
@@ -1298,10 +1309,10 @@ details:not([open])>summary::after{content:" ▸"}
   background:var(--orange);
 }
 .tl-time{
-  font-family:var(--font-display);
-  font-size:13px;font-weight:800;
+  font-family:var(--font-mono);
+  font-size:12px;font-weight:700;
   color:var(--orange);
-  letter-spacing:0.06em;
+  letter-spacing:0.1em;
   font-variant-numeric:tabular-nums;
 }
 .tl-action{font-size:13.5px;font-weight:600;color:var(--text);margin-top:3px;letter-spacing:-0.005em}
@@ -1329,7 +1340,7 @@ details:not([open])>summary::after{content:" ▸"}
   text-transform:uppercase;
   margin-top:10px;
 }
-.tagline::before{content:"⚡";font-size:13px}
+.tagline::before{content:"";display:none}
 
 /* Macro nutrition table */
 .macro-card{padding:14px 16px;background:var(--card-elev);border-radius:11px;border:1px solid var(--hairline-soft)}
@@ -1651,6 +1662,201 @@ input,textarea,select{-webkit-appearance:none;appearance:none;border-radius:11px
   content:"";width:6px;height:6px;border-radius:50%;background:#000;
   animation:pulse 2s infinite;
 }
+
+/* ============================================================
+   SEASON PROGRAM — editorial design system
+   Chapter mastheads · mono microtype · grouped nav · tickets
+   ============================================================ */
+
+::selection{background:rgba(255,107,0,0.32);color:#fff}
+
+/* --- Masthead: every view opens like a chapter --- */
+.masthead{margin-bottom:30px}
+.mh-eyebrow{
+  display:flex;align-items:center;gap:12px;
+  font-family:var(--font-mono);
+  font-size:10px;font-weight:600;
+  letter-spacing:0.24em;text-transform:uppercase;
+  color:var(--text-3);
+}
+.mh-eyebrow b{color:var(--orange);font-weight:700;letter-spacing:0.14em}
+.mh-eyebrow::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--hairline),transparent)}
+.mh-row{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-top:16px}
+.mh-lead{min-width:0}
+.mh-title{
+  font-family:var(--font-display);
+  font-size:40px;font-weight:850;
+  letter-spacing:-0.042em;line-height:0.98;
+  text-wrap:balance;
+}
+.mh-dek{margin-top:10px;font-size:13.5px;color:var(--text-2);max-width:660px;line-height:1.55}
+.mh-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mh-stat{text-align:right;padding-left:18px;border-left:1px solid var(--hairline-soft)}
+.mh-stat .n{
+  font-family:var(--font-display);
+  font-size:32px;font-weight:850;letter-spacing:-0.045em;line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.mh-stat .l{
+  font-family:var(--font-mono);
+  font-size:9px;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--text-3);margin-top:6px;
+}
+@media(max-width:767px){
+  .mh-title{font-size:29px}
+  .mh-row{margin-top:12px}
+  .masthead{margin-bottom:22px}
+}
+
+/* --- Sidebar nav groups --- */
+.nav-group{display:flex;flex-direction:column;gap:1px}
+.nav-group + .nav-group{margin-top:16px}
+.nav-group-label{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--font-mono);
+  font-size:8.5px;font-weight:600;
+  letter-spacing:0.24em;text-transform:uppercase;
+  color:var(--text-3);
+  padding:0 14px;margin-bottom:7px;
+}
+.nav-group-label::after{content:"";flex:1;height:1px;background:var(--hairline-soft)}
+
+/* --- Race tickets (Side Races) --- */
+.ticket{
+  position:relative;
+  border-radius:20px;
+  background:var(--card);
+  border:1px solid color-mix(in srgb,var(--tc,#fff) 26%,var(--hairline-soft));
+  overflow:hidden;
+  margin-bottom:24px;
+}
+.ticket-head{
+  position:relative;
+  display:flex;justify-content:space-between;gap:18px;align-items:center;
+  padding:22px 24px;
+  flex-wrap:wrap;
+  background:
+    radial-gradient(circle at 0% 0%,color-mix(in srgb,var(--tc,#fff) 15%,transparent),transparent 52%),
+    linear-gradient(180deg,color-mix(in srgb,var(--tc,#fff) 6%,transparent),transparent);
+}
+.ticket-id{min-width:0;flex:1}
+.ticket-no{
+  font-family:var(--font-mono);
+  font-size:9.5px;letter-spacing:0.22em;text-transform:uppercase;
+  color:color-mix(in srgb,var(--tc,#fff) 78%,var(--text-2));
+  display:flex;align-items:center;gap:8px;
+}
+.ticket-no::before{
+  content:"";width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  background:var(--tc,#fff);
+  box-shadow:0 0 10px color-mix(in srgb,var(--tc,#fff) 65%,transparent);
+}
+.ticket-name{font-family:var(--font-display);font-size:23px;font-weight:820;letter-spacing:-0.028em;margin-top:9px;line-height:1.1}
+.ticket-sub{font-size:12.5px;color:var(--text-2);margin-top:6px}
+.ticket-side{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.ticket-date{
+  text-align:center;
+  padding:11px 15px;min-width:88px;
+  border:1px solid color-mix(in srgb,var(--tc,#fff) 34%,transparent);
+  border-radius:14px;
+  background:color-mix(in srgb,var(--tc,#fff) 8%,transparent);
+}
+.ticket-date .d{font-family:var(--font-display);font-size:31px;font-weight:850;line-height:1;letter-spacing:-0.03em;color:var(--tc,#fff)}
+.ticket-date .m{font-family:var(--font-mono);font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-2);margin-top:6px}
+.ticket-count{text-align:right}
+.ticket-count .n{font-family:var(--font-display);font-size:38px;font-weight:900;letter-spacing:-0.05em;line-height:0.95;color:var(--tc,#fff);font-variant-numeric:tabular-nums}
+.ticket-count .l{font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-3);margin-top:6px}
+.ticket-rip{position:relative;height:0;border-top:2px dashed var(--hairline);margin:0 14px}
+.ticket-rip::before,.ticket-rip::after{
+  content:"";position:absolute;top:-10px;width:20px;height:20px;border-radius:50%;
+  background:var(--bg);
+  border:1px solid var(--hairline-soft);
+}
+.ticket-rip::before{left:-25px}
+.ticket-rip::after{right:-25px}
+.ticket-body{padding:22px 24px}
+.ticket-code{
+  height:32px;width:86px;border-radius:2px;opacity:0.45;flex-shrink:0;
+  background:repeating-linear-gradient(90deg,currentColor 0 1.5px,transparent 1.5px 4px,currentColor 4px 6.5px,transparent 6.5px 8px,currentColor 8px 9px,transparent 9px 12px);
+  color:var(--text-2);
+}
+.stamp{
+  display:inline-block;
+  padding:7px 14px;
+  border:2px solid var(--green);border-radius:9px;
+  color:var(--green);
+  font-family:var(--font-mono);font-weight:700;font-size:11px;
+  letter-spacing:0.26em;text-transform:uppercase;
+  transform:rotate(-5deg);
+  background:rgba(48,209,88,0.06);
+}
+@media(max-width:700px){
+  .ticket-head{padding:18px}
+  .ticket-body{padding:18px}
+  .ticket-side{width:100%;justify-content:space-between}
+  .ticket-code{display:none}
+}
+
+/* --- Week rhythm strip (Weekly masthead) --- */
+.week-rhythm{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:18px}
+.wr-day{
+  position:relative;
+  padding:10px 6px 12px;
+  border-radius:12px;
+  background:var(--card);
+  border:1px solid var(--hairline-soft);
+  text-align:center;cursor:pointer;
+  transition:transform .14s var(--ease),border-color .14s var(--ease);
+}
+.wr-day:hover{border-color:var(--hairline);transform:translateY(-2px)}
+.wr-day:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.wr-day.today{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange),0 6px 18px rgba(255,107,0,0.15)}
+.wr-dow{font-family:var(--font-mono);font-size:8.5px;letter-spacing:0.16em;color:var(--text-3);text-transform:uppercase}
+.wr-num{font-family:var(--font-display);font-size:17px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+.wr-bar{height:3px;border-radius:2px;margin:9px auto 0;width:64%;background:var(--gray)}
+.wr-done{position:absolute;top:7px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(52,211,153,0.55)}
+@media(max-width:600px){.week-rhythm{gap:4px}.wr-num{font-size:14px}.wr-day{padding:8px 4px 10px}}
+
+/* --- Micro meta icons + evidence/notes labels --- */
+.day-meta svg{width:12px;height:12px;opacity:0.6;flex-shrink:0}
+.ev-note{display:flex;align-items:baseline;gap:8px;margin-top:9px;font-size:10.5px;color:var(--text-3);line-height:1.55}
+.ev-note .tag{
+  font-family:var(--font-mono);
+  font-size:8px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--text-3);
+  border:1px solid var(--hairline);border-radius:4px;
+  padding:2px 6px;flex-shrink:0;
+  transform:translateY(-1px);
+}
+.ev-note.note-user{color:var(--text-2)}
+.ev-note.note-user .tag{color:var(--orange);border-color:rgba(255,107,0,0.35)}
+
+/* --- Knowledge chapter cards --- */
+.k-head{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.k-index{
+  font-family:var(--font-display);
+  font-size:40px;font-weight:900;letter-spacing:-0.05em;line-height:0.9;
+  background:linear-gradient(180deg,#FFB340,#FF6B00);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  flex-shrink:0;min-width:74px;
+}
+.k-titles{min-width:0}
+.k-title{font-family:var(--font-display);font-size:17px;font-weight:780;letter-spacing:-0.018em}
+.k-meta{font-family:var(--font-mono);font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-3);margin-top:5px}
+.k-head::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--hairline),transparent);align-self:center}
+
+/* --- Staggered view reveal --- */
+.view.active>*{animation:fadeup 0.45s var(--ease) both}
+.view.active>*:nth-child(2){animation-delay:0.04s}
+.view.active>*:nth-child(3){animation-delay:0.08s}
+.view.active>*:nth-child(4){animation-delay:0.12s}
+.view.active>*:nth-child(5){animation-delay:0.16s}
+.view.active>*:nth-child(6){animation-delay:0.2s}
+.view.active>*:nth-child(n+7){animation-delay:0.24s}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}
+}
 </style>
 </head>
 <body>
@@ -1658,7 +1864,7 @@ input,textarea,select{-webkit-appearance:none;appearance:none;border-radius:11px
 <!-- ============ MOBILE TOPBAR (mobile + landscape iPhone only) ============ -->
 <header class="mobile-topbar" id="mobile-topbar">
   <button class="mt-hamburger" id="mt-hamburger" aria-label="Open navigation"></button>
-  <div class="mt-brand-mobile">James Endurance<span>2026 · Evidence-Based</span></div>
+  <div class="mt-brand-mobile">James Endurance<span>Season 2026 · Road to Fuji</span></div>
   <button class="mt-countdown-pill" id="mt-countdown-pill" aria-label="Days to Fuji">
     <strong id="mt-cd-num">—</strong><small>D · FUJI</small>
   </button>
@@ -1933,19 +2139,19 @@ const SESSION_STRAVA_FIELDS = [
 ];
 
 const NAV = [
-  {id:"dashboard",label:"Dashboard",icon:iconHome},
-  {id:"weekly",   label:"Weekly Plan",icon:iconCal},
-  {id:"longrun",  label:"Long Run Log",icon:iconChart},
-  {id:"archive",  label:"Plan Lab",icon:iconLayers},
-  {id:"strength", label:"Strength & Plyo",icon:iconDumb},
-  {id:"speed",    label:"Speed Sessions",icon:iconBolt},
-  {id:"sideraces",label:"Side Races",icon:iconMountain},
-  {id:"biometrics",label:"Biometrics",icon:iconHeart},
-  {id:"periodization",label:"Periodization",icon:iconLayers},
-  {id:"profile",  label:"Runner Profile",icon:iconPerson},
-  {id:"knowledge",label:"Knowledge",icon:iconBook},
-  {id:"raceweek", label:"Race Week",icon:iconFlag},
-  {id:"settings", label:"Settings",icon:iconGear}
+  {id:"dashboard",label:"Dashboard",icon:iconHome,group:"Overview"},
+  {id:"weekly",   label:"Weekly Plan",icon:iconCal,group:"Train"},
+  {id:"longrun",  label:"Long Run Log",icon:iconChart,group:"Train"},
+  {id:"strength", label:"Strength & Plyo",icon:iconDumb,group:"Train"},
+  {id:"speed",    label:"Speed Sessions",icon:iconBolt,group:"Train"},
+  {id:"sideraces",label:"Side Races",icon:iconMountain,group:"Race"},
+  {id:"raceweek", label:"Race Week",icon:iconFlag,group:"Race"},
+  {id:"biometrics",label:"Biometrics",icon:iconHeart,group:"Body"},
+  {id:"profile",  label:"Runner Profile",icon:iconPerson,group:"Body"},
+  {id:"periodization",label:"Periodization",icon:iconLayers,group:"System"},
+  {id:"archive",  label:"Plan Lab",icon:iconFlask,group:"System"},
+  {id:"knowledge",label:"Knowledge",icon:iconBook,group:"System"},
+  {id:"settings", label:"Settings",icon:iconGear,group:"System"}
 ];
 
 const MOBILE_NAV = ["dashboard","weekly","biometrics","sideraces","profile"];
@@ -2249,7 +2455,7 @@ function buildLongRun(w){
     return {type:"mp_long",title:`Long run ${min}min + 25min MP`,detail:`Z1 base + last 25min @ MP 7:06/km (HR 150–160) • Race fueling: 60g CHO/hr + 500ml fluid/hr`,duration:min,hrTarget:"<150 / 150–160",zone:"z2",evidence:ev2};
   }
   if(w===21){
-    return {type:"tune_race",title:`🏁 RACE — Bangkok Half Marathon`,detail:`Amazing Thailand Marathon Bangkok · Goal sub 2:30 (7:06/km) · HR 158–168. Full Fuji dress rehearsal: kit, fueling 45–60g CHO/hr, negative split.`,duration:min,hrTarget:"158–168 race effort",zone:"z2",evidence:'Race rehearsal • Tune-up race D-15 (Mujika 2010)'};
+    return {type:"tune_race",title:`RACE — Bangkok Half Marathon`,detail:`Amazing Thailand Marathon Bangkok · Goal sub 2:30 (7:06/km) · HR 158–168. Full Fuji dress rehearsal: kit, fueling 45–60g CHO/hr, negative split.`,duration:min,hrTarget:"158–168 race effort",zone:"z2",evidence:'Race rehearsal • Tune-up race D-15 (Mujika 2010)'};
   }
   // Taper
   return {type:"long_run",title:`Long run ${min}min`,detail:`Easy Z1 + last 15min @ MP feel • Taper — keep race rhythm alive, drop volume`,duration:min,hrTarget:"<150",zone:"z1",evidence:ev1};
@@ -2295,7 +2501,7 @@ function buildWeek(w){
       speedSessionFor(w),
       {type:"easy_z1",title:"Easy jog 30min",detail:"Very easy Z1 • Stay loose, nothing hard",duration:30,hrTarget:"<150",zone:"z1",evidence:'Pre-race freshness'},
       {type:"rest",title:"Rest — carb top-up",detail:"Full rest. D-1: 7–8 g/kg CHO (~600 g), low fiber, dinner by 7 PM. Lay out race kit — same kit as Fuji.",duration:0,hrTarget:"—",zone:"rest",evidence:'Pre-race CHO (Burke 2017)'},
-      buildLongRun(21), // 🏁 RACE Saturday
+      buildLongRun(21), // RACE Saturday
       {type:"rest",title:"Rest / 20min walk",detail:"Post-half recovery. 30g protein + 100g CHO within 60min after the race · easy walk only today.",duration:0,hrTarget:"—",zone:"rest",evidence:'Post-race recovery'}
     ]};
   }
@@ -2322,7 +2528,7 @@ function buildWeek(w){
       {type:"easy_z1",title:"Easy jog 20min + 3×100m strides",detail:"Easy shakeout • Stay loose",duration:20,hrTarget:"<150",zone:"z1",evidence:'Pre-race shakeout'},
       {type:"rest",title:"Rest — carb load",detail:"Full rest. D-3→D-1: 10 g/kg CHO (~850 g/day). Expect +1–2 kg — that's glycogen, it's good.",duration:0,hrTarget:"—",zone:"rest",evidence:'Carb load (Burke 2017)'},
       {type:"easy_z1",title:"Race-day shakeout 15min",detail:"Race tomorrow! Easy 15min + 2 strides. Kit check, early night.",duration:15,hrTarget:"<140",zone:"z1",evidence:'Race-eve activation'},
-      {type:"tune_race",title:"🏁 FUJI MARATHON — RACE DAY",detail:"Sub 5:00 goal • 7:06/km avg • HR 150–160. Fuel 60–90g CHO/hr + 500–700ml fluid/hr. First 5k conservative — pace, not place.",duration:300,hrTarget:"150–160 → 170 final",zone:"z2",evidence:'Race execution per plan'}
+      {type:"tune_race",title:"FUJI MARATHON — RACE DAY",detail:"Sub 5:00 goal • 7:06/km avg • HR 150–160. Fuel 60–90g CHO/hr + 500–700ml fluid/hr. First 5k conservative — pace, not place.",duration:300,hrTarget:"150–160 → 170 final",zone:"z2",evidence:'Race execution per plan'}
     ]};
   }
 
@@ -2349,7 +2555,7 @@ function buildWeek(w){
 
   // W6 Sunday — Thai Hyrox Doubles lands on the recovery week
   if(w===6){
-    days[6]={type:"tune_race",title:"💪 RACE — Thai Hyrox Doubles",detail:"8×1km run + 8 stations · Men Doubles · target 75–90 min. The recovery week was your taper — race hard, have fun.",duration:80,hrTarget:"165–180 mixed",zone:"mixed",evidence:'B-race · fitness test, no plan disruption'};
+    days[6]={type:"tune_race",title:"RACE — Thai Hyrox Doubles",detail:"8×1km run + 8 stations · Men Doubles · target 75–90 min. The recovery week was your taper — race hard, have fun.",duration:80,hrTarget:"165–180 mixed",zone:"mixed",evidence:'B-race · fitness test, no plan disruption'};
   }
   // W7 Monday — post-Hyrox: swap Strength A → recovery jog
   if(w===7){
@@ -2400,6 +2606,30 @@ function iconRight(){return _svg('<polyline points="9 18 15 12 9 6"/>')}
 function iconPlus(){return _svg('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>')}
 function iconClose(){return _svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>')}
 function iconNote(){return _svg('<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>')}
+function iconFlask(){return _svg('<path d="M10 2v6.2L4.6 17.5A2 2 0 006.3 20.5h11.4a2 2 0 001.7-3L14 8.2V2"/><path d="M8.5 2h7M7.2 14h9.6"/>')}
+
+/* Micro inline icons for session meta rows */
+function _mi(p){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;}
+function miClock(){return _mi('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v4.5l3 2"/>')}
+function miHeart(){return _mi('<path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 000-7.8z"/>')}
+
+/* Chapter masthead — every view opens the same editorial way */
+function masthead(id,opts={}){
+  const idx=NAV.findIndex(n=>n.id===id);
+  const item=NAV[idx]||{};
+  const no=String(idx+1).padStart(2,"0");
+  return `<header class="masthead">
+    <div class="mh-eyebrow"><b>${no}</b><span>${item.group||"—"}</span></div>
+    <div class="mh-row">
+      <div class="mh-lead">
+        <h1 class="mh-title">${opts.title||item.label||""}</h1>
+        ${opts.dek?`<p class="mh-dek">${opts.dek}</p>`:""}
+      </div>
+      ${opts.right?`<div class="mh-right">${opts.right}</div>`:""}
+    </div>
+  </header>`;
+}
+function mhStat(n,label){return `<div class="mh-stat"><div class="n">${n}</div><div class="l">${label}</div></div>`;}
 
 /* =========================================================================
    7. SIDEBAR / NAV / COUNTDOWN
@@ -2407,11 +2637,21 @@ function iconNote(){return _svg('<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012
 
 function renderNav(){
   const el=document.getElementById("nav-list");
-  el.innerHTML=NAV.map(n=>`
-    <button type="button" class="nav-item${State.view===n.id?" active":""}" data-nav="${n.id}" aria-current="${State.view===n.id?"page":"false"}">
-      <span class="nav-icon">${n.icon()}</span>
-      <span>${n.label}</span>
-    </button>`).join("");
+  const groups=[];
+  NAV.forEach(n=>{
+    const last=groups[groups.length-1];
+    if(!last||last.name!==(n.group||""))groups.push({name:n.group||"",items:[n]});
+    else last.items.push(n);
+  });
+  el.innerHTML=groups.map(g=>`
+    <div class="nav-group">
+      ${g.name?`<div class="nav-group-label">${g.name}</div>`:""}
+      ${g.items.map(n=>`
+      <button type="button" class="nav-item${State.view===n.id?" active":""}" data-nav="${n.id}" aria-current="${State.view===n.id?"page":"false"}">
+        <span class="nav-icon">${n.icon()}</span>
+        <span>${n.label}</span>
+      </button>`).join("")}
+    </div>`).join("");
   el.querySelectorAll("[data-nav]").forEach(a=>{
     a.addEventListener("click",()=>switchView(a.dataset.nav));
   });
@@ -2437,7 +2677,7 @@ function renderCountdown(){
   const halfEl=document.getElementById("cd-half");
   if(halfEl){
     const hd=daysUntil(ATHLETE.halfRace.date);
-    halfEl.textContent=hd>=0?`🏃 Half · 28 Nov · ${hd}d`:"🏃 Half · done ✓";
+    halfEl.textContent=hd>=0?`BKK HALF · 28 NOV · ${hd}D`:"BKK HALF · FINISHED";
   }
   // Mobile topbar countdown pill
   const mtNum=document.getElementById("mt-cd-num");
@@ -2691,17 +2931,18 @@ function renderWeekly(){
         <div class="day-body">
           <div class="day-type-row">
             <span class="day-title">${s.title}</span>
+            ${s.type==="tune_race"?'<span class="chip chip-red">Race day</span>':''}
             ${isModified?'<span class="chip chip-orange">Modified</span>':''}
             ${isToday?'<span class="chip chip-orange">Today</span>':''}
           </div>
           <div class="day-detail">${s.detail}</div>
           <div class="day-meta">
-            ${s.duration?`<span>⏱ ${s.duration} min</span>`:""}
-            ${s.hrTarget&&s.hrTarget!=="—"?`<span>♥ ${s.hrTarget}</span>`:""}
+            ${s.duration?`<span>${miClock()} ${s.duration} min</span>`:""}
+            ${s.hrTarget&&s.hrTarget!=="—"?`<span>${miHeart()} ${s.hrTarget}</span>`:""}
             ${lg.actualDuration?`<span class="muted">Actual: ${lg.actualDuration}min${lg.actualDistance?` · ${lg.actualDistance}km`:""}${lg.pace?` · ${lg.pace}/km`:""}${lg.avgHR?` · HR ${lg.avgHR}`:""}${lg.rpe?` · RPE ${lg.rpe}`:""}</span>`:""}
           </div>
-          ${s.evidence?`<div class="day-evidence">📚 ${s.evidence}</div>`:""}
-          ${lg.notes?`<div class="day-evidence" style="color:var(--text-2);font-style:normal">📝 ${escapeHtml(lg.notes)}</div>`:""}
+          ${s.evidence?`<div class="ev-note"><span class="tag">Evidence</span><span>${s.evidence}</span></div>`:""}
+          ${lg.notes?`<div class="ev-note note-user"><span class="tag">Note</span><span>${escapeHtml(lg.notes)}</span></div>`:""}
         </div>
         <div class="day-actions">
           <button class="icon-btn edit-btn" title="Edit" aria-label="Edit ${escapeHtml(s.title)}">${iconEdit()}</button>
@@ -2710,17 +2951,30 @@ function renderWeekly(){
       </div>`;
   }).join("");
 
+  // Week rhythm strip — the 7 days as a tappable overview
+  const rhythm=`<div class="week-rhythm" role="list">
+    ${week.days.map((s,d)=>{
+      const date=fmtISO(dateForWeekDay(w,d));
+      const lg=log[date]||{};
+      const done=lg.status==="done"||lg.status==="modified";
+      return `<button type="button" class="wr-day ${date===todayStr?"today":""}" role="listitem" data-wr-day="${d}" data-wr-date="${date}" aria-label="${DAY_NAMES_FULL[d]}: ${escapeHtml(s.title)}" title="${escapeHtml(s.title)}">
+        ${done?'<span class="wr-done"></span>':""}
+        <div class="wr-dow">${DAY_NAMES[d]}</div>
+        <div class="wr-num">${dateForWeekDay(w,d).getUTCDate()}</div>
+        <div class="wr-bar t-${s.type}"></div>
+      </button>`;
+    }).join("")}
+  </div>`;
+
   document.getElementById("view-weekly").innerHTML=`
-    <div class="view-head">
-      <div>
-        <div class="view-title">Weekly Plan</div>
-        <div class="view-sub">Phase ${PHASES.indexOf(phase)+1} of 4 · ${phase.focus}</div>
-      </div>
-      <div class="row">
-        <button class="btn btn-ghost" id="btn-today-jump">Today</button>
-        <button class="btn btn-primary" id="btn-log-session">${iconPlus()} Log Session</button>
-      </div>
-    </div>
+    ${masthead("weekly",{
+      title:"Weekly Plan",
+      dek:`Phase ${PHASES.indexOf(phase)+1} of 4 · ${phase.focus}`,
+      right:`<button class="btn btn-ghost" id="btn-today-jump">Today</button>
+        <button class="btn btn-primary" id="btn-log-session">${iconPlus()} Log Session</button>`
+    })}
+
+    ${rhythm}
 
     <div class="week-bar">
       <div class="week-nav">
@@ -2741,9 +2995,9 @@ function renderWeekly(){
         <span class="chip">${week.targetKm} km target</span>
         <span class="chip">${week.days.filter(d=>d.type!=="rest").length} sessions</span>
         ${week.isRecovery?'<span class="chip chip-green">Recovery week</span>':""}
-        ${w===6?'<span class="chip chip-purple">💪 Hyrox Sun</span>':""}
-        ${isTuneRaceWeek(w)?'<span class="chip chip-blue">🏁 Bangkok Half Sat</span>':""}
-        ${w===ATHLETE.totalWeeks?'<span class="chip chip-red">FUJI RACE WEEK</span>':""}
+        ${w===6?'<span class="chip chip-purple">Hyrox Sunday</span>':""}
+        ${isTuneRaceWeek(w)?'<span class="chip chip-blue">Bangkok Half Saturday</span>':""}
+        ${w===ATHLETE.totalWeeks?'<span class="chip chip-red">Fuji race week</span>':""}
       </div>
     </div>
 
@@ -2824,6 +3078,9 @@ function renderWeekly(){
       openSessionModal(State.currentWeek,d,row.dataset.date);
     });
   });
+  document.querySelectorAll(".wr-day").forEach(b=>{
+    b.addEventListener("click",()=>openSessionModal(State.currentWeek,parseInt(b.dataset.wrDay),b.dataset.wrDate));
+  });
 }
 
 function tidBar(label,actual,target,color){
@@ -2842,9 +3099,9 @@ function nextMilestone(w){
   for(let i=w+1;i<=ATHLETE.totalWeeks;i++){if(isRecoveryWeek(i)){items.push({d:i-w,t:`Recovery week (W${i})`});break;}}
   const ph=phaseForWeek(w);
   if(ph.weeks[1]<ATHLETE.totalWeeks) items.push({d:ph.weeks[1]-w+1,t:`Next phase: ${PHASES[PHASES.indexOf(ph)+1].name} (W${ph.weeks[1]+1})`});
-  if(w<6)  items.push({d:6-w,t:"💪 Thai Hyrox Doubles (W6 Sun)"});
-  if(w<21) items.push({d:21-w,t:"🏃 Bangkok Half — sub 2:30 (W21 Sat)"});
-  items.push({d:ATHLETE.totalWeeks-w,t:"🏁 Fuji Marathon (W23 Sun)"});
+  if(w<6)  items.push({d:6-w,t:"Thai Hyrox Doubles (W6 Sun)"});
+  if(w<21) items.push({d:21-w,t:"Bangkok Half — sub 2:30 (W21 Sat)"});
+  items.push({d:ATHLETE.totalWeeks-w,t:"Fuji Marathon (W23 Sun)"});
   items.sort((a,b)=>a.d-b.d);
   return items.slice(0,3).map(i=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12.5px"><b style="color:var(--orange)">${i.d}wk</b> · ${i.t}</div>`).join("");
 }
@@ -2934,7 +3191,7 @@ function openSessionModal(wIdx,dIdx,date){
 
       ${["long_run","mp_long","tune_race","hill"].includes(session.type)?`
       <details ${lg.hr1||lg.hr2?"open":""} style="margin-bottom:14px">
-        <summary>⚡ Aerobic decoupling (long run / endurance only)</summary>
+        <summary>Aerobic decoupling (long run / endurance only)</summary>
         <div style="font-size:11.5px;color:var(--text-2);margin-top:8px;line-height:1.5">Split run in half · log avg HR + pace each half. Target &lt;5% drift. <i>Friel framework · cardiac-drift mechanism Coyle 2005 Sports Med</i></div>
         <div class="field-row mt-12">
           <div class="field"><label>1st half HR</label><input id="f-hr1" type="number" inputmode="numeric" value="${lg.hr1||""}" placeholder="bpm"></div>
@@ -3376,8 +3633,9 @@ function renderDashboard(){
 
       <div class="after-poster dashboard-detail">
         <div class="detail-head">
-          <div>
-            <div class="detail-title">Training detail</div>
+          <div style="min-width:0;flex:1">
+            <div class="mh-eyebrow" style="margin-bottom:12px"><b>01</b><span>Training detail</span></div>
+            <div class="detail-title">Current block: ${currentPhase.name}</div>
             <div class="detail-sub">${currentPhase.focus}</div>
           </div>
           <div class="row">
@@ -3438,7 +3696,7 @@ function renderDashboard(){
                 <span class="chip">${nextKey.session.duration} min</span>
                 <span class="chip">${nextKey.session.hrTarget}</span>
               </div>
-              ${nextKey.session.evidence?`<div class="day-evidence mt-12">${nextKey.session.evidence}</div>`:""}
+              ${nextKey.session.evidence?`<div class="ev-note mt-12"><span class="tag">Evidence</span><span>${nextKey.session.evidence}</span></div>`:""}
             `:`<div class="muted">No upcoming key session.</div>`}
           </div>
           <div class="card">
@@ -3577,12 +3835,11 @@ function renderLongRun(){
   }
 
   document.getElementById("view-longrun").innerHTML=`
-    <div class="view-head">
-      <div>
-        <div class="view-title">Long Run Log</div>
-        <div class="view-sub">${lrs.filter(l=>l.done).length} of ${lrs.length} long runs completed</div>
-      </div>
-    </div>
+    ${masthead("longrun",{
+      title:"Long Run Log",
+      dek:"The weekly aerobic anchor, W1 to race day — duration first, pace honest.",
+      right:mhStat(`${lrs.filter(l=>l.done).length}<span style="font-size:18px;color:var(--text-2)">/${lrs.length}</span>`,"long runs done")
+    })}
     <div class="card mb-16">
       <div class="card-h">Long Run Progression — All ${ATHLETE.totalWeeks} Weeks</div>
       <div style="height:300px"><canvas id="ch-lr"></canvas></div>
@@ -3671,16 +3928,12 @@ function renderArchive(){
   const preResetInCurrent=Object.keys(currentLog).filter(isPreResetCurrentSessionDate).length;
 
   document.getElementById("view-archive").innerHTML=`
-    <div class="view-head">
-      <div>
-        <div class="view-title">Plan Lab</div>
-        <div class="view-sub">Restored 32-week archive · Strava comparison workspace · brain-endurance audit notes</div>
-      </div>
-      <div class="row">
-        ${preResetInCurrent?`<button class="btn" id="btn-archive-repair">Move old logs to archive</button>`:""}
-        <button class="btn btn-primary" id="btn-archive-strava">Import Strava to archive</button>
-      </div>
-    </div>
+    ${masthead("archive",{
+      title:"Plan Lab",
+      dek:"The restored 32-week archive · Strava comparison workspace · notes for the next block.",
+      right:`${preResetInCurrent?`<button class="btn" id="btn-archive-repair">Move old logs to archive</button>`:""}
+        <button class="btn btn-primary" id="btn-archive-strava">Import Strava to archive</button>`
+    })}
 
     <div class="grid grid-3 mb-16">
       <div class="metric">
@@ -3868,13 +4121,11 @@ function renderStrength(){
   const recent=log.slice(-5).reverse();
 
   document.getElementById("view-strength").innerHTML=`
-    <div class="view-head">
-      <div>
-        <div class="view-title">Strength & Plyometric</div>
-        <div class="view-sub">2 sessions/week · Mon (Day A) · Thu (Day B)</div>
-      </div>
-      <button class="btn btn-primary" id="btn-log-strength">${iconPlus()} Log session</button>
-    </div>
+    ${masthead("strength",{
+      title:"Strength & Plyometric",
+      dek:"Two sessions a week — Day A Monday, Day B Thursday. Heavy load plus plyo is what moves running economy.",
+      right:`<button class="btn btn-primary" id="btn-log-strength">${iconPlus()} Log session</button>`
+    })}
 
     <details open>
       <summary>Why HL + Plyometric — Evidence</summary>
@@ -4013,9 +4264,11 @@ function renderSpeed(){
   const completedPct=planned?Math.round(completed/planned*100):0;
 
   document.getElementById("view-speed").innerHTML=`
-    <div class="view-head">
-      <div><div class="view-title">Speed Sessions</div><div class="view-sub">All quality workouts across the ${ATHLETE.totalWeeks}-week plan</div></div>
-    </div>
+    ${masthead("speed",{
+      title:"Speed Sessions",
+      dek:`Every quality workout across the ${ATHLETE.totalWeeks}-week plan — from VO₂max rebuild to goal-pace sharpeners.`,
+      right:mhStat(`${completedPct}<span style="font-size:18px;color:var(--text-2)">%</span>`,"completed")
+    })}
     <div class="grid grid-3 mb-16">
       <div class="metric card"><div class="metric-label">Planned</div><div class="metric-value">${planned}</div></div>
       <div class="metric card"><div class="metric-label">Completed</div><div class="metric-value">${completed}</div><div class="metric-sub">${completedPct}%</div></div>
@@ -4063,9 +4316,11 @@ function renderSpeed(){
    ========================================================================= */
 function renderProfile(){
   document.getElementById("view-profile").innerHTML=`
-    <div class="view-head">
-      <div><div class="view-title">Runner Profile</div><div class="view-sub">GXT-derived training prescription</div></div>
-    </div>
+    ${masthead("profile",{
+      title:"Runner Profile",
+      dek:"Lab-tested physiology, honest benchmarks, and the numbers every zone in this plan is anchored to.",
+      right:mhStat(ATHLETE.vo2max,"VO₂max · 96th %ile")
+    })}
 
     <div class="card mb-16" style="display:flex;align-items:center;gap:18px">
       <div class="avatar" style="width:64px;height:64px;font-size:28px">J</div>
@@ -4161,7 +4416,7 @@ function renderProfile(){
         <div class="zone-card zone-z3"><div class="zh">Z3 — VO₂max</div><div class="zhr">&gt; 171 bpm</div><div class="zd">VO₂max intervals · neuromuscular sharpening. <b>15% Phase 1 → 5% Phase 3</b> (front-loaded ceiling build).</div></div>
       </div>
       <div class="warn-box mt-16" style="border-color:#0A84FF;background:rgba(10,132,255,0.06)">
-        <b style="color:#0A84FF">📐 TID by phase (block periodization):</b><br>
+        <b style="color:#0A84FF">TID by phase (block periodization):</b><br>
         Phase 1 <b>POL 82/3/15</b> → Phase 2 <b>bridge 78/12/10</b> → Phase 3 <b>PYR 77/18/5</b> → Phase 4 <b>taper 80/12/8</b>.<br>
         <span class="small muted">Build VO₂max ceiling first (POL), bridge with mixed work, then specialize at race pace (PYR). See Periodization view for rationale.</span>
       </div>
@@ -4249,9 +4504,11 @@ function renderBiometrics(){
   const wDelta=targetW?(parseFloat(targetW)-curWeight).toFixed(1):null;
 
   document.getElementById("view-biometrics").innerHTML=`
-    <div class="view-head">
-      <div><div class="view-title">Biometrics</div><div class="view-sub">Daily wellness · weight · HRV · trends</div></div>
-    </div>
+    ${masthead("biometrics",{
+      title:"Biometrics",
+      dek:"Morning numbers before opinions — weight, resting HR, HRV, sleep, and how the body is actually absorbing the work.",
+      right:mhStat(`${curWeight.toFixed(1)}<span style="font-size:16px;color:var(--text-2)"> kg</span>`,"today")
+    })}
 
     <div class="grid grid-4 mb-16">
       <div class="metric card"><div class="metric-label">Weight (today)</div><div class="metric-value">${curWeight.toFixed(1)}<span style="font-size:14px;color:var(--text-2)"> kg</span></div><div class="metric-sub ${w30delta>0?"down":w30delta<0?"up":""}">${w30delta!=="—"?(w30delta>0?"+":"")+w30delta+" kg vs 30d":"—"}${targetW?` · target ${targetW}`:""}</div></div>
@@ -4312,7 +4569,7 @@ function renderBiometrics(){
 
     <!-- ===== K2: SWEAT RATE CALCULATOR ===== -->
     <div class="card mb-16">
-      <div class="card-h">💧 SWEAT RATE CALCULATOR</div>
+      <div class="card-h">Sweat rate calculator</div>
       <div class="grid grid-2 mt-12" style="gap:24px">
         <div>
           <div class="small muted" style="line-height:1.6;margin-bottom:12px">Weigh nude before + after a long run · log fluid intake during. Personalizes hydration plan for the Bangkok Half + Fuji race day. <i>Method: ACSM 2007 Sawka et al. MSSE 39:377</i></div>
@@ -4448,7 +4705,7 @@ function avg(arr){const a=arr.filter(x=>!isNaN(x));return a.length?a.reduce((s,x
 function chartGuard(canvas){
   if(typeof Chart!=="undefined")return true;
   if(canvas&&canvas.parentElement){
-    canvas.parentElement.innerHTML='<div class="muted small" style="display:flex;align-items:center;justify-content:center;height:100%;text-align:center;padding:12px">📉 Charts unavailable offline — reconnect once and reload to enable.</div>';
+    canvas.parentElement.innerHTML='<div class="muted small" style="display:flex;align-items:center;justify-content:center;height:100%;text-align:center;padding:12px">Charts unavailable offline — reconnect once and reload to enable.</div>';
   }
   return false;
 }
@@ -4548,9 +4805,11 @@ function drawPaceChart(){
 let periodChart=null;
 function renderPeriodization(){
   document.getElementById("view-periodization").innerHTML=`
-    <div class="view-head">
-      <div><div class="view-title">Periodization</div><div class="view-sub">${ATHLETE.totalWeeks}-week macrocycle · 4 mesocycles · weekly microcycle pattern</div></div>
-    </div>
+    ${masthead("periodization",{
+      title:"Periodization",
+      dek:`${ATHLETE.totalWeeks}-week macrocycle · four mesocycles · one weekly rhythm. Polarized first, pyramidal when it matters.`,
+      right:mhStat("POL→PYR","block sequence")
+    })}
 
     <div class="card mb-16">
       <div class="card-h">Macrocycle — ${ATHLETE.totalWeeks} weeks at a glance</div>
@@ -4614,8 +4873,8 @@ function renderPeriodization(){
   const colors=PLAN.map(w=>w.isRecovery?w.phase.color+"55":w.phase.color);
   const races=[
     {label:"Hyrox",weekIdx:5,color:"#BF5AF2"},
-    {label:"🏃 Half",weekIdx:20,color:"#0A84FF"},
-    {label:"🏁 Fuji",weekIdx:22,color:"#FF9F0A"}
+    {label:"Half",weekIdx:20,color:"#0A84FF"},
+    {label:"Fuji",weekIdx:22,color:"#FF9F0A"}
   ];
   if(periodChart)periodChart.destroy();
   periodChart=new Chart(ctx,{
@@ -4663,24 +4922,30 @@ function renderSideRaces(){
   const hDays=daysUntil(hyrox.date);
   const aDays=daysUntil(half.date);
   document.getElementById("view-sideraces").innerHTML=`
-    <div class="view-head">
-      <div><div class="view-title">Side Races</div><div class="view-sub">Bangkok Half (Fuji dress rehearsal) + Hyrox upcoming · Trail 25k finished · overlaid on the Fuji plan</div></div>
-    </div>
+    ${masthead("sideraces",{
+      title:"Side Races",
+      dek:"One result banked, two starts ahead — every ticket punched on the way to Fuji.",
+      right:mhStat(Math.max(0,aDays),"days to BKK Half")
+    })}
 
     <!-- =============== AMAZING THAILAND BKK HALF =============== -->
-    <div class="card mb-24" style="border:1px solid ${half.color}55">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px">
-        <div>
-          <div style="font-size:20px;font-weight:700">${half.icon} ${half.name}</div>
-          <div class="muted small mt-8">${fmtLong(parseISO(half.date))} · Fuji-plan W21 Saturday · D-15 before Fuji</div>
+    <article class="ticket" style="--tc:${half.color}">
+      <div class="ticket-head">
+        <div class="ticket-id">
+          <div class="ticket-no">Race 03 · W21 Saturday · D-15 to Fuji</div>
+          <div class="ticket-name">${half.name}</div>
+          <div class="ticket-sub">${fmtLong(parseISO(half.date))} · goal <b style="color:${half.color}">sub 2:30</b> · 7:06/km</div>
         </div>
-        <div style="text-align:right">
-          <div class="metric-value" style="color:${half.color};font-size:32px">${Math.max(0,aDays)}<span style="font-size:13px;color:var(--text-2);font-weight:500"> days</span></div>
-          <div class="small muted">goal <b style="color:${half.color}">sub 2:30</b> · 7:06/km</div>
+        <div class="ticket-side">
+          <div class="ticket-count"><div class="n">${Math.max(0,aDays)}</div><div class="l">days out</div></div>
+          <div class="ticket-date"><div class="d">${parseISO(half.date).getUTCDate()}</div><div class="m">${MONTHS[parseISO(half.date).getUTCMonth()]} 2026</div></div>
+          <div class="ticket-code" aria-hidden="true"></div>
         </div>
       </div>
+      <div class="ticket-rip" aria-hidden="true"></div>
+      <div class="ticket-body">
 
-      <div class="grid grid-4 mt-12">
+      <div class="grid grid-4">
         <div><div class="metric-label">Distance</div><div style="font-size:18px;font-weight:700;margin-top:4px">${half.specs.distance}</div></div>
         <div><div class="metric-label">Surface</div><div style="font-size:18px;font-weight:700;margin-top:4px">${half.specs.surface}</div></div>
         <div><div class="metric-label">Start</div><div style="font-size:13px;font-weight:600;margin-top:6px">${half.specs.start}</div></div>
@@ -4688,7 +4953,7 @@ function renderSideRaces(){
       </div>
 
       <div class="warn-box mt-16" style="border-color:${half.color};background:rgba(10,132,255,0.06)">
-        <b style="color:${half.color}">📅 Plan-impact:</b> ${half.impactNote}
+        <b style="color:${half.color}">Plan impact — </b>${half.impactNote}
       </div>
 
       <details open class="mt-16">
@@ -4739,29 +5004,33 @@ function renderSideRaces(){
       <details class="mt-12">
         <summary>Race week + post-race (W21 → taper)</summary>
         <div class="small mt-12" style="line-height:1.7">
-          <b style="color:${half.color}">W21 (race week):</b> Mon light strength · Tue easy 45 · Wed 30 min + strides · Thu easy 30 · Fri REST + carb top-up · Sat 🏁 RACE · Sun rest / 20 min walk.<br>
+          <b style="color:${half.color}">W21 (race week):</b> Mon light strength · Tue easy 45 · Wed 30 min + strides · Thu easy 30 · Fri REST + carb top-up · Sat RACE · Sun rest / 20 min walk.<br>
           <b style="color:${half.color}">W22 (taper 1):</b> Mon recovery jog — legs flat is normal · Thu = LAST heavy lift (D-10) · Sat 75 min + 15 min MP.<br>
           <b style="color:${half.color}">W23:</b> Fuji race week — shakeouts, carb load D-3, race Sunday.<br><br>
           ⚠ If the half goes badly (heat, GI, pacing blow-up) — <b>nothing changes for Fuji</b>. It's a rehearsal: take the lesson, trust the taper.
         </div>
       </details>
-
-    </div>
+      </div>
+    </article>
 
     <!-- =============== HYROX DOUBLES =============== -->
-    <div class="card mb-24" style="border:1px solid ${hyrox.color}55">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px">
-        <div>
-          <div style="font-size:20px;font-weight:700">${hyrox.icon} ${hyrox.name}</div>
-          <div class="muted small mt-8">${fmtLong(parseISO(hyrox.date))} · falls on Fuji-plan W6 Sunday (recovery week)</div>
+    <article class="ticket" style="--tc:${hyrox.color}">
+      <div class="ticket-head">
+        <div class="ticket-id">
+          <div class="ticket-no">Race 02 · W6 Sunday · recovery week</div>
+          <div class="ticket-name">${hyrox.name}</div>
+          <div class="ticket-sub">${fmtLong(parseISO(hyrox.date))} · target <b style="color:${hyrox.color}">${hyrox.estimate}</b></div>
         </div>
-        <div style="text-align:right">
-          <div class="metric-value" style="color:${hyrox.color};font-size:32px">${Math.max(0,hDays)}<span style="font-size:13px;color:var(--text-2);font-weight:500"> days</span></div>
-          <div class="small muted">target ${hyrox.estimate}</div>
+        <div class="ticket-side">
+          <div class="ticket-count"><div class="n">${Math.max(0,hDays)}</div><div class="l">days out</div></div>
+          <div class="ticket-date"><div class="d">${parseISO(hyrox.date).getUTCDate()}</div><div class="m">${MONTHS[parseISO(hyrox.date).getUTCMonth()]} 2026</div></div>
+          <div class="ticket-code" aria-hidden="true"></div>
         </div>
       </div>
+      <div class="ticket-rip" aria-hidden="true"></div>
+      <div class="ticket-body">
 
-      <div class="grid grid-4 mt-12">
+      <div class="grid grid-4">
         <div><div class="metric-label">Format</div><div style="font-size:13px;font-weight:600;margin-top:4px">${hyrox.specs.format}</div></div>
         <div><div class="metric-label">Division</div><div style="font-size:13px;font-weight:600;margin-top:4px;color:${hyrox.color}">${hyrox.specs.division}</div></div>
         <div><div class="metric-label">Duration</div><div style="font-size:13px;font-weight:600;margin-top:4px">${hyrox.specs.duration}</div></div>
@@ -4769,7 +5038,7 @@ function renderSideRaces(){
       </div>
 
       <div class="warn-box mt-16" style="border-color:${hyrox.color};background:rgba(191,90,242,0.06)">
-        <b style="color:${hyrox.color}">📅 Plan-impact:</b> ${hyrox.impactNote}
+        <b style="color:${hyrox.color}">Plan impact — </b>${hyrox.impactNote}
       </div>
 
       <details open class="mt-16">
@@ -4830,7 +5099,7 @@ function renderSideRaces(){
           • Thu: easy run as planned<br>
           • Fri: easy 20–30 min · carb prep dinner<br>
           • Sat: reduced long run 60 min OR 15 min shakeout + 3 strides · gear check<br>
-          • Sun: 🔥 RACE
+          • Sun: RACE
         </div>
       </details>
 
@@ -4898,26 +5167,28 @@ function renderSideRaces(){
           </ul>
         </div>
       </details>
-    </div>
+      </div>
+    </article>
 
     <!-- =============== TRAIL 25k — COMPLETED =============== -->
-    <div class="card mb-24" style="border:1px solid ${trail.color}55">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <div style="font-size:20px;font-weight:700">${trail.icon} ${trail.name}</div>
-            <span class="chip chip-green">Finished ✓</span>
-          </div>
-          <div class="muted small mt-8">${fmtLong(parseISO(trail.date))} · ${trail.specs.distance} · ${trail.specs.gain} · ${trail.specs.temp}</div>
+    <article class="ticket" style="--tc:${trail.color}">
+      <div class="ticket-head">
+        <div class="ticket-id">
+          <div class="ticket-no">Race 01 · 28 June · result banked</div>
+          <div class="ticket-name">${trail.name}</div>
+          <div class="ticket-sub">${fmtLong(parseISO(trail.date))} · ${trail.specs.distance} · ${trail.specs.gain} · ${trail.specs.temp}</div>
         </div>
-        <div style="text-align:right">
-          <div class="metric-value" style="color:${trail.color};font-size:32px;font-variant-numeric:tabular-nums">${trail.result}</div>
-          <div class="small muted">official time</div>
+        <div class="ticket-side">
+          <span class="stamp">Finished</span>
+          <div class="ticket-count"><div class="n" style="font-size:30px">${trail.result}</div><div class="l">official time</div></div>
+          <div class="ticket-code" aria-hidden="true"></div>
         </div>
       </div>
+      <div class="ticket-rip" aria-hidden="true"></div>
+      <div class="ticket-body">
 
-      <div class="warn-box mt-16" style="border-color:${trail.color};background:rgba(48,209,88,0.06)">
-        <b style="color:${trail.color}">✅ Banked:</b> ${trail.note}
+      <div class="warn-box" style="border-color:${trail.color};background:rgba(48,209,88,0.06)">
+        <b style="color:${trail.color}">Banked — </b>${trail.note}
       </div>
 
       <details class="mt-12">
@@ -4931,10 +5202,11 @@ function renderSideRaces(){
           </ul>
         </div>
       </details>
-    </div>
+      </div>
+    </article>
 
     <div class="card">
-      <div class="card-h">⚠ Combined load awareness</div>
+      <div class="card-h">Combined load awareness</div>
       <div class="small" style="line-height:1.7">
         These races ladder into Fuji. <b>Hyrox (W6 Sun)</b> lands on a recovery week — race it, then one recovery jog Monday and back on plan. <b>Bangkok Half (W21 Sat)</b> IS the plan: final peak long run + full dress rehearsal at goal pace, 15 days out. If ACWR (Dashboard) creeps above 1.4 at any point, drop the optional Hyrox overlay first, protect the long runs second. <b>Fuji is the A-race</b> — everything else serves it.
       </div>
@@ -4948,13 +5220,15 @@ function renderSideRaces(){
    ========================================================================= */
 function renderKnowledge(){
   document.getElementById("view-knowledge").innerHTML=`
-    <div class="view-head">
-      <div><div class="view-title">Knowledge</div><div class="view-sub">Evidence-based references · warmup · mobility · emergencies · glossary · failure modes · pacing</div></div>
-    </div>
+    ${masthead("knowledge",{
+      title:"Knowledge",
+      dek:"The field manual — warmup, mobility, emergencies, pacing, failure modes, and a glossary with receipts. Every claim cited.",
+      right:mhStat("K7–K14","chapters")
+    })}
 
     <!-- ============ K7 · DYNAMIC WARMUP ============ -->
     <div class="card mb-16">
-      <div class="card-h">⚡ K7 · PRE-RUN DYNAMIC WARMUP (5–8 min)</div>
+      <div class="k-head"><span class="k-index">K7</span><div class="k-titles"><div class="k-title">Pre-run dynamic warmup</div><div class="k-meta">5–8 min · before every quality session</div></div></div>
       <div class="small muted mt-8" style="line-height:1.6">Dynamic warmup acutely improves running performance and may reduce injury vs static stretching. Routine raises core temp and primes neuromuscular activation. <i>McGowan 2015 Sports Med · Behm & Chaouachi 2011 Eur J Appl Physiol · Fradkin 2010 J Strength Cond Res</i></div>
       <div class="grid grid-2 mt-16">
         <div class="ex-card">
@@ -5000,7 +5274,7 @@ function renderKnowledge(){
 
     <!-- ============ K8 · POST-RUN MOBILITY ============ -->
     <div class="card mb-16">
-      <div class="card-h">🧘 K8 · POST-RUN MOBILITY (5 min)</div>
+      <div class="k-head"><span class="k-index">K8</span><div class="k-titles"><div class="k-title">Post-run mobility</div><div class="k-meta">5 min · maintenance, honestly framed</div></div></div>
       <div class="small muted mt-8" style="line-height:1.6">
         <b style="color:var(--text)">Honest framing:</b> Post-run static stretching has SMALL effects on flexibility and MINIMAL effect on injury prevention or DOMS recovery (Behm 2016 <i>Appl Physiol Nutr Metab</i> systematic review). Foam rolling has small recovery benefit (Wiewelhove 2019 <i>Front Physiol</i> meta-analysis). Primary value here = <b style="color:var(--text)">mobility maintenance + nervous-system down-regulation</b>, not magic recovery.
       </div>
@@ -5040,7 +5314,7 @@ function renderKnowledge(){
 
     <!-- ============ K10 · CRAMP / BONK EMERGENCY ============ -->
     <div class="card mb-16">
-      <div class="card-h">🚨 K10 · ON-RACE EMERGENCY PROTOCOLS</div>
+      <div class="k-head"><span class="k-index">K10</span><div class="k-titles"><div class="k-title">On-race emergency protocols</div><div class="k-meta">Cramp · bonk · hyponatremia</div></div></div>
 
       <div class="grid grid-2 mt-12">
         <div class="ex-card" style="border:1px solid rgba(244,63,94,0.3);background:linear-gradient(135deg,rgba(244,63,94,0.04),var(--card-elev))">
@@ -5093,7 +5367,7 @@ function renderKnowledge(){
 
     <!-- ============ K14 · PACING STRATEGY ============ -->
     <div class="card mb-16">
-      <div class="card-h">🎯 K14 · MARATHON PACING STRATEGIES</div>
+      <div class="k-head"><span class="k-index">K14</span><div class="k-titles"><div class="k-title">Marathon pacing strategies</div><div class="k-meta">Even · negative · positive — pick before the gun</div></div></div>
       <div class="small muted mt-12" style="line-height:1.6">Three pacing patterns dominate marathon racing. Choice has measurable effect on outcome.</div>
 
       <div class="grid grid-3 mt-16">
@@ -5136,7 +5410,7 @@ function renderKnowledge(){
 
     <!-- ============ K13 · FAILURE MODES ============ -->
     <div class="card mb-16">
-      <div class="card-h">🛟 K13 · FAILURE MODE RECOVERY</div>
+      <div class="k-head"><span class="k-index">K13</span><div class="k-titles"><div class="k-title">Failure mode recovery</div><div class="k-meta">When things go wrong — protocol, not improvisation</div></div></div>
       <div class="small muted mt-12">When things go wrong — don't improvise. Below are evidence-anchored protocols.</div>
       <div class="tbl-wrap mt-16">
         <table class="tbl">
@@ -5157,7 +5431,7 @@ function renderKnowledge(){
 
     <!-- ============ K12 · GLOSSARY ============ -->
     <div class="card mb-16">
-      <div class="card-h">📖 K12 · GLOSSARY · "WHY THIS WORKS"</div>
+      <div class="k-head"><span class="k-index">K12</span><div class="k-titles"><div class="k-title">Glossary — why this works</div><div class="k-meta">Core terms · peer-reviewed sources</div></div></div>
       <div class="small muted mt-12" style="line-height:1.6">Core terms used throughout this app, with peer-reviewed sources for each. If a term seems vague in the plan, look it up here.</div>
       <div class="knowledge-grid mt-16">
         <div class="term-card">
@@ -5259,13 +5533,14 @@ function renderRaceWeek(){
     splits:["10 km: 1:11:00","Half: 2:30:00","30 km: 3:33:00","Finish: 4:59:30"]
   };
   document.getElementById("view-raceweek").innerHTML=`
-    <div class="view-head">
-      <div><div class="view-title">Race Week — Fuji Marathon</div><div class="view-sub">13 December 2026 · Sub 5:00 goal</div></div>
-      <span class="chip chip-orange">${Math.max(0,daysUntil(ATHLETE.race.date))} days</span>
-    </div>
+    ${masthead("raceweek",{
+      title:"Race Week — Fuji",
+      dek:"Sunday 13 December 2026 · sub 5:00 · everything below is decided before the gun, not during.",
+      right:mhStat(Math.max(0,daysUntil(ATHLETE.race.date)),"days to start")
+    })}
 
     <div class="warn-box mb-16" style="border-color:rgba(10,132,255,0.5);background:rgba(10,132,255,0.06)">
-      <b style="color:#0A84FF">🏃 D-15 · Bangkok Half (Sat 28 Nov · sub 2:30)</b> — full dress rehearsal at the exact Fuji goal pace (7:06/km): same kit, same fueling rhythm, same negative-split discipline. Race it, recover Sunday, then the 2-week taper carries you here. Details in Side Races.
+      <b style="color:#0A84FF">D-15 — Bangkok Half (Sat 28 Nov · sub 2:30)</b> — full dress rehearsal at the exact Fuji goal pace (7:06/km): same kit, same fueling rhythm, same negative-split discipline. Race it, recover Sunday, then the 2-week taper carries you here. Details in Side Races.
     </div>
 
     <div class="card mb-16">
@@ -5296,7 +5571,7 @@ function renderRaceWeek(){
         </ul>
       </div>
       <div class="card">
-        <div class="card-h">⏱ RACE-MORNING TIMELINE · START 09:00</div>
+        <div class="card-h">RACE-MORNING TIMELINE · START 09:00</div>
         <div class="timeline mt-16">
           <div class="tl-step"><div class="tl-dot"></div>
             <div class="tl-time">05:45</div>
@@ -5335,7 +5610,7 @@ function renderRaceWeek(){
           </div>
           <div class="tl-step"><div class="tl-dot" style="background:var(--orange);box-shadow:0 0 18px var(--orange-glow);width:24px;height:24px;left:-32px"></div>
             <div class="tl-time" style="font-size:17px">09:00</div>
-            <div class="tl-action" style="color:var(--orange);font-size:16px;font-weight:800">🏁 START</div>
+            <div class="tl-action" style="color:var(--orange);font-size:16px;font-weight:800">START — FUJI MARATHON</div>
             <div class="tl-detail">First 5 km <b style="color:var(--orange)">conservative</b> · HR &lt; 155 · K14 negative split execution</div>
           </div>
         </div>
@@ -5627,7 +5902,7 @@ async function renderStravaSettings(){
           <div class="integration-logo">S</div>
           <div>
             <div class="integration-title">Strava</div>
-            <div class="integration-meta">${escapeHtml(err.message)} Add Vercel env vars before connecting.</div>
+            <div class="integration-meta">${escapeHtml(err.message)} — check the Strava API setup on Vercel, then reload.</div>
           </div>
         </div>
         <div class="integration-actions"><button class="btn" disabled>Unavailable</button></div>
@@ -5727,7 +6002,10 @@ async function disconnectStrava(){
 
 function renderSettings(){
   document.getElementById("view-settings").innerHTML=`
-    <div class="view-head"><div><div class="view-title">Settings</div><div class="view-sub">Integrations, backup, restore, and reset</div></div></div>
+    ${masthead("settings",{
+      title:"Settings",
+      dek:"Integrations, backup, data health, and the reset switches."
+    })}
 
     <div class="card mb-16" id="strava-card">
       <div class="card-h">Strava Sync</div>
@@ -5940,23 +6218,23 @@ function showWelcome(){
   showModal(`
     <button class="icon-btn modal-close" style="position:absolute;top:14px;right:14px;z-index:5">${iconClose()}</button>
     <div class="welcome-hero">
-      <div style="font-size:10px;color:var(--orange);font-weight:800;letter-spacing:0.18em;text-transform:uppercase">⚡ Evidence-Based Endurance Training</div>
-      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-0.025em;margin-top:14px">Welcome, James</div>
+      <div style="font-family:var(--font-mono);font-size:9px;color:var(--orange);font-weight:600;letter-spacing:0.24em;text-transform:uppercase">Season 2026 · Road to Fuji</div>
+      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-0.025em;margin-top:14px">Welcome back, James</div>
       <div class="welcome-hero-num mt-12">${fujiDays}</div>
-      <div style="font-size:11px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.18em;font-weight:800;margin-top:4px">DAYS TO FUJI MARATHON</div>
-      <div style="font-size:12px;color:var(--text-3);margin-top:6px">13 December 2026 · Sub 5:00 · 7:06/km · Half sub 2:30 on 28 Nov</div>
+      <div style="font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.22em;font-weight:600;margin-top:6px">Days to Fuji Marathon</div>
+      <div style="font-size:12px;color:var(--text-3);margin-top:8px">13 December 2026 · Sub 5:00 · 7:06/km · Half sub 2:30 on 28 Nov</div>
     </div>
     <div class="modal-body" style="padding-top:8px">
       <div class="grid grid-3" style="gap:10px;margin-top:6px">
         ${SECONDARY_RACES.map(r=>`
           <div class="macro-card text-center" style="border-color:${r.color}55">
-            <div style="font-size:18px">${r.icon}</div>
-            <div class="mv" style="color:${r.color};font-size:24px;margin-top:4px">${daysUntil(r.date)}</div>
+            <div style="width:8px;height:8px;border-radius:50%;background:${r.color};margin:4px auto 0;box-shadow:0 0 10px ${r.color}66"></div>
+            <div class="mv" style="color:${r.color};font-size:24px;margin-top:8px">${daysUntil(r.date)}</div>
             <div class="ms" style="font-size:10px">${r.short}</div>
           </div>`).join("")}
         <div class="macro-card text-center" style="border-color:rgba(255,107,0,0.4)">
-          <div style="font-size:18px">🏁</div>
-          <div class="mv" style="color:var(--orange);font-size:24px;margin-top:4px">${fujiDays}</div>
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--orange);margin:4px auto 0;box-shadow:0 0 10px var(--orange-glow)"></div>
+          <div class="mv" style="color:var(--orange);font-size:24px;margin-top:8px">${fujiDays}</div>
           <div class="ms" style="font-size:10px">Fuji A-Race</div>
         </div>
       </div>
