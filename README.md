@@ -42,4 +42,4 @@ In the Strava API application settings, set the authorization callback domain to
 
 ## Visual Asset
 
-Dashboard hero photo: Mount Fuji above Lake Kawaguchi, Japan, by Marion & Christoph Aistleitner (`Fuji_Kawaguchi_357.JPG`) via Wikimedia Commons. The image is released under CC0 1.0 Public Domain Dedication.
+Dashboard hero photo: Mount Fuji above Lake Kawaguchi, Japan, by Marion & Christoph Aistleitner (`Fuji_Kawaguchi_357.JPG`) via Wikimedia Commons. The image is released under CC0 1.0 Public Domain Dedication. Served as compressed derivatives (1920 px ≈ 140 KB desktop, 960 px ≈ 35 KB mobile) instead of the 4.2 MB original.
