@@ -1913,6 +1913,28 @@ body{touch-action:manipulation}
 .today-race .rn{font-family:var(--font-display);font-size:30px;font-weight:800;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:var(--tc,var(--text))}
 .today-race .rl{font-size:12.5px;color:var(--text);font-weight:600;margin-top:2px}
 .today-race .rg{font-size:11.5px;color:var(--text-2);margin-top:4px}
+.today-track{background:var(--card);border:1px solid var(--hairline);border-radius:18px;padding:14px 16px 12px;cursor:pointer}
+.today-track .sh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13px;color:var(--text-2);font-weight:600}
+.today-track .sh b{color:var(--text);font-size:15px;font-weight:700}
+.tt-bar{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;height:10px;margin-top:12px}
+.tt-seg{border-radius:3px;background:color-mix(in srgb,var(--c) 22%,transparent)}
+.tt-seg.past{background:var(--c)}
+.tt-seg.now{background:var(--c);box-shadow:0 0 0 2px var(--card),0 0 0 3.5px var(--c)}
+.tt-seg.down{opacity:0.55}
+.tt-seg.race{background:repeating-linear-gradient(90deg,var(--c) 0 3px,transparent 3px 5px)}
+.tt-marks{position:relative;height:32px;margin-top:6px;font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.tt-phase{position:absolute;top:0;letter-spacing:0.02em;opacity:0.9;white-space:nowrap}
+.tt-race{position:absolute;top:16px;transform:translateX(-100%);color:var(--blue);white-space:nowrap;padding-right:2px}
+.tt-race::after{content:"";position:absolute;right:-1px;top:-6px;width:1px;height:5px;background:currentColor;opacity:0.7}
+.ts-ex{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ts-ex li{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:8px 0;border-top:1px solid var(--hairline-soft)}
+.ts-ex li:first-child{border-top:none;padding-top:0}
+.ts-ex-p{color:var(--text-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ts-ex-more{color:var(--text-2);font-size:12.5px;justify-content:flex-start}
+@keyframes pop-in{from{transform:scale(0.96);opacity:0}to{transform:scale(1);opacity:1}}
+.ts-done{animation:pop-in 0.22s var(--ease)}
+.course-svg{display:block;width:100%;height:auto;margin-top:8px}
+.course-svg text{font-family:var(--font-text)}
 .more-body{padding:6px 10px 18px}
 .more-group-label{font-size:11.5px;color:var(--text-3);padding:14px 12px 6px;font-weight:700;letter-spacing:0.04em}
 .more-row{display:flex;align-items:center;gap:14px;width:100%;padding:13px 12px;border-radius:12px;font-size:16px;font-weight:600;text-align:left;color:var(--text);transition:background 0.12s var(--ease)}
@@ -1943,6 +1965,7 @@ body{touch-action:manipulation}
     transition:color 0.15s var(--ease);
   }
   .mt-item svg{width:24px;height:24px}
+  .mt-item{color:var(--text-2)}
   .mt-item.active{color:var(--orange)}
   .mt-item span{line-height:1}
 
@@ -1987,7 +2010,12 @@ body{touch-action:manipulation}
   .metric-label{font-family:var(--font-text);font-size:11.5px;letter-spacing:0.02em;text-transform:none;font-weight:600;color:var(--text-2)}
   .metric.card{padding:14px 14px}
   .metric-value{font-size:26px}
-  .chip{font-size:12.5px;padding:7px 12px}
+  .chip{font-size:12.5px;padding:7px 12px;text-transform:none;letter-spacing:0;font-weight:600}
+  .day-meta{color:var(--text-2)}
+  .wr-dow{color:var(--text-2)}
+  .pv-metrics{grid-template-columns:1fr 1fr;gap:10px}
+  .pv-metrics .metric:nth-child(n+3){display:none}
+  .mt-brand-mobile{font-size:15px;font-weight:600;letter-spacing:-0.01em}
   .day-row{border-radius:16px}
   .day-title{font-size:15.5px}
   .day-detail{font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -2057,7 +2085,7 @@ body{touch-action:manipulation}
 <!-- ============ MOBILE TOPBAR (mobile + landscape iPhone only) ============ -->
 <header class="mobile-topbar" id="mobile-topbar">
   <div class="mt-titlewrap">
-    <div class="mt-brand-mobile">James Endurance<span>Season 2026 · Road to Fuji</span></div>
+    <div class="mt-brand-mobile">Endurance 2026</div>
     <div class="mt-viewtitle" id="mt-viewtitle"></div>
   </div>
   <button class="mt-countdown-pill" id="mt-countdown-pill" aria-label="Days to Fuji">
@@ -3045,7 +3073,7 @@ function renderWeekly(){
       </div>
     </div>
 
-    <div class="grid grid-4 mb-16">
+    <div class="grid grid-4 mb-16 pv-metrics">
       <div class="metric card"><div class="metric-label">km logged</div><div class="metric-value">${kmLogged.toFixed(1)}</div><div class="metric-sub">/ ${week.targetKm} km target</div></div>
       <div class="metric card"><div class="metric-label">Sessions done</div><div class="metric-value">${sessionsDone}</div><div class="metric-sub">/ ${week.days.filter(d=>d.type!=="rest").length} planned</div></div>
       <div class="metric card"><div class="metric-label">Modified</div><div class="metric-value">${sessionsModified}</div><div class="metric-sub">vs plan</div></div>
@@ -3944,6 +3972,17 @@ function renderToday(){
     }
   }
   const g=inPlan?computeGuard(wIdx):null;
+  const stravaCount=(Store.get(STORAGE.strava,{}).activities||[]).length;
+
+  // strength days: show the actual session, not a pointer to another view
+  let strengthSess=null;
+  if(s&&(s.type==="strength_a"||s.type==="strength_b")){
+    strengthSess=FujiStrength.sessionFor(wIdx,s.type==="strength_a"?"A":"B");
+  }
+  const detailText=strengthSess
+    ?`${strengthSess.load} · ${strengthSess.exercises.length} exercises${FujiStrength.plyoContacts(strengthSess)?` · ${FujiStrength.plyoContacts(strengthSess)} plyo contacts`:" · no plyometrics"}${s.distanceKm?` · then easy ${s.distanceKm} km`:""}`
+    :(s?s.detail:"");
+  const exPreview=strengthSess?`<ul class="ts-ex">${strengthSess.exercises.slice(0,4).map(e=>`<li><span>${escapeHtml(e.name)}</span><span class="ts-ex-p">${escapeHtml(e.prescription.split(" · ")[0])}</span></li>`).join("")}${strengthSess.exercises.length>4?`<li class="ts-ex-more">+ ${strengthSess.exercises.length-4} more in Strength</li>`:""}</ul>`:"";
 
   const targets=s?[
     s.distanceKm?`${s.distanceKm} km`:"",
@@ -3962,16 +4001,29 @@ function renderToday(){
     <section class="today-session">
       <div class="ts-kicker"><span class="ts-dot t-${s.type}"></span>${s.title.startsWith(TYPE_NAMES[s.type]||"\u0000")?"Today's session":TYPE_NAMES[s.type]||s.type}${skipped?' · <span style="color:var(--text-3)">skipped</span>':""}</div>
       <h2 class="ts-title">${s.title}</h2>
-      <p class="ts-detail">${s.detail}</p>
-      ${targets.length?`<div class="ts-targets">${targets.map(t=>`<span class="chip">${t}</span>`).join("")}</div>`:""}
+      <p class="ts-detail">${detailText}</p>
+      ${exPreview}
+      ${targets.length&&!strengthSess?`<div class="ts-targets">${targets.map(t=>`<span class="chip">${t}</span>`).join("")}</div>`:""}
       ${done?`
         <div class="ts-done">${iconCheck()} <span>Done${lg.actualDistance?` · ${lg.actualDistance} km`:""}${lg.actualDuration?` · ${lg.actualDuration} min`:""}${lg.pace?` · ${lg.pace}/km`:""}${lg.avgHR?` · HR ${lg.avgHR}`:""}</span></div>
         <div class="ts-actions"><button class="btn" id="td-log">Edit log</button><button class="btn" id="td-undo">Undo</button></div>`
       :s.type==="rest"?`
         <div class="ts-actions"><button class="btn btn-primary" id="td-done">Mark rest day done</button></div>`
+      :strengthSess?`
+        <div class="ts-actions"><button class="btn btn-primary" id="td-open-strength">Open session</button><button class="btn" id="td-done">Mark done</button></div>`
       :`
         <div class="ts-actions"><button class="btn btn-primary" id="td-done">Mark done</button><button class="btn" id="td-log">Log details</button></div>`}
     </section>`;
+
+  const track=`<section class="today-track" data-go="periodization" role="button" tabindex="0">
+    <div class="sh"><b>Road to Fuji</b><span>${inPlan?`W${wIdx} of ${ATHLETE.totalWeeks} · ${week.phase.name}`:`${ATHLETE.totalWeeks} weeks`}</span></div>
+    <div class="tt-bar">${PLAN.map(w=>`<span class="tt-seg${w.weekNum<wIdx?" past":w.weekNum===wIdx&&inPlan?" now":""}${w.isRecovery?" down":""}${w.race?" race":""}" style="--c:${w.phase.color}"></span>`).join("")}</div>
+    <div class="tt-marks">
+      ${PHASES.map(p=>`<span class="tt-phase" style="left:${((p.weeks[0]-1)/ATHLETE.totalWeeks*100).toFixed(1)}%;color:${p.color}">${p.short}</span>`).join("")}
+      <span class="tt-race" style="left:${((half.weekInPlan-1+half.dayInPlan/7)/ATHLETE.totalWeeks*100).toFixed(1)}%">Half</span>
+      <span class="tt-race" style="left:${((FUJI_RACE.weekInPlan-1+FUJI_RACE.dayInPlan/7)/ATHLETE.totalWeeks*100).toFixed(1)}%;color:var(--orange)">Fuji</span>
+    </div>
+  </section>`;
 
   const strip=inPlan?`<div class="week-rhythm today-strip" role="list">
     ${week.days.map((d,i)=>{
@@ -3994,6 +4046,8 @@ function renderToday(){
 
       ${sessionCard}
 
+      ${track}
+
       ${inPlan?`
       <section class="today-section">
         <div class="sh"><b>This week</b><span>${km.toFixed(1)} / ${week.targetKm} km</span></div>
@@ -4006,7 +4060,7 @@ function renderToday(){
         <span class="gdot"></span>
         <div style="flex:1;min-width:0">
           <div class="sh"><b>Load guard</b><span>${g.acwr?`ACWR ${g.acwr.ratio.toFixed(2)}`:"baseline"}</span></div>
-          <div class="tg-text">${escapeHtml(g.headline)}</div>
+          <div class="tg-text">${escapeHtml(g.headline)}${!stravaCount&&g.level==="ok"?' <span style="color:var(--text-3)">· Connect Strava in Settings to score long runs.</span>':""}</div>
         </div>
       </section>
 
@@ -4039,6 +4093,8 @@ function renderToday(){
   if(bUndo)bUndo.addEventListener("click",()=>toggleDone(date,wIdx,dow));
   const bLog=root.querySelector("#td-log");
   if(bLog)bLog.addEventListener("click",()=>openSessionModal(wIdx,dow,date));
+  const bStr=root.querySelector("#td-open-strength");
+  if(bStr)bStr.addEventListener("click",()=>openStrengthModal(wIdx,s.type==="strength_a"?"A":"B"));
   root.querySelectorAll(".today-strip .wr-day").forEach(b=>b.addEventListener("click",()=>openSessionModal(parseInt(b.dataset.w),parseInt(b.dataset.d),b.dataset.date)));
   const nx=root.querySelector(".today-next");
   if(nx)nx.addEventListener("click",()=>openSessionModal(parseInt(nx.dataset.w),parseInt(nx.dataset.d),nx.dataset.date));
@@ -4478,8 +4534,9 @@ function renderStrength(){
   document.getElementById("btn-log-strength").addEventListener("click",()=>openStrengthModal(w));
 }
 
-function openStrengthModal(week){
+function openStrengthModal(week,day){
   const w0=week||currentPlanWeek();
+  const d0=day==="B"?"B":"A";
   const html=`
     <div class="modal-h">
       <div class="modal-title">Log Strength Session</div>
@@ -4489,7 +4546,7 @@ function openStrengthModal(week){
       <div class="field-row">
         <div class="field"><label>Date</label><input type="date" id="s-date" value="${todayISO()}"></div>
         <div class="field"><label>Week</label><select id="s-week">${PLAN.map(wk=>`<option value="${wk.weekNum}" ${wk.weekNum===w0?"selected":""}>W${wk.weekNum} · ${fmtShort(dateForWeekDay(wk.weekNum,0))}</option>`).join("")}</select></div>
-        <div class="field"><label>Day</label><select id="s-day"><option value="A">A — Mon</option><option value="B">B — Thu</option></select></div>
+        <div class="field"><label>Day</label><select id="s-day"><option value="A" ${d0==="A"?"selected":""}>A — Mon</option><option value="B" ${d0==="B"?"selected":""}>B — Thu</option></select></div>
       </div>
       <div class="field"><label>Exercises completed</label><div id="s-ex"></div></div>
       <div class="field-row">
@@ -5610,10 +5667,47 @@ function clockAt(sec){
   const t=h*3600+m*60+sec;
   return `${Math.floor(t/3600)}:${String(Math.floor((t%3600)/60)).padStart(2,"0")}`;
 }
+/* Schematic elevation of the Kawaguchi → Saiko loop: flat lakeside, the ~100 m Bunkado climb at
+   km 20–22, the rolling Saiko shelf, the ~100 m descent at km 35. Drawn from the course
+   description, not survey data — labelled as such in the caption. */
+function courseProfileSvg(R,t1,compact){
+  const pts=[[0,4],[2,14],[4,22],[6,14],[8,10],[10,16],[12.1,18],[14,10],[16,12],[18,8],[20.5,14],[21,60],[22,112],[23,104],[24,110],[26,100],[27.3,108],[28.5,98],[30.3,104],[32,96],[34,102],[35,60],[36,14],[38,8],[40,10],[42.195,4]];
+  const W=compact?360:760,H=compact?190:200,L=compact?8:16,Rr=compact?8:16,T=compact?34:30,B=compact?46:44;
+  const iw=W-L-Rr,ih=H-T-B,maxKm=42.195,maxM=125;
+  const X=km=>L+km/maxKm*iw, Y=m=>T+ih-(m/maxM)*ih;
+  const path="M"+pts.map(p=>`${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("L");
+  const area=path+`L${X(maxKm).toFixed(1)},${(T+ih).toFixed(1)}L${X(0).toFixed(1)},${(T+ih).toFixed(1)}Z`;
+  const fs=compact?9.5:10.5;
+  const cps=R.checkpoints.map((c,i)=>{
+    const a=t1.checkpoints[i];
+    const x=X(c.km);
+    const up=i%2===0;
+    const short=c.name.replace("Kawaguchiko bridge","Bridge").replace("Saiko #","Saiko ");
+    const y=up?T-8:T+ih+14;
+    const label=compact?(c.hardest?`${short} ${c.km}`:`${c.km}`):`${short} · ${c.km} km`;
+    const sub=compact?clockAt(c.cutoffSec):`closes ${clockAt(c.cutoffSec)} · you ${clockAt(a.arrivalSec)}`;
+    return `<g>
+      <line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${T-2}" y2="${(T+ih+4).toFixed(1)}" stroke="${c.hardest?"var(--red)":"rgba(255,255,255,0.28)"}" stroke-width="${c.hardest?1.5:1}" stroke-dasharray="${c.hardest?"":"2 3"}"/>
+      <text x="${x.toFixed(1)}" y="${up?y-10:y}" text-anchor="${c.km>38?"end":c.km<3?"start":"middle"}" font-size="${fs}" font-weight="700" fill="${c.hardest?"var(--red)":"var(--text)"}">${label}</text>
+      <text x="${x.toFixed(1)}" y="${up?y+2:y+12}" text-anchor="${c.km>38?"end":c.km<3?"start":"middle"}" font-size="${fs-1}" fill="var(--text-2)">${sub}</text>
+    </g>`;
+  }).join("");
+  const seg=(km0,km1,cls)=>`<rect x="${X(km0).toFixed(1)}" y="${T}" width="${(X(km1)-X(km0)).toFixed(1)}" height="${ih}" fill="${cls}" opacity="0.10"/>`;
+  return `<svg class="course-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Schematic course profile with checkpoints">
+    ${seg(20.5,22,"var(--red)")}${seg(34,36,"var(--blue)")}
+    <path d="${area}" fill="var(--orange)" opacity="0.14"/>
+    <path d="${path}" fill="none" stroke="var(--orange)" stroke-width="2" stroke-linejoin="round"/>
+    <text x="${X(21.25).toFixed(1)}" y="${(Y(112)-(compact?4:6)).toFixed(1)}" text-anchor="middle" font-size="${fs}" fill="var(--red)" font-weight="700">+100 m</text>
+    <text x="${X(35).toFixed(1)}" y="${(Y(60)+(compact?12:14)).toFixed(1)}" text-anchor="middle" font-size="${fs}" fill="var(--blue)" font-weight="700">−100 m</text>
+    ${cps}
+  </svg>`;
+}
+
 function renderRaceWeek(){
   const R=PLAN_SPEC.race;
   const tiers=R.tiers.map(t=>FujiIntel.raceProjection(t,R.checkpoints));
   const t1=tiers[0],t2=tiers[1];
+  const compact=isMobileLayout();
   const days=daysUntil(R.date);
   document.getElementById("view-raceweek").innerHTML=`
     ${masthead("raceweek",{
@@ -5624,6 +5718,15 @@ function renderRaceWeek(){
 
     <div class="warn-box mb-16" style="border-color:rgba(96,165,250,0.5);background:rgba(96,165,250,0.06)">
       <b style="color:#60A5FA">D-15 — ATM Bangkok Half (Sat 28 Nov · 02:00)</b> — controlled 21.1 km at 7:45/km, HR ≤160, stops &lt;5%. Pass → Tier 1 below. Otherwise Tier 2. Details in Side Races.
+    </div>
+
+    <div class="card mb-16 course-card">
+      <div class="row" style="justify-content:space-between;align-items:baseline;gap:10px">
+        <div class="card-h" style="margin:0">Course · checkpoints · Tier 1 arrivals</div>
+        <div class="small muted">Kawaguchi → Bunkado climb → Saiko → descent</div>
+      </div>
+      ${courseProfileSvg(R,t1,compact)}
+      <div class="small muted" style="margin-top:6px">Schematic profile from the course description (not survey data). Red line = the tight checkpoint. ${compact?"Times under each checkpoint are closing times.":""}</div>
     </div>
 
     <div class="card mb-16">
