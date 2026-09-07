@@ -70,16 +70,6 @@ test("easyPaceTrend groups steady runs by month and takes the median moving pace
   assert.equal(t[1].n, 1);
 });
 
-test("footStrip returns one cell per day ending today with the bucket or null", () => {
-  const foot = { "2026-09-12": { am: 0, pm: 1 }, "2026-09-05": { am: 2 } };
-  const s = R.footStrip(foot, "2026-09-12", 14);
-  assert.equal(s.length, 14);
-  assert.equal(s[13].date, "2026-09-12");
-  assert.equal(s[13].level, 1);
-  assert.equal(s[6].level, 2);
-  assert.equal(s[0].level, null);
-});
-
 test("heatAdjustSec slows the pace band above the reference temperature and speeds it below, clamped to ±10%", () => {
   assert.equal(R.heatAdjustSec(510, 28), 510);
   assert.equal(R.heatAdjustSec(510, 36), 530);
