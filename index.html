@@ -48,6 +48,7 @@
 <header class="topbar" id="topbar" aria-hidden="true"><span id="topbar-title"></span></header>
 <nav class="tabs" id="tabs" aria-label="Tabs"></nav>
 <div id="sheet-root"></div>
+<noscript><p style="padding:40px 22px;font:15px -apple-system,system-ui,sans-serif;color:#F4F5F7;background:#060709">This app needs JavaScript. Enable it and reload.</p></noscript>
 
 <script>
 'use strict';
@@ -232,10 +233,11 @@ function openMore() {
 }
 
 /* sheets: bottom sheet on the phone, dialog on the desk */
-let __lockY = 0;
+let __lockY = 0, __lastFocus = null;
 function showSheet(html, opts = {}) {
   const root = $("#sheet-root");
   const wasOpen = !!root.firstChild;
+  if (!wasOpen) __lastFocus = document.activeElement;
   root.innerHTML = `<div class="sheet-bg"></div><div class="sheet ${opts.small ? "small" : ""}" role="dialog" aria-modal="true">${html}</div>`;
   $(".sheet-bg", root).addEventListener("click", closeSheet);
   $$(".sheet-close", root).forEach(b => b.addEventListener("click", closeSheet));
@@ -243,6 +245,7 @@ function showSheet(html, opts = {}) {
     __lockY = window.scrollY;
     document.body.style.position = "fixed"; document.body.style.top = `-${__lockY}px`; document.body.style.left = "0"; document.body.style.right = "0";
   }
+  [$("#app"), $("#tabs"), $("#topbar")].forEach(el => { if (el) el.inert = true; });
   const first = $(".sheet input:not([type=hidden]),.sheet textarea,.sheet select", root);
   if (first && !isPhone()) first.focus({ preventScroll: true });
 }
@@ -250,8 +253,11 @@ function closeSheet() {
   const root = $("#sheet-root");
   if (!root.firstChild) return;
   root.innerHTML = "";
+  [$("#app"), $("#tabs"), $("#topbar")].forEach(el => { if (el) el.inert = false; });
   document.body.style.position = ""; document.body.style.top = ""; document.body.style.left = ""; document.body.style.right = "";
   window.scrollTo(0, __lockY);
+  if (__lastFocus && __lastFocus.isConnected) { try { __lastFocus.focus({ preventScroll: true }); } catch (_) { /* element may be gone */ } }
+  __lastFocus = null;
 }
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
 function sheetFrame(o) {
@@ -493,7 +499,7 @@ function renderToday() {
   const root = $("#view-today");
   animateDial(root);
   loadWeather($("#wx", root), s);
-  wire(root, "#foot-am button", "click", b => { const l = parseInt(b.dataset.l, 10); Store.setFoot(date, "am", foot.am === l ? undefined : l); if (foot.am === l) { const f = footLog(); delete f[date].am; Store.set(STORAGE.foot, f); } renderToday(); });
+  wire(root, "#foot-am button", "click", b => { setFootLevel(date, "am", parseInt(b.dataset.l, 10)); renderToday(); });
   wire(root, "#td-rest", "click", () => { toggleDone(date); flash(isDone(Store.getSession(date)) ? "Rest day logged" : "Undone"); });
   wire(root, "#td-log", "click", () => openLogSheet(date));
   wire(root, "#td-details", "click", () => openDetails(date));
@@ -520,6 +526,22 @@ function openDetails(date) {
     ${s.evidence ? `<div class="note" style="margin-top:14px;color:var(--ink-4)">${escapeHtml(s.evidence)}</div>` : ""}`;
   showSheet(sheetFrame({ title: escapeHtml(stripTitle(s.title)), sub: fmtDay(d), body, foot: past && s.type !== "rest" ? `<button class="btn sheet-close" type="button">Close</button><button class="btn pri" id="dt-log" type="button">${isDone(lg) ? "Edit log" : "Log session"}</button>` : `<button class="btn pri sheet-close" type="button">Close</button>` }));
   wire($("#sheet-root"), "#dt-log", "click", () => openLogSheet(date));
+}
+
+/* Tapping the bucket that is already recorded clears it. */
+function setFootLevel(date, slot, level) {
+  const cur = Store.getFoot(date) || {};
+  if (cur[slot] === level) {
+    const all = footLog();
+    if (all[date]) {
+      delete all[date][slot];
+      if (!Object.keys(all[date]).filter(k => k !== "ts").length) delete all[date];
+      Store.set(STORAGE.foot, all);
+    }
+    return undefined;
+  }
+  Store.setFoot(date, slot, level);
+  return level;
 }
 
 function toggleDone(date) {
@@ -666,7 +688,7 @@ function openLogSheet(date) {
     else entry = FujiStore.clearStravaSessionFields({ ...entry, source: "manual" });
     Store.saveSession(date, entry, { replace: true });
     if (footPm !== undefined) Store.setFoot(date, "pm", footPm);
-    else if (foot.pm !== undefined) { const f = footLog(); if (f[date]) { delete f[date].pm; Store.set(STORAGE.foot, f); } }
+    else if (foot.pm !== undefined) setFootLevel(date, "pm", foot.pm);
     closeSheet(); rerender(); flash(status === "skipped" ? "Marked skipped" : "Saved");
   }
   g("lg-save").addEventListener("click", () => save());
@@ -740,6 +762,38 @@ function openBodySheet() {
   });
 }
 
+function openSweatSheet() {
+  const history = Array.isArray(getSettings().sweat) ? getSettings().sweat : [];
+  const fld = (id, label, unit, mode = "decimal") => `<div class="f"><div class="l">${label}</div><input id="${id}" type="text" inputmode="${mode}" placeholder="—" autocomplete="off"><div class="u">${unit}</div></div>`;
+  showSheet(sheetFrame({ title: "Sweat rate", sub: "weigh in either side of a run", body: `
+    <div class="fields">
+      ${fld("sw-pre", "Before", "kg")}${fld("sw-post", "After", "kg")}${fld("sw-fluid", "Drank", "ml", "numeric")}${fld("sw-dur", "Duration", "min", "numeric")}${fld("sw-temp", "Air", "°C", "numeric")}
+      <div class="f text"><div class="l">Note</div><input id="sw-note" placeholder="Easy Z1, humid" autocomplete="off"></div>
+    </div>
+    <div id="sw-out"></div>
+    <div class="note">Nude weight before and after, the fluid you drank in between. Replace about 80 % of the rate while running and 150 % of the loss afterwards. Sodium 500 – 700 mg per litre when it is hot and over an hour.</div>
+    ${history.length ? `<div class="tbl">${history.slice(-6).reverse().map(x => `<div class="tr" style="grid-template-columns:56px 1fr auto"><b>${fmtShort(parseISO(x.date))}</b><span>${x.sweatLh} L/h${x.temp ? ` · ${x.temp} °C` : ""}${x.note ? ` · ${escapeHtml(x.note)}` : ""}</span><span class="right ${x.level === "ok" ? "" : "now"}">−${x.dehydPct}%</span></div>`).join("")}</div>` : ""}`,
+    foot: `<button class="btn sheet-close" type="button">Close</button><button class="btn pri" id="sw-save" type="button">Save</button>` }));
+  const root = $("#sheet-root");
+  const v = id => $("#" + id, root).value.trim();
+  function calc() {
+    const r = FujiRecords.sweatRate({ pre: v("sw-pre"), post: v("sw-post"), fluidMl: v("sw-fluid"), durMin: v("sw-dur") });
+    $("#sw-out", root).innerHTML = r ? `<div class="stats" style="grid-template-columns:repeat(3,1fr);margin-top:18px">
+        <div class="stat"><div class="n">${r.sweatLh.toFixed(2)}<small>L/h</small></div><div class="l">sweat rate</div></div>
+        <div class="stat"><div class="n ${r.level === "ok" ? "" : "now"}">${r.dehydPct.toFixed(1)}<small>%</small></div><div class="l">body mass lost</div></div>
+        <div class="stat"><div class="n">${r.duringMlH}<small>ml/h</small></div><div class="l">drink while running</div></div>
+      </div><div class="note">${r.level === "ok" ? "Under 2 % · acceptable" : r.level === "watch" ? "2 – 3 % · drink more next time" : "Above 3 % · performance and heat risk"} · replace ${r.replaceL.toFixed(2)} L over the next 2 – 4 hours.</div>` : "";
+    return r;
+  }
+  ["sw-pre", "sw-post", "sw-fluid", "sw-dur"].forEach(id => $("#" + id, root).addEventListener("input", calc));
+  wire(root, "#sw-save", "click", () => {
+    const r = calc();
+    if (!r) { flash("Need before, after and duration"); return; }
+    patchSettings({ sweat: [...history, { date: todayISO(), sweatLh: r.sweatLh, dehydPct: r.dehydPct, level: r.level, temp: v("sw-temp") || null, note: v("sw-note") || "", ts: Date.now() }].slice(-40) });
+    closeSheet(); rerender(); flash("Saved");
+  });
+}
+
 /* =========================================================================
    11. PLAN — one week as a timeline, the season one tap away
    ========================================================================= */
@@ -760,7 +814,7 @@ function renderPlan() {
     return `<div class="it ${done ? "done" : ""} ${skip ? "skip" : ""} ${isToday ? "today" : ""}">
       <div class="day"><b>${parseISO(s.date).getUTCDate()}</b>${DAY[i].toUpperCase()}</div>
       <button type="button" class="body" data-date="${s.date}"><div class="t">${escapeHtml(stripTitle(s.title))}${sw ? ' <span class="now mono" style="font-size:11px">· bike (rule 3)</span>' : ""}</div><div class="m ${done ? "log" : ""}">${escapeHtml(done ? logLine(l) : skip ? "skipped" : plannedMeta(s, w))}</div></button>
-      ${s.type === "rest" && !done ? "" : `<button type="button" class="chk ${done ? "on" : ""}" data-chk="${s.date}" aria-label="${done ? "Undo" : "Mark done"}">${I.check()}</button>`}
+      <button type="button" class="chk ${done ? "on" : ""}" data-chk="${s.date}" aria-label="${done ? "Undo" : "Mark done"}: ${escapeHtml(stripTitle(s.title))}">${I.check()}</button>
     </div>`;
   }).join("");
   const nextW = PLAN[w] || null;
@@ -835,6 +889,14 @@ function computeGuard(wIdx) {
   return { week, acwr, guard, jump, lr, lrOk, flags, level, short };
 }
 function addDaysISO(iso, n) { return FujiRecords.addDaysISO(iso, n); }
+/* Training-intensity distribution: three bars, the phase target marked on each. */
+function tidMarkup(t) {
+  const rows = [["Z1", t.z1, t.target[0], "easy · bike · long-run base"], ["Z2", t.z2, t.target[1], "goal pace · cruise intervals"], ["Z3", t.z3, t.target[2], "strides · hill tops"]];
+  if (!t.minutes) return `<div class="empty">Nothing logged this week yet.</div>`;
+  return `<div class="tid">${rows.map(r => `<div class="tid-row"><div class="tid-h"><span>${r[0]} <span class="dim">${r[3]}</span></span><span class="mono">${r[1]}% <span class="dim">/ ${r[2]}%</span></span></div><div class="tid-track"><i style="width:${Math.min(100, r[1])}%"></i><u style="left:${Math.min(100, r[2])}%"></u></div></div>`).join("")}</div>
+    <div class="note">${t.minutes} minutes logged · bars are what you did, the tick is the ${PLAN[currentWeekIndex() - 1].phase.name.toLowerCase()} target.</div>`;
+}
+
 function sparkSvg(points, opts = {}) {
   const W = 340, H = 96, pad = 6;
   if (points.length < 2) return "";
@@ -861,6 +923,7 @@ function renderData() {
   const foot = FujiRecords.footStrip(footLog(), today, 14);
   const body = FujiRecords.bodyStats(readinessLog());
   const weights = body.entries.filter(e => num(e.weight) !== null).slice(-30).map(e => ({ v: parseFloat(e.weight) }));
+  const sweat = Array.isArray(getSettings().sweat) ? getSettings().sweat : [];
   const lrRow = r => {
     const cls = r.done ? "" : "dim";
     const right = r.done ? `<b>${r.km !== null ? fmtKm(r.km) + " km" : "done"}</b><small>${[r.pace ? r.pace + "/km" : "", r.hr ? "HR " + r.hr : ""].filter(Boolean).join(" · ") || (r.min ? r.min + "'" : "")}</small>` : `<b>${r.plannedKm} km</b><small>${r.skipped ? "skipped" : r.date > today ? fmtShort(parseISO(r.date)) : "not logged"}</small>`;
@@ -869,7 +932,7 @@ function renderData() {
     return `<button type="button" class="tr ${cls}" data-date="${r.date}"><b>W${r.week}</b><div><div style="color:${r.done ? "var(--ink)" : "inherit"}">${r.done ? escapeHtml(stripTitle(r.title)) : meta}</div>${r.done ? `<div class="micro" style="margin-top:4px;text-transform:none;letter-spacing:0.02em">${meta || fmtShort(parseISO(r.date))}${r.flagged ? ' <span class="now">· guard</span>' : ""}</div>` : ""}${bar}</div><span class="right">${right}</span></button>`;
   };
   $("#view-data").innerHTML = `<div class="wrap wide">
-    ${viewHead({ kicker: "Data · Strava + manual", title: "Data", sub: `${acts.length ? `${acts.length} activities synced` : "no Strava data yet"}${stravaState().lastSync ? ` · ${new Date(stravaState().lastSync).toLocaleDateString(undefined, { day: "numeric", month: "short" })}` : ""}`, actions: `<button class="btn sm" id="dt-sync" type="button">Sync Strava</button><button class="btn sm" id="dt-body" type="button">Morning numbers</button>` })}
+    ${viewHead({ kicker: "Data · Strava + manual", title: "Data", sub: `${acts.length ? `${acts.length} activities synced` : "no Strava data yet"}${stravaState().lastSync ? ` · ${new Date(stravaState().lastSync).toLocaleDateString(undefined, { day: "numeric", month: "short" })}` : ""}`, actions: `<button class="btn sm" id="dt-sync" type="button">Sync Strava</button><button class="btn sm" id="dt-body" type="button">Morning numbers</button><button class="btn sm" id="dt-sweat" type="button">Sweat rate</button>` })}
     <div class="two">
     <div>
     ${sec("Weekly km", "actual · plan", `<div class="bars">${bars}</div><div class="legend"><span><i></i>run km</span><span><i class="n"></i>this week</span><span><i class="p"></i>plan</span></div>`)}
@@ -879,6 +942,7 @@ function renderData() {
         <div><div class="gl">Long-run jump</div><div class="gv ${g.jump.flag ? "hot" : ""}">${g.jump.ratio !== null ? g.jump.ratio.toFixed(2) + "×" : "—"}</div><div class="gs">${g.week.longRunKm} km vs ${g.jump.max ?? "—"} km · limit 1.25×</div></div>
         <div><div class="gl">Latest long run</div><div class="gv ${g.lr && g.lr.intel && !g.lrOk ? "hot" : ""}">${g.lr && g.lr.intel ? (g.lrOk ? "clean" : "flag") : "—"}</div><div class="gs">${g.lr && g.lr.intel ? `${fmtKm(g.lr.distanceKm)} km · stops ${g.lr.intel.stopPct}% · cadence ${g.lr.intel.cadenceStartSpm}→${g.lr.intel.cadenceEndSpm}` : "sync, then analyze long runs"}</div></div>
       </div></div>${g.flags.length ? `<div>${g.flags.slice(0, 5).map(f => `<div class="flag ${f.cls}">${escapeHtml(f.text)}</div>`).join("")}</div>` : `<div class="flag">No guard tripped. Continuous long run, easy days easy, same shoe.</div>`}`) : ""}
+    ${inPlanWindow() ? sec("Intensity", `logged vs ${PLAN[currentWeekIndex() - 1].phase.name} target`, tidMarkup(FujiRecords.tidForWeek(PLAN[currentWeekIndex() - 1], log))) : ""}
     ${sec("Long runs", `stop % · guard ${GUARDS.stopPctMax}`, `<div class="tbl">${lrRows.map(lrRow).join("")}</div>`)}
     </div>
     <div>
@@ -889,12 +953,13 @@ function renderData() {
         <div class="stat"><div class="n">${body.rhr14 ?? "—"}<small>bpm</small></div><div class="l">rest HR 14 d</div></div>
         <div class="stat"><div class="n">${body.hrv14 ?? "—"}<small>ms</small></div><div class="l">HRV 14 d</div></div>
         <div class="stat"><div class="n">${body.sleep7 !== null ? body.sleep7.toFixed(1) : "—"}<small>h</small></div><div class="l">sleep 7 d</div></div>
-      </div>${weights.length >= 2 ? `<div class="spark" style="height:64px">${sparkSvg(weights)}<span class="lbl" style="left:0;top:-16px">${weights[0].v.toFixed(1)}</span><span class="lbl" style="right:0;top:-16px;color:var(--ink)">${weights[weights.length - 1].v.toFixed(1)}</span></div>` : ""}`)}
+      </div>${weights.length >= 2 ? `<div class="spark" style="height:64px">${sparkSvg(weights)}<span class="lbl" style="left:0;top:-16px">${weights[0].v.toFixed(1)}</span><span class="lbl" style="right:0;top:-16px;color:var(--ink)">${weights[weights.length - 1].v.toFixed(1)}</span></div>` : ""}${sweat.length ? `<div class="tbl">${sweat.slice(-4).reverse().map(x => `<div class="tr" style="grid-template-columns:56px 1fr auto"><b>${fmtShort(parseISO(x.date))}</b><span>sweat ${x.sweatLh} L/h${x.temp ? ` · ${x.temp} °C` : ""}</span><span class="right ${x.level === "ok" ? "" : "now"}">−${x.dehydPct}%</span></div>`).join("")}</div>` : ""}`)}
     </div></div>
   </div>`;
   const root = $("#view-data");
   wire(root, "#dt-sync", "click", () => syncStrava(root.querySelector("#dt-sync")));
   wire(root, "#dt-body", "click", openBodySheet);
+  wire(root, "#dt-sweat", "click", openSweatSheet);
   wire(root, ".tr[data-date]", "click", b => b.dataset.date > today ? openDetails(b.dataset.date) : openLogSheet(b.dataset.date));
 }
 
@@ -932,6 +997,13 @@ function courseSvg(t1, compact) {
 const GEAR = ["Race shoes · the W10 long-run pair", "Long-sleeve base + throwaway layer", "Thin gloves + buff · shed after km 5", "Bib · race belt · chest strap · watch charged", "Gels × 9 (7 plain, 2 caffeinated) + salt", "Anti-chafe · tape", "Dry clothes, recovery drink, sandals"];
 const FUEL = [["5", "gel + water", "25–30"], ["10", "gel + sports drink", "30 + 10"], ["15", "gel + water", "25–30"], ["19–20", "gel before the climb + salt", "30"], ["25", "gel + sports drink", "30 + 10"], ["30", "caffeinated gel + water", "30"], ["35", "gel + sports drink", "30 + 10"], ["38–40", "sports drink or half gel", "15"]];
 const MORNING = [["05:45", "Wake", "500 ml water + electrolyte · 0–5 °C outside"], ["06:00", "Breakfast", "200 g carbohydrate · rice, banana, honey"], ["07:15", "Body prep", "Toilet · anti-chafe · tape what rubbed on the 30 km"], ["07:45", "Walk to Funatsuhama", "10 min from Kawaguchiko station · bag drop"], ["08:30", "Warm-up", "8 min jog · leg swings · 3 × 60 m strides · keep the layer on"], ["08:50", "Caffeine", "1 caffeinated gel + 200 ml water"], ["09:00", "Start", "First 4 km uphill at 7:45, HR ≤ 152"]];
+const EMERGENCY = [
+  ["Cramp", "Slow to a walk, stretch the muscle, take salt with fluid.", "It is neuromuscular fatigue, not only salt. Shorten the stride and drop the pace a step rather than stopping dead."],
+  ["Bonk", "Take a gel with water and walk two minutes before running again.", "Carbohydrate takes 10 – 15 minutes to reach the blood. Do not chase the lost time; hold the new pace to the finish."],
+  ["Too much water", "Stop drinking plain water. Take salt and carbohydrate instead.", "Nausea with a sloshing stomach and swollen fingers late in a cold race is dilution, not dehydration. Tell a marshal if you feel confused."],
+  ["Foot pain", "Walk. If it stays above 3 out of 10 for a kilometre, stop at the next aid station.", "The lateral foot is the injury from 29 August. A finish is not worth a stress fracture."],
+  ["Behind the cutoff", "Check the next checkpoint time, then hold the pace it needs.", "Saiko 3 at 27.3 km is the tight one. If the buffer is gone there, run in to the closure and take the bus."]
+];
 const CUES = [["0–4", "Uphill, cold, calm. 7:45 is the plan."], ["4–20", "7:30. Walk the water, gel on time."], ["20–22", "Cadence up the hill. This is the treadmill session."], ["22–34", "Saiko is banked at 27.3. Hold 7:45."], ["34–36", "Short steps down. Save the quads."], ["36–42", "Everything is banked. Bring it home."]];
 function renderRace() {
   const tiers = COURSE.tiers.map(t => FujiIntel.raceProjection(t, COURSE.checkpoints));
@@ -960,6 +1032,7 @@ function renderRace() {
     ${sec("Fuel", "60 g/h · 300–400 ml/h", `<div class="tbl">${FUEL.map(f => `<div class="tr" style="grid-template-columns:52px 1fr auto"><b>${f[0]}</b><span>${escapeHtml(f[1])}</span><span class="right">${f[2]} g</span></div>`).join("")}</div><div class="note">Carb load D-3 → D-1: 10 g/kg ≈ 850 g a day, low fibre. Expect +1–2 kg. Cold hides thirst: drink to the plan.</div>`)}
     ${sec("Gear", `${Object.values(gear).filter(Boolean).length} of ${GEAR.length}`, `<div class="rows">${GEAR.map((g, i) => `<button type="button" class="check ${gear[i] ? "on" : ""}" data-gear="${i}"><span class="box">${I.check()}</span><div class="body"><div class="t">${escapeHtml(g)}</div></div></button>`).join("")}</div>`)}
     ${sec("Cold", "2–8 °C after 28–32 °C", `<p class="copy">Same HR buys 6–10 % more pace in the cold. Do not spend it in the first 4 km. Dress for 10 °C warmer than the air once moving, in layers you can drop.</p>`)}
+    ${sec("If it goes wrong", "on the course", `<div class="tbl">${EMERGENCY.map(e => `<div class="tr" style="grid-template-columns:78px 1fr"><b>${escapeHtml(e[0])}</b><span><span style="color:var(--ink)">${escapeHtml(e[1])}</span><br>${escapeHtml(e[2])}</span></div>`).join("")}</div>`)}
     ${sec("Cues", "", `<div class="tbl cue">${CUES.map(c => `<div class="tr"><b>${c[0]}</b><span style="color:var(--ink)">${escapeHtml(c[1])}</span></div>`).join("")}</div>`)}
     </div></div>
 
@@ -969,7 +1042,7 @@ function renderRace() {
     ${sec("Done", "2026", `<div class="tbl">${RACES_DONE.map(r => `<button type="button" class="tr" data-race="${r.id}" style="grid-template-columns:56px 1fr auto"><b>${fmtShort(parseISO(r.date))}</b><span><span style="color:var(--ink)">${escapeHtml(r.name)}</span><br>${escapeHtml(Object.values(r.specs).slice(0, 2).join(" · "))}</span><span class="right"><b>${escapeHtml(r.id === "hyrox" ? (hyroxResult || "add result") : r.result)}</b></span></button>`).join("")}</div>`)}
   </div>`;
   const root = $("#view-race");
-  wire(root, "[data-gear]", "click", b => { const g = { ...(getSettings().gear || {}) }; const i = b.dataset.gear; g[i] = !g[i]; patchSettings({ gear: g }); b.classList.toggle("on", !!g[i]); const h = root.querySelector(".sec-h .micro"); renderRace(); });
+  wire(root, "[data-gear]", "click", b => { const g = { ...(getSettings().gear || {}) }; const i = b.dataset.gear; g[i] = !g[i]; patchSettings({ gear: g }); b.classList.toggle("on", !!g[i]); renderRace(); });
   wire(root, "[data-race='hyrox']", "click", async () => { const v = await inputSheet({ title: "Hyrox result", sub: "16 Aug 2026 · doubles", label: "Time", value: hyroxResult, placeholder: "1:32:10" }); if (v !== null) { patchSettings({ hyroxResult: v }); renderRace(); } });
 }
 
@@ -1063,6 +1136,7 @@ function applyStravaActivitiesToArchive(activities) {
     const lr = lrs.find(r => r.date === date);
     const planned = { title: lr ? lr.title : "", duration: lr ? lr.plannedDuration : "", type: lr ? lr.type : "easy_z1", hrTarget: lr && lr.type === "tune_race" ? "race effort" : "" };
     const a = FujiStravaSync.activitiesForDay(activities, date, planned)[0];
+    if (!a) { summary.skipped++; return; }
     const existing = log[date] || {};
     if (String(existing.stravaId || "") === String(a.id) || (existing.status && existing.source !== "strava")) { summary.skipped++; return; }
     const isUpdate = existing.source === "strava";
@@ -1207,7 +1281,7 @@ function renderSettings() {
     ${sec("Shoes", `${shoes.length}`, shoes.length ? `<div class="chips">${shoes.map(s => `<button type="button" class="chip" data-shoe-rm="${escapeHtml(s)}">${escapeHtml(s)} <span class="dim">×</span></button>`).join("")}</div>` : `<div class="empty">Add shoes from the log sheet.</div>`)}
     ${sec("Backup", "", `<div class="btnrow" style="margin-top:12px"><button class="btn" id="bk-export" type="button">Export JSON</button><button class="btn" id="bk-import" type="button">Import JSON</button></div><div class="note">Everything lives in this browser. Export before changing phones.</div>`)}
     ${sec("Data health", audit.summary.issueCount ? `${audit.summary.issueCount} issue${audit.summary.issueCount === 1 ? "" : "s"}` : "clean", audit.summary.issueCount ? `<div class="rows">${audit.issues.slice(0, 8).map(i => `<div class="r"><div class="body"><div class="t">${escapeHtml(i.code)}${i.date ? ` · ${i.date}` : ""}</div><div class="m">${escapeHtml(i.message)}</div></div>${i.safeFix ? '<span class="v">fixable</span>' : ""}</div>`).join("")}</div>${audit.summary.safeFixableCount ? `<div class="btnrow"><button class="btn sm" id="dh-repair" type="button">Repair ${audit.summary.safeFixableCount}</button></div>` : ""}` : `<div class="stats" style="grid-template-columns:repeat(3,1fr)">${counts.map(c => `<div class="stat"><div class="n">${c[1]}</div><div class="l">${c[0]}</div></div>`).join("")}</div>`)}
-    ${sec("Reset", "", `<div class="rows">${[["rs-sess", "Clear session log", STORAGE.sessions], ["rs-foot", "Clear foot and morning logs", null], ["rs-strength", "Clear strength log", STORAGE.strength], ["rs-archive", "Clear archive", STORAGE.archiveSessions], ["rs-all", "Erase everything", "all"]].map(r => `<button type="button" class="r act" id="${r[0]}"><div class="body"><div class="t">${r[1]}</div></div><span class="chev">${I.right()}</span></button>`).join("")}</div>`)}
+    ${sec("Reset", "", `<div class="rows">${[["rs-sess", "Clear session log"], ["rs-foot", "Clear foot and morning logs"], ["rs-strength", "Clear strength log"], ["rs-archive", "Clear archive"], ["rs-all", "Erase everything"]].map(r => `<button type="button" class="r act" id="${r[0]}"><div class="body"><div class="t">${r[1]}</div></div><span class="chev">${I.right()}</span></button>`).join("")}</div>`)}
   </div>`;
   const root = $("#view-settings");
   wire(root, "#cfg-apply", "click", () => { patchSettings({ gateDate: $("#cfg-gate", root).value }); rebuildPlan(); State.init(); flash(PLAN_OBJ.slip ? `Rebuilt · gate slipped ${PLAN_OBJ.slip} wk` : "Rebuilt · gate at W1"); renderSettings(); renderCountdown(); });
@@ -1244,6 +1318,14 @@ function showStorageWarning() {
   b.querySelector("button").addEventListener("click", () => b.remove());
   document.body.appendChild(b);
 }
+function showUpdateBanner() {
+  if ($(".banner.update")) return;
+  const b = document.createElement("div");
+  b.className = "banner update"; b.setAttribute("role", "status");
+  b.innerHTML = '<span style="flex:1">A new version is ready.</span><button class="link" type="button" style="color:var(--ink);font-weight:600">Reload</button>';
+  b.querySelector("button").addEventListener("click", () => location.reload());
+  document.body.appendChild(b);
+}
 function init() {
   State.init();
   renderNav(); renderCountdown(); setupTopbar();
@@ -1265,7 +1347,15 @@ function init() {
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true }); else init();
 
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
-  window.addEventListener("load", () => { navigator.serviceWorker.register("./sw.js").catch(() => { /* offline support is optional */ }); });
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").then(reg => {
+      reg.addEventListener("updatefound", () => {
+        const sw = reg.installing;
+        if (!sw || !navigator.serviceWorker.controller) return;   // first install, nothing to announce
+        sw.addEventListener("statechange", () => { if (sw.state === "installed") showUpdateBanner(); });
+      });
+    }).catch(() => { /* offline support is optional */ });
+  });
 }
 </script>
 </body>

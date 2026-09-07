@@ -98,3 +98,58 @@ test("bodyStats returns latest weight and rolling averages from readiness entrie
   assert.equal(s.sleep7, 6.8);
   assert.equal(R.bodyStats({}).weight, null);
 });
+
+test("zoneForSession maps logged and planned types to training zones", () => {
+  assert.equal(R.zoneForSession({ type: "easy_z1" }, null), "z1");
+  assert.equal(R.zoneForSession({ type: "walk_run" }, null), "z1");
+  assert.equal(R.zoneForSession({ type: "bike" }, null), "z1");
+  assert.equal(R.zoneForSession({ type: "mp_long" }, null), "z2");
+  assert.equal(R.zoneForSession({ type: "tune_race" }, null), "z2");
+  assert.equal(R.zoneForSession({ type: "hill" }, null), "mixed");
+  assert.equal(R.zoneForSession({}, { zone: "z2" }), "z2");
+  assert.equal(R.zoneForSession({ type: "strength_a" }, { zone: "strength" }), null);
+  assert.equal(R.zoneForSession(null, null), null);
+});
+
+test("tidForWeek splits logged minutes into zones and reports them against the phase target", () => {
+  const week = PLAN.weeks[6];
+  const day = i => week.days[i].date;
+  const log = {
+    [day(1)]: { status: "done", type: "easy_z1", actualDuration: "60" },
+    [day(2)]: { status: "done", type: "speed", actualDuration: "40" },
+    [day(5)]: { status: "done", type: "long_run", actualDuration: "100" },
+    [day(6)]: { status: "skipped", type: "bike", actualDuration: "90" }
+  };
+  const t = R.tidForWeek(week, log);
+  assert.equal(t.minutes, 200);
+  assert.equal(t.z1, 80);
+  assert.equal(t.z2, 20);
+  assert.equal(t.z3, 0);
+  assert.deepEqual(t.target, week.phase.tid);
+  const empty = R.tidForWeek(week, {});
+  assert.equal(empty.minutes, 0);
+  assert.equal(empty.z1, 0);
+});
+
+test("tidForWeek falls back to the planned duration and splits a mixed session", () => {
+  const week = PLAN.weeks[7];
+  const hill = week.days.find(d => d.type === "hill");
+  const t = R.tidForWeek(week, { [hill.date]: { status: "done", type: "hill" } });
+  assert.equal(t.minutes, hill.duration);
+  assert.equal(t.z1 + t.z2 + t.z3, 100);
+  assert.ok(t.z1 > t.z2 && t.z2 > t.z3);
+});
+
+test("sweatRate returns loss, rate, dehydration percent and replacement targets", () => {
+  const s = R.sweatRate({ pre: 85.2, post: 83.8, fluidMl: 700, durMin: 90 });
+  assert.equal(s.lossKg, 1.4);
+  assert.equal(s.sweatLh, 1.4);
+  assert.equal(s.dehydPct, 1.6);
+  assert.equal(s.level, "ok");
+  assert.equal(s.duringMlH, 1120);
+  assert.equal(s.replaceL, 2.1);
+  assert.equal(R.sweatRate({ pre: 85, post: 82, fluidMl: 0, durMin: 120 }).level, "high");
+  assert.equal(R.sweatRate({ pre: 85, post: 82.5, fluidMl: 0, durMin: 120 }).level, "watch");
+  assert.equal(R.sweatRate({ pre: 85, post: 86, fluidMl: 0, durMin: 60 }), null);
+  assert.equal(R.sweatRate({ pre: 85, post: 84, fluidMl: 0, durMin: 0 }), null);
+});

@@ -10,6 +10,7 @@
   const RUN_SPORTS = ["Run", "TrailRun", "VirtualRun"];
   const r1 = x => Math.round(x * 10) / 10;
   const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
+  const round2 = x => Math.round(x * 100) / 100;
   const median = a => { if (!a.length) return null; const s = a.slice().sort((x, y) => x - y); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
   const isDone = lg => !!lg && (lg.status === "done" || lg.status === "modified");
 
@@ -144,6 +145,48 @@
     return Math.round(baseSec * (1 + adj));
   }
 
+  /* Training-intensity distribution: which zone a session actually landed in.
+     The logged type wins over the planned one, so a "modified" session is counted honestly. */
+  const TYPE_ZONE = { easy_z1: "z1", recovery: "z1", long_run: "z1", walk_run: "z1", bike: "z1", mp_long: "z2", tune_race: "z2", speed: "z2", hill: "mixed" };
+  const MIXED_SPLIT = { z1: 0.5, z2: 0.4, z3: 0.1 };
+  function zoneForSession(lg, planned) {
+    const t = lg && lg.type;
+    if (t && Object.prototype.hasOwnProperty.call(TYPE_ZONE, t)) return TYPE_ZONE[t];
+    const z = planned && planned.zone;
+    return z === "z1" || z === "z2" || z === "z3" || z === "mixed" ? z : null;
+  }
+  function tidForWeek(week, log) {
+    const min = { z1: 0, z2: 0, z3: 0 };
+    (week.days || []).forEach(s => {
+      const lg = (log || {})[s.date];
+      if (!isDone(lg)) return;
+      const dur = Number(lg.actualDuration) || s.duration || 0;
+      if (dur <= 0) return;
+      const z = zoneForSession(lg, s);
+      if (z === "mixed") { min.z1 += dur * MIXED_SPLIT.z1; min.z2 += dur * MIXED_SPLIT.z2; min.z3 += dur * MIXED_SPLIT.z3; }
+      else if (min[z] !== undefined) min[z] += dur;
+    });
+    const total = min.z1 + min.z2 + min.z3;
+    const pct = v => total ? Math.round(v / total * 100) : 0;
+    return { minutes: Math.round(total), z1: pct(min.z1), z2: pct(min.z2), z3: pct(min.z3), target: (week.phase && week.phase.tid) || [0, 0, 0] };
+  }
+
+  /* Sweat rate from a weigh-in either side of a run (ACSM 2007 method).
+     Replace 80 % of the rate during exercise, 150 % of the net loss after. */
+  function sweatRate(o) {
+    const pre = Number(o && o.pre), post = Number(o && o.post), dur = Number(o && o.durMin), fluid = Number(o && o.fluidMl) || 0;
+    if (!(pre > 0) || !(post > 0) || !(dur > 0) || post >= pre) return null;
+    const lossKg = pre - post;
+    const sweatL = lossKg + fluid / 1000;
+    const sweatLh = sweatL / (dur / 60);
+    const dehydPct = lossKg / pre * 100;
+    return {
+      lossKg: round2(lossKg), sweatLh: round2(sweatLh), dehydPct: r1(dehydPct),
+      duringMlH: Math.round(sweatLh * 0.8 * 1000), replaceL: round2(lossKg * 1.5),
+      level: dehydPct < 2 ? "ok" : dehydPct <= 3 ? "watch" : "high"
+    };
+  }
+
   function bodyStats(readiness) {
     const entries = Object.entries(readiness || {}).map(([date, v]) => ({ date, ...(v || {}) })).sort((a, b) => a.date.localeCompare(b.date));
     const nums = (key, n) => entries.filter(e => e[key] !== null && e[key] !== undefined && e[key] !== "" && !isNaN(parseFloat(e[key]))).slice(-n).map(e => parseFloat(e[key]));
@@ -159,7 +202,7 @@
     };
   }
 
-  const api = { RUN_SPORTS, addDaysISO, daysBetween, weekStartFor, paceToSec, runsByDate, weeklyKm, longDayOf, longRunRows, easyPaceTrend, footStrip, heatAdjustSec, bodyStats };
+  const api = { RUN_SPORTS, addDaysISO, daysBetween, weekStartFor, paceToSec, runsByDate, weeklyKm, longDayOf, longRunRows, easyPaceTrend, footStrip, heatAdjustSec, zoneForSession, tidForWeek, sweatRate, bodyStats };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.FujiRecords = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);
