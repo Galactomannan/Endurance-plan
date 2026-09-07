@@ -160,6 +160,14 @@
       catch (_) { return false; }
     }
     function clear(k) { try { backend.removeItem(k); } catch (_) { /* ignore */ } }
+    function unreadableKeys() {
+      return Object.values(STORAGE).filter(k => {
+        let raw;
+        try { raw = backend.getItem(k); } catch (_) { return false; }
+        if (raw === null || raw === undefined || raw === "") return false;
+        try { JSON.parse(raw); return false; } catch (_) { return true; }
+      });
+    }
 
     function exportAll() {
       const o = {};
@@ -175,6 +183,9 @@
 
     function audit() {
       const issues = [];
+      unreadableKeys().forEach(key => {
+        issues.push({ code: "unreadable", key, message: `${key} is damaged and cannot be read. It is being treated as empty; restore from a backup to get it back.`, safeFix: false });
+      });
       Object.values(STORAGE).forEach(key => {
         const value = get(key, storageDefaultForKey(key));
         const valid = key === STORAGE.strength ? Array.isArray(value) : isPlainRecord(value);
