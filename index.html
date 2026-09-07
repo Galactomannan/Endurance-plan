@@ -203,9 +203,10 @@ function renderCountdown() {
   const hd = daysUntil(RACE_HALF.date);
   $("#sb-meta").textContent = `${inPlanWindow() ? `W${wi} of ${ATHLETE.totalWeeks}` : wi < 1 ? "before W1" : "season done"} · half ${hd >= 0 ? hd + " d" : "done"}`;
 }
-const VIEWS = {};
+const VIEWS = Object.create(null);
+function hasView(id) { return typeof id === "string" && typeof VIEWS[id] === "function"; }
 function switchView(id) {
-  if (!VIEWS[id]) return;
+  if (!hasView(id)) return;
   if (isPhone()) State.scroll[State.view] = window.scrollY;
   State.view = id;
   $$(".view").forEach(v => v.classList.toggle("active", v.dataset.view === id));
@@ -215,7 +216,7 @@ function switchView(id) {
   closeSheet();
   window.scrollTo({ top: isPhone() ? (State.scroll[id] || 0) : 0, behavior: "instant" });
 }
-function rerender() { if (VIEWS[State.view]) VIEWS[State.view](); renderCountdown(); }
+function rerender() { if (hasView(State.view)) VIEWS[State.view](); renderCountdown(); }
 function setupTopbar() {
   const tb = $("#topbar");
   const sync = () => tb.classList.toggle("scrolled", window.scrollY > 56);
@@ -1092,16 +1093,17 @@ function renderStrength() {
    ========================================================================= */
 function renderAthlete() {
   const a = ATHLETE, f = fmtPace;
-  const rows = list => `<div class="tbl">${list.map(r => `<div class="tr" style="grid-template-columns:1fr auto"><span>${r[0]}${r[2] ? `<br><span class="dim">${r[2]}</span>` : ""}</span><span class="right"><b>${r[1]}</b></span></div>`).join("")}</div>`;
+  /* Orange marks the one number in a section the season turns on. Never more than one. */
+  const rows = list => `<div class="tbl kv">${list.map(r => `<div class="tr" style="grid-template-columns:1fr auto"><span>${r[0]}${r[2] ? `<br><span class="dim">${r[2]}</span>` : ""}</span><span class="right"><b class="${r[3] ? "hot" : ""}">${r[1]}</b></span></div>`).join("")}</div>`;
   $("#view-athlete").innerHTML = `<div class="wrap wide">
     ${viewHead({ kicker: "Athlete", title: a.name, sub: `${a.age} y · ${a.weight} kg · ${a.height} cm · gate ${fmtShort(parseISO(planGateDate()))}` })}
     <div class="two"><div>
-    ${sec("Lab", `GXT · ${a.testDate}`, `<div class="stats"><div class="stat"><div class="n">${a.vo2max}</div><div class="l">VO₂max</div></div><div class="stat"><div class="n">${a.hrMax}</div><div class="l">HR max</div></div><div class="stat"><div class="n">${a.vt1_hr}</div><div class="l">VT1 · ${a.vt1_pace}</div></div><div class="stat"><div class="n">${a.vt2_hr}</div><div class="l">VT2 · ${a.vt2_pace}</div></div></div><div class="note">96th percentile for age. vVO₂max ${a.vvo2max} km/h. The engine is not the limiter; continuity is.</div>`)}
-    ${sec("Zones", "GXT 3-zone · Bangkok caps", rows([["Z1 · aerobic", "< 155", "easy, walk-run, bike, long-run base · cap 150 in the heat"], ["Z2 · threshold", "155 – 171", "goal-pace segments ≤ 162 · cruise intervals 165 – 170"], ["Z3 · VO₂max", "> 171", "not prescribed · strides and hill tops only"]]))}
-    ${sec("Paces", "seconds per km", rows([["Recovery · walk-run", `${f(PACES.recovery.minSec)} – ${f(PACES.recovery.maxSec)}`, `HR under ${PACES.recovery.hrCap}`], ["Easy", `${f(PACES.easy.minSec)} – ${f(PACES.easy.maxSec)}`, `HR under ${PACES.easy.hrCap}`], ["Goal · marathon", `${f(PACES.goal.minSec)} – ${f(PACES.goal.maxSec)}`, `target ${PACES.goal.target} · HR ≤ ${PACES.goal.hrCap}`], ["Threshold · cruise", `${f(PACES.threshold.minSec)} – ${f(PACES.threshold.maxSec)}`, `HR ${PACES.threshold.hrMin} – ${PACES.threshold.hrMax}`], ["Bike", "Z1", `HR under ${PACES.bike.hrCap} · 85 – 95 rpm`]]))}
+    ${sec("Lab", `GXT · ${a.testDate}`, `<div class="stats"><div class="stat"><div class="n hot">${a.vo2max}</div><div class="l">VO₂max</div></div><div class="stat"><div class="n">${a.hrMax}</div><div class="l">HR max</div></div><div class="stat"><div class="n">${a.vt1_hr}</div><div class="l">VT1 · ${a.vt1_pace}</div></div><div class="stat"><div class="n">${a.vt2_hr}</div><div class="l">VT2 · ${a.vt2_pace}</div></div></div><div class="note">96th percentile for age. vVO₂max ${a.vvo2max} km/h. The engine is not the limiter; continuity is.</div>`)}
+    ${sec("Zones", "GXT 3-zone · Bangkok caps", rows([["Z1 · aerobic", "< 155", "easy, walk-run, bike, long-run base · cap 150 in the heat", true], ["Z2 · threshold", "155 – 171", "goal-pace segments ≤ 162 · cruise intervals 165 – 170"], ["Z3 · VO₂max", "> 171", "not prescribed · strides and hill tops only"]]))}
+    ${sec("Paces", "seconds per km", rows([["Recovery · walk-run", `${f(PACES.recovery.minSec)} – ${f(PACES.recovery.maxSec)}`, `HR under ${PACES.recovery.hrCap}`], ["Easy", `${f(PACES.easy.minSec)} – ${f(PACES.easy.maxSec)}`, `HR under ${PACES.easy.hrCap}`], ["Goal · marathon", `${f(PACES.goal.minSec)} – ${f(PACES.goal.maxSec)}`, `target ${PACES.goal.target} · HR ≤ ${PACES.goal.hrCap}`, true], ["Threshold · cruise", `${f(PACES.threshold.minSec)} – ${f(PACES.threshold.maxSec)}`, `HR ${PACES.threshold.hrMin} – ${PACES.threshold.hrMax}`], ["Bike", "Z1", `HR under ${PACES.bike.hrCap} · 85 – 95 rpm`]]))}
     </div><div>
-    ${sec("Benchmarks", "2026", rows([["Longest run", "27.0 km", "29 Aug · 8:11/km moving · 20 % stopped"], ["Best half · moving", "2:54:16", "8 Aug · 8:14/km · elapsed 4:26"], ["Easy pace · Bangkok", "8:30 – 9:15", "at HR under 150"], ["Trail 25k", "7:46:41", "28 Jun · +1,153 m"]]))}
-    ${sec("Nutrition", `${a.weight} kg`, rows([["Protein", "136 – 153 g", "1.6 – 1.8 g/kg"], ["Carbohydrate", "255 – 850 g", "3 – 5 g/kg rest · 6 – 10 g/kg long days · 10 g/kg race week"], ["Fat", "68 – 85 g", "0.8 – 1.0 g/kg"], ["Fluid", "2.5 – 3.0 L", "+ 500 – 700 ml per training hour"], ["Racing", "60 – 90 g/h", "glucose + fructose 2:1"]]))}
+    ${sec("Benchmarks", "2026", rows([["Longest run", "27.0 km", "29 Aug · 8:11/km moving · 20 % stopped", true], ["Best half · moving", "2:54:16", "8 Aug · 8:14/km · elapsed 4:26"], ["Easy pace · Bangkok", "8:30 – 9:15", "at HR under 150"], ["Trail 25k", "7:46:41", "28 Jun · +1,153 m"]]))}
+    ${sec("Nutrition", `${a.weight} kg`, rows([["Protein", "136 – 153 g", "1.6 – 1.8 g/kg"], ["Carbohydrate", "255 – 850 g", "3 – 5 g/kg rest · 6 – 10 g/kg long days · 10 g/kg race week"], ["Fat", "68 – 85 g", "0.8 – 1.0 g/kg"], ["Fluid", "2.5 – 3.0 L", "+ 500 – 700 ml per training hour"], ["Racing", "60 – 90 g/h", "glucose + fructose 2:1", true]]))}
     ${sec("Notes", "", `<div class="tbl"><div class="tr" style="grid-template-columns:64px 1fr"><b>injury</b><span>${escapeHtml(a.injury.site)} after the 27 km on 29 Aug: 2.7× jump on the longest run, cadence 157 → 130 spm, 56 min of stops. Second load-spike injury of the year.</span></div><div class="tr" style="grid-template-columns:64px 1fr"><b>heat</b><span>Every run so far at 28 – 32 °C. The same effort is worth 6 – 10 % more at 2 – 8 °C. That gap is where 7:30 comes from.</span></div><div class="tr" style="grid-template-columns:64px 1fr"><b>shoes</b><span>One daily trainer through the return block. Plated shoes only on cruise-interval days from W7. Race shoe = the W10 long-run pair.</span></div><div class="tr" style="grid-template-columns:64px 1fr"><b>data</b><span>Treadmill distances run 18 – 20 % high; indoor paces are not used for zones. Watch zone 2 sits inside GXT Z1; prescribe by GXT.</span></div></div>`)}
     </div></div>
   </div>`;
@@ -1349,7 +1351,7 @@ function init() {
     flash(sr === "connected" ? "Strava connected" : sr === "denied" ? "Strava connection cancelled" : "Add the Strava keys in Vercel first");
     history.replaceState({}, document.title, location.pathname);
   } else {
-    switchView(VIEWS[p.get("view")] ? p.get("view") : "today");
+    switchView(hasView(p.get("view")) ? p.get("view") : "today");
   }
   setInterval(renderCountdown, 3600e3);
   let lastDay = todayISO(), phone = isPhone();

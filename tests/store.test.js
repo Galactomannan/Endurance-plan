@@ -115,3 +115,24 @@ test("export includes every storage key and import normalizes and ignores unknow
   assert.deepEqual(S2.get(STORAGE.strength), []);
   assert.throws(() => S2.importAll("nope"));
 });
+
+test("unreadable storage is reported rather than silently read as empty", () => {
+  const be = memoryBackend();
+  be.setItem(STORAGE.sessions, "{not json");
+  be.setItem(STORAGE.strength, "[1,");
+  const S = createStore(be);
+  assert.deepEqual(S.get(STORAGE.sessions, {}), {}, "reads still fall back so the app keeps working");
+  const a = S.audit();
+  const unreadable = a.issues.filter(i => i.code === "unreadable");
+  assert.equal(unreadable.length, 2);
+  assert.deepEqual(unreadable.map(i => i.key).sort(), [STORAGE.sessions, STORAGE.strength].sort());
+  assert.equal(unreadable.every(i => i.safeFix === false), true, "restoring from a backup is the only fix");
+  assert.ok(/unreadable|damaged/i.test(unreadable[0].message));
+  assert.equal(a.summary.issueCount >= 2, true);
+});
+
+test("a key that is simply absent is not reported as unreadable", () => {
+  const S = createStore(memoryBackend());
+  assert.equal(S.audit().issues.filter(i => i.code === "unreadable").length, 0);
+  assert.equal(S.audit().summary.issueCount, 0);
+});
