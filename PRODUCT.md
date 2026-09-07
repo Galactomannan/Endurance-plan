@@ -14,7 +14,7 @@ A personal, offline-first training system for one season: the Mt. Fuji Internati
 
 ## Brand Personality
 
-Precise, calm, coach-like. Three words: **titanium, honest, unhurried**. The visual world is Apple Watch Ultra × Whoop: matte black surfaces, one warm orange, system typography, tabular numbers. It should feel like a serious instrument the athlete trusts at 5 a.m., not a fitness-brand campaign. Numbers are shown with their inputs; advice is never louder than the evidence behind it.
+Precise, calm, coach-like. Three words: **instrument, honest, unhurried**. One graphite tone with one ink; orange means "now" and nothing else. No cards: hairlines, light large numerals, mono micro-labels, the season as a dial. It should feel like a serious instrument the athlete trusts at 5 a.m., not a fitness-brand campaign. Numbers are shown with their inputs; advice is never louder than the evidence behind it.
 
 ## Anti-references
 
@@ -25,11 +25,12 @@ Precise, calm, coach-like. Three words: **titanium, honest, unhurried**. The vis
 
 ## Design Principles
 
-1. **Today first on the phone.** The session that matters is the one in front of him; everything else is one tap deeper.
-2. **One thumb, no chrome.** Installed-app ergonomics: bottom tabs, 44-pt targets, sheets instead of modals, no browser-feeling navigation.
-3. **Show the input next to the verdict.** Every guard, projection and pace target displays the numbers and rule it came from.
-4. **Data honesty over decoration.** Treadmill distances, stopped time and estimated numbers are labeled as such; nothing is rounded to look better.
-5. **Desktop reads, phone acts.** The Mac keeps the editorial depth (rationale, evidence, tables); the phone gets the compact operational view of the same data.
+1. **A plan and a logbook, not a running companion.** Nothing in the app is meant to be used mid-session; it tells him what today is, records what happened, and shows the numbers next to the plan.
+2. **Today first on the phone.** The session that matters is the one in front of him; everything else is one tap deeper.
+3. **One thumb, no chrome.** Installed-app ergonomics: bottom tabs, 44-pt targets, sheets instead of modals, no browser-feeling navigation.
+4. **Show the input next to the verdict.** Every guard, projection and pace target displays the numbers and rule it came from.
+5. **Data honesty over decoration.** Treadmill distances, stopped time and estimated numbers are labeled as such; nothing is rounded to look better.
+6. **Desktop reads, phone acts.** The Mac keeps the editorial depth (rationale, evidence, tables); the phone gets the compact operational view of the same data.
 
 ## Accessibility & Inclusion
 

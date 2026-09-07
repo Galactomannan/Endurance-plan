@@ -1,55 +1,56 @@
-# James Endurance Plan 2026
+# Endurance 2026
 
-Single-page, offline-first PWA (`index.html` + `js/`) for James's 2026 season — evidence-based training, now rebuilt as a **14-week return-to-run → Fuji Marathon finish** after the September foot injury.
+A personal, offline-first training app for one season: the 14-week rebuild from the September foot injury to the **Mt. Fuji International Marathon** (Sun 13 Dec 2026, 6-hour cutoff), with the **ATM Bangkok Half** (Sat 28 Nov, 02:00) as the pacing test.
 
-## Season
+It is a plan and a logbook, not something to use mid-run. Live at https://endurance-plan.vercel.app, installed to the iPhone home screen.
 
-| Race | Date | Goal / Result |
-|---|---|---|
-| 🏔 The North Face Trail 25k | 28 Jun 2026 | ✅ Finished — **7:46:41** |
-| 💪 Thai Hyrox · Doubles Men | 16 Aug 2026 | done · result not logged |
-| 🏃 Amazing Thailand Marathon Bangkok — Half | Sat 28 Nov 2026 · 02:00 (W12) | **controlled test: 7:45/km, HR ≤160, stops <5%** → sets the Fuji tier |
-| 🗻 Mt. Fuji International Marathon — A-race | Sun 13 Dec 2026 · 09:00 (W14) | **finish inside the 6:00 cutoff** · Tier 1 = 7:30/km to Saiko (≈5:35–5:45) · Tier 2 = 8:00 flat (≈5:49) |
+## Screens
 
-The course decides the plan: Saiko checkpoint #3 (27.3 km) closes at 13:00 — cumulative 8:47/km *after* the 100 m Bunkado climb, every stop counted.
+| Tab | What it is |
+|---|---|
+| **Today** | The day's session on the season dial, the Bangkok forecast turned into an expected easy pace, the morning foot check (above 3/10 swaps the run for a bike day, decision rule 3), and the log button |
+| **Plan** | The week as a timeline with the logged numbers under each day; the 14-week season one tap away |
+| **Data** | Weekly km against the plan, the load guard (ACWR, week ratio, long-run jump, stopped time, cadence decay, HR drift), every long run, the easy-pace trend at HR 140–158, the 14-day foot strip, morning numbers |
+| **Race** | Course profile and checkpoints with Tier 1 / Tier 2 arrival times, the pacing tiers, race morning, fuel, gear checklist, the half test, results |
+| **More** | Strength (the two weekly sessions and their log), Athlete (lab numbers, zones, paces), Archive (the 32-week plan before the injury), Evidence (one line per rule with its source), Settings |
+
+Logging a session pulls the matching Strava activity for that day (distance, moving and elapsed time, heart rate) and computes stopped time against the 8 % guard. Everything is editable.
 
 ## Plan
 
-14 weeks from **Mon 7 Sep 2026** (the first walk-run week), race Sunday of W14. Design and evidence: [`docs/superpowers/specs/2026-09-07-fuji-rebuild-plan-design.md`](docs/superpowers/specs/2026-09-07-fuji-rebuild-plan-design.md).
+14 weeks from **Mon 7 Sep 2026**. Design and evidence: [`docs/superpowers/specs/2026-09-07-fuji-rebuild-plan-design.md`](docs/superpowers/specs/2026-09-07-fuji-rebuild-plan-design.md).
 
-1. **Return** W1–3 · walk-run → continuous easy, 10→24 km, bike carries the aerobic load (Daniels 33→50→75 %)
+1. **Return** W1–3 · walk-run → continuous easy, 10→24 km, bike carries the aerobic load
 2. **Base** W4–6 · 28→32 km, plateau, down week
 3. **Build** W7–9 · 36→40 km, cruise intervals / hills Wednesday, goal-pace segments in the long run
-4. **Peak** W10–12 · 46→50 km, Bunkado hill rehearsal, **30 km continuous at D-22**, then the ATM Half test
+4. **Peak** W10–12 · 46→50 km, Bunkado hill rehearsal, 30 km continuous at D-22, the half test
 5. **Taper** W13–14 · −30 %, last lift D-13, race
 
-Guards (also enforced in code): weekly increase ≤15 % between non-down weeks · long run ≤1.25× the longest of the prior two weeks · ≤2 quality days · long run ≤65 % of the week · ACWR caution 1.3 / cap 1.5.
+Guards enforced in code: weekly increase ≤ 15 % · long run ≤ 1.25× the longest of the prior two weeks · long run ≤ 65 % of the week · ACWR watch 1.3 / cap 1.5 · stopped time < 8 % · cadence decay < 5 % · HR drift < 8 %.
 
-Strength + plyometrics: two sessions a week, foot/ankle rehab first, high-load compound lifts from W4, plyometric contacts capped 80 → 120 → 80, descent prep (eccentric step-downs, Nordics) from W7, last lift D-13.
+## Code
 
-## App
+Vanilla HTML/CSS/JS, no build step, no runtime dependencies.
 
-Vanilla HTML/CSS/JS + Chart.js (CDN). No build step.
-
-- `js/plan-spec.js` — the plan as data (weeks, paces, phases, races, checkpoints, guards, decision rules)
-- `js/plan-engine.js` — `buildPlan(spec, {gateDate})` → dated weeks of sessions; `checkProgression` returns guard violations
-- `js/strength-program.js` — phase-aware strength/plyo sessions
+- `index.html` — the views and sheets
+- `css/app.css` — the design system: one graphite tone, orange only for "now"
+- `js/plan-spec.js` — the plan as data · `js/plan-engine.js` — dated weeks + progression guards
+- `js/strength-program.js` — the strength and plyometric program by week
 - `js/intel.js` — stop %, cadence decay, HR drift, ACWR, long-run jump, race projection
-- Data lives in `localStorage` (JSON export/import in Settings). Service worker (`sw.js`) gives offline support — bump `CACHE` when shipping.
-- **Gate date** (Settings → Plan Configuration): the first running day after the injury. Slipping it re-shapes the plan without moving the race, the 30 km run or the half test.
+- `js/store.js` — storage, audit/repair, the legacy archive · `js/strava-sync.js` — Strava → log mapping · `js/records.js` — aggregations for Data
+- `sw.js` — offline cache; bump `CACHE` with every release
+- Data lives in `localStorage`; export/import JSON in Settings. Add `?today=YYYY-MM-DD` to the URL to preview another day.
 
 ```bash
 npm test
 ```
 
-## Strava Sync
+## Strava
 
 Vercel serverless functions in `api/strava/*` handle OAuth and API calls; the browser never sees the client secret.
 
-- `GET /api/strava/activities?days=90` — summaries (moving *and* elapsed time)
-- `GET /api/strava/streams?id=…&points=400` — down-sampled time/distance/HR/cadence/velocity/moving streams, used to score long runs (stopped time, cadence decay, HR drift) on the dashboard's **Load & form guard**
-
-Required Vercel environment variables:
+- `GET /api/strava/activities?days=90` — summaries with moving *and* elapsed time
+- `GET /api/strava/streams?id=…&points=400` — down-sampled streams used to score long runs
 
 | Variable | Value |
 |---|---|
@@ -57,8 +58,4 @@ Required Vercel environment variables:
 | `STRAVA_CLIENT_SECRET` | Strava API application client secret |
 | `STRAVA_REDIRECT_ORIGIN` | Optional. Production origin, e.g. `https://endurance-plan.vercel.app` |
 
-Set the Strava app's authorization callback domain to the deployed Vercel domain; the callback route is `/api/strava/callback`.
-
-## Visual Asset
-
-Dashboard hero photo: Mount Fuji above Lake Kawaguchi, by Marion & Christoph Aistleitner via Wikimedia Commons (CC0 1.0). Served as compressed derivatives (1920 px ≈ 140 KB desktop, 960 px ≈ 35 KB mobile).
+The Strava app's callback domain must be the deployed domain; the callback route is `/api/strava/callback`.
