@@ -1,2 +1,6 @@
-.vercel
+.DS_Store
+.claude/worktrees/
 .env*
+.lazyweb/
+.vercel
+node_modules/
