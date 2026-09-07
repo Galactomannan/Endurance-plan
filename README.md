@@ -10,8 +10,8 @@ It is a plan and a logbook, not something to use mid-run. Live at https://endura
 |---|---|
 | **Today** | The day's session on the season dial, the Bangkok forecast turned into an expected easy pace, the morning foot check (above 3/10 swaps the run for a bike day, decision rule 3), and the log button |
 | **Plan** | The week as a timeline with the logged numbers under each day; the 14-week season one tap away |
-| **Data** | Weekly km against the plan, the load guard (ACWR, week ratio, long-run jump, stopped time, cadence decay, HR drift), every long run, the easy-pace trend at HR 140–158, the 14-day foot strip, morning numbers |
-| **Race** | Course profile and checkpoints with Tier 1 / Tier 2 arrival times, the pacing tiers, race morning, fuel, gear checklist, the half test, results |
+| **Data** | Weekly km against the plan, the load guard (ACWR, week ratio, long-run jump, stopped time, cadence decay, HR drift), the logged intensity distribution against the phase target, every long run, the easy-pace trend at HR 140–158, the 14-day foot strip, morning numbers and sweat rate |
+| **Race** | Course profile and checkpoints with Tier 1 / Tier 2 arrival times, the pacing tiers, race morning, fuel, gear checklist, what to do about cramp, bonk and over-drinking, the half test, results |
 | **More** | Strength (the two weekly sessions and their log), Athlete (lab numbers, zones, paces), Archive (the 32-week plan before the injury), Evidence (one line per rule with its source), Settings |
 
 Logging a session pulls the matching Strava activity for that day (distance, moving and elapsed time, heart rate) and computes stopped time against the 8 % guard. Everything is editable.
@@ -38,7 +38,7 @@ Vanilla HTML/CSS/JS, no build step, no runtime dependencies.
 - `js/strength-program.js` — the strength and plyometric program by week
 - `js/intel.js` — stop %, cadence decay, HR drift, ACWR, long-run jump, race projection
 - `js/store.js` — storage, audit/repair, the legacy archive · `js/strava-sync.js` — Strava → log mapping · `js/records.js` — aggregations for Data
-- `sw.js` — offline cache; bump `CACHE` with every release
+- `sw.js` — offline cache. HTML, JS and CSS are network-first so a new page never runs against last release's modules; the cache is the offline fallback. Bump `CACHE` with every release
 - Data lives in `localStorage`; export/import JSON in Settings. Add `?today=YYYY-MM-DD` to the URL to preview another day.
 
 ```bash

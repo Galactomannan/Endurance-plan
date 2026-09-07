@@ -39,11 +39,14 @@ self.addEventListener("fetch", e => {
   if (url.origin !== self.location.origin) return;               // weather, Strava: straight to the network
   if (url.pathname.startsWith("/api/")) { e.respondWith(fetch(req)); return; }
 
-  if (req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html")) {
+  // Code is network-first as well as HTML: a new index.html must never run against
+  // last release's modules. The cache is the offline fallback, not the fast path.
+  const isCode = /\.(js|css)$/.test(url.pathname);
+  if (isCode || req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html")) {
     e.respondWith(fetch(req).then(resp => {
       if (cacheable(req, resp)) { const clone = resp.clone(); caches.open(CACHE).then(c => c.put(req, clone)); }
       return resp;
-    }).catch(() => caches.match(req).then(cached => cached || caches.match("./index.html"))));
+    }).catch(() => caches.match(req).then(cached => cached || (isCode ? Response.error() : caches.match("./index.html")))));
     return;
   }
 
