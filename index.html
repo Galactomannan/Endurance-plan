@@ -1934,6 +1934,27 @@ body{touch-action:manipulation}
 @keyframes pop-in{from{transform:scale(0.96);opacity:0}to{transform:scale(1);opacity:1}}
 .ts-done{animation:pop-in 0.22s var(--ease)}
 .course-svg{display:block;width:100%;height:auto;margin-top:8px}
+/* pace band */
+.pace-band{margin-top:14px}
+.pb-label{font-size:13px;color:var(--text-2);font-weight:600;margin-bottom:8px}
+.pb-track{position:relative;height:8px;border-radius:4px;background:rgba(255,255,255,0.07)}
+.pb-seg{position:absolute;top:0;height:8px;border-radius:4px;background:var(--tint,var(--green));box-shadow:0 0 12px color-mix(in srgb,var(--tint,var(--green)) 45%,transparent)}
+.pb-seg.goal{background:var(--orange);box-shadow:0 0 12px var(--orange-glow)}
+.pb-scale{position:relative;height:16px;margin-top:6px;font-size:10.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.pb-scale span{position:absolute;top:0;transform:translateX(-50%)}
+/* week ring */
+.tw-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.tw-big{font-family:var(--font-display);font-size:30px;font-weight:700;letter-spacing:-0.03em;line-height:1.05;margin-top:6px;font-variant-numeric:tabular-nums}
+.tw-big span{font-size:14px;font-weight:500;color:var(--text-2);letter-spacing:0}
+.tw-sub{font-size:12.5px;color:var(--text-2);margin-top:4px}
+.tw-ring{width:84px;height:84px;flex:none}
+.tw-ring .ring-bg{stroke:rgba(255,255,255,0.08)}
+.tw-ring .ring-fg{stroke:var(--orange);transition:stroke-dashoffset 0.9s var(--ease)}
+.more-group{background:var(--card);border-radius:14px;overflow:hidden;border:1px solid var(--hairline);margin-bottom:8px}
+.more-group .more-row{border-radius:0;padding:13px 14px}
+.more-group .more-row+.more-row{border-top:1px solid var(--hairline-soft)}
+@keyframes check-pop{0%{transform:scale(0.5)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+.checkbox.done svg{animation:check-pop 0.28s var(--ease)}
 .course-svg text{font-family:var(--font-text)}
 .more-body{padding:6px 10px 18px}
 .more-group-label{font-size:11.5px;color:var(--text-3);padding:14px 12px 6px;font-weight:700;letter-spacing:0.04em}
@@ -2011,6 +2032,32 @@ body{touch-action:manipulation}
   .metric.card{padding:14px 14px}
   .metric-value{font-size:26px}
   .chip{font-size:12.5px;padding:7px 12px;text-transform:none;letter-spacing:0;font-weight:600}
+  /* Apple weights: 700 for large titles, 600 for card titles */
+  .mh-title,.today-date,.ts-title,.tn-title,.today-section .sh b,.today-track .sh b{font-weight:700}
+  .metric-value,.today-race .rn{font-weight:700}
+  /* session card tinted by type */
+  .today-session{background:linear-gradient(180deg,color-mix(in srgb,var(--tint,var(--card)) 16%,var(--card)) 0%,var(--card) 78%);border-color:color-mix(in srgb,var(--tint,var(--hairline)) 28%,var(--hairline))}
+  /* week strip → calendar style */
+  .wr-day{background:transparent;border:none;padding:4px 0 6px;gap:0}
+  .wr-day .wr-dow{font-size:10px;letter-spacing:0.06em;color:var(--text-2);text-transform:uppercase}
+  .wr-day .wr-num{width:34px;height:34px;line-height:34px;border-radius:50%;margin:4px auto 0;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+  .wr-day.today .wr-num{background:var(--orange);color:#0A0A0B;font-weight:700}
+  .wr-day.today{box-shadow:none;border:none}
+  .wr-day .wr-bar{width:18px;height:3px;border-radius:2px;margin:6px auto 0}
+  .wr-done{top:2px;right:8px}
+  /* Plan view: grouped inset list */
+  .pv-metrics{display:none}
+  .day-list{background:var(--card);border-radius:16px;overflow:hidden;border:1px solid var(--hairline)}
+  .day-row{border-radius:0;margin:0;border:none;border-bottom:1px solid var(--hairline-soft);background:transparent;box-shadow:none}
+  .day-row:last-child{border-bottom:none}
+  .day-row.today{background:rgba(255,107,0,0.07);box-shadow:none;border-color:var(--hairline-soft)}
+  .day-row.today .day-date{color:var(--orange)}
+  .day-row .day-stripe{width:3px}
+  .day-row.modified{border-style:solid}
+  .week-layout aside{margin-top:14px}
+  /* transition between tabs: a short crossfade, not a choreography */
+  .view.active{animation:viewfade 0.16s ease-out!important}
+  @keyframes viewfade{from{opacity:0.55}to{opacity:1}}
   .day-meta{color:var(--text-2)}
   .wr-dow{color:var(--text-2)}
   .pv-metrics{grid-template-columns:1fr 1fr;gap:10px}
@@ -2073,6 +2120,9 @@ body{touch-action:manipulation}
 }
 @media(display-mode:standalone){
   body{padding-top:0}
+}
+@media(max-width:767px) and (-webkit-min-device-pixel-ratio:2){
+  .day-list,.day-row,.today-section,.today-session,.today-track,.today-race,.more-group,.more-group .more-row+.more-row,.tbl-cards tr,.card{border-width:0.5px}
 }
 
 @media(prefers-reduced-motion:reduce){
@@ -2904,12 +2954,15 @@ function openMoreSheet(){
     <div class="modal-body more-body">
       ${groups.map(g=>`
         <div class="more-group-label">${g.name}</div>
-        ${g.items.map(n=>`<button type="button" class="more-row${State.view===n.id?" active":""}" data-go="${n.id}"><span class="more-ic">${n.icon()}</span><span>${n.label}</span><span class="more-chev">${iconRight()}</span></button>`).join("")}
+        <div class="more-group">
+          ${g.items.map(n=>`<button type="button" class="more-row${State.view===n.id?" active":""}" data-go="${n.id}"><span class="more-ic">${n.icon()}</span><span>${n.label}</span><span class="more-chev">${iconRight()}</span></button>`).join("")}
+        </div>
       `).join("")}
     </div>`);
   document.querySelectorAll(".more-row").forEach(b=>b.addEventListener("click",()=>{closeModal();switchView(b.dataset.go);}));
 }
 function switchView(id){
+  if(isMobileLayout()){State.scroll=State.scroll||{};State.scroll[State.view]=window.scrollY;}
   State.view=id;
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.dataset.view===id));
   renderNav();
@@ -2921,7 +2974,7 @@ function switchView(id){
   __viewAniTimer=setTimeout(()=>animateAllNumbers(document.getElementById("view-"+id)),60);
   // Auto-close mobile drawer when navigating
   if(isMobileLayout())toggleDrawer(false);
-  window.scrollTo({top:0,behavior:"instant"});
+  window.scrollTo({top:isMobileLayout()&&State.scroll?(State.scroll[id]||0):0,behavior:"instant"});
 }
 
 /* =========================================================================
@@ -2984,6 +3037,14 @@ function renderWeekly(){
   const z3Pct=totalMin?Math.round(z3Min/totalMin*100):0;
 
   // Day rows
+  const strengthDetail=(s)=>{
+    if(s.type!=="strength_a"&&s.type!=="strength_b")return s.detail;
+    const sess=FujiStrength.sessionFor(w,s.type==="strength_a"?"A":"B");
+    if(!sess)return s.detail;
+    const names=sess.exercises.slice(0,3).map(e=>e.name.replace(/\s*\(.*?\)/,"")).join(" · ");
+    const pl=FujiStrength.plyoContacts(sess);
+    return `${sess.load} · ${names}${sess.exercises.length>3?` · +${sess.exercises.length-3}`:""}${pl?` · plyo ${pl} contacts`:""}${s.distanceKm?` · then easy ${s.distanceKm} km`:""}`;
+  };
   const dayRows=week.days.map((s,d)=>{
     const date=fmtISO(dateForWeekDay(w,d));
     const dateObj=dateForWeekDay(w,d);
@@ -3006,7 +3067,7 @@ function renderWeekly(){
             ${isModified?'<span class="chip chip-orange">Modified</span>':''}
             ${isToday?'<span class="chip chip-orange">Today</span>':''}
           </div>
-          <div class="day-detail">${s.detail}</div>
+          <div class="day-detail">${strengthDetail(s)}</div>
           <div class="day-meta">
             ${s.duration?`<span>${miClock()} ${s.duration} min</span>`:""}
             ${s.hrTarget&&s.hrTarget!=="—"?`<span>${miHeart()} ${s.hrTarget}</span>`:""}
@@ -3081,7 +3142,7 @@ function renderWeekly(){
     </div>
 
     <div class="week-layout">
-      <div>${dayRows}</div>
+      <div class="day-list">${dayRows}</div>
       <aside>
         <div class="card mb-12">
           <div class="card-h">TID Distribution (logged)</div>
@@ -3934,6 +3995,27 @@ function renderGuardCard(wIdx){
 }
 
 /* ---------- Today: the phone home. One session, one action, the week at a glance. ---------- */
+const TYPE_TINT={easy_z1:"var(--green)",walk_run:"var(--green)",recovery:"var(--green)",long_run:"var(--blue)",mp_long:"var(--blue)",hill:"var(--blue)",speed:"var(--red)",tune_race:"var(--orange)",strength_a:"var(--purple)",strength_b:"var(--purple)",bike:"var(--yellow)",rest:"var(--gray)"};
+/* Pace band: where today's effort sits on the 6:30–10:00 scale, with the HR cap that governs it. */
+function paceBand(s){
+  const P=PLAN_SPEC.paces, f=FujiIntel.fmtPace;
+  let seg=null,label="",goal=null;
+  if(["easy_z1","long_run"].includes(s.type)){seg=[P.easy.minSec,P.easy.maxSec];label=`Easy ${f(P.easy.minSec)}–${f(P.easy.maxSec)} /km · HR under ${P.easy.hrCap}`;}
+  else if(s.type==="mp_long"){seg=[P.easy.minSec,P.easy.maxSec];goal=[P.goal.minSec,P.goal.maxSec];label=`Easy ${f(P.easy.minSec)}–${f(P.easy.maxSec)} · last ${s.mpKm} km at ${P.goal.target} (HR ≤${P.goal.hrCap})`;}
+  else if(s.type==="speed"){seg=[P.threshold.minSec,P.threshold.maxSec];label=`Cruise ${f(P.threshold.minSec)}–${f(P.threshold.maxSec)} /km · HR ${P.threshold.hrMin}–${P.threshold.hrMax}`;}
+  else if(s.type==="walk_run"||s.type==="recovery"){seg=[P.recovery.minSec,P.recovery.maxSec];label=`Recovery ${f(P.recovery.minSec)}–${f(P.recovery.maxSec)} /km · HR under ${P.recovery.hrCap}`;}
+  else return "";
+  const lo=390,hi=600,x=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
+  const ticks=[[390,"6:30"],[450,"7:30"],[510,"8:30"],[570,"9:30"]];
+  return `<div class="pace-band">
+    <div class="pb-label">${label}</div>
+    <div class="pb-track">
+      ${goal?`<div class="pb-seg goal" style="left:${x(goal[0]).toFixed(1)}%;width:${(x(goal[1])-x(goal[0])).toFixed(1)}%"></div>`:""}
+      <div class="pb-seg" style="left:${x(seg[0]).toFixed(1)}%;width:${(x(seg[1])-x(seg[0])).toFixed(1)}%"></div>
+    </div>
+    <div class="pb-scale">${ticks.map(t=>`<span style="left:${x(t[0]).toFixed(1)}%">${t[1]}</span>`).join("")}</div>
+  </div>`;
+}
 const TYPE_NAMES={easy_z1:"Easy run",walk_run:"Walk-run",speed:"Cruise intervals",hill:"Hills",long_run:"Long run",mp_long:"Long run · goal pace",tune_race:"Race",strength_a:"Strength A",strength_b:"Strength B",recovery:"Recovery",rest:"Rest",bike:"Bike"};
 function renderToday(){
   const today=todayUTC();
@@ -3998,11 +4080,12 @@ function renderToday(){
       <h2 class="ts-title">${wi<1?"Plan starts "+fmtLong(parseISO(ATHLETE.planStart)):"Season complete"}</h2>
       <p class="ts-detail">${wi<1?"Bike and strength until the gate opens. Change the gate date in Settings if the foot is ready earlier.":"Race is done. Rest, then plan the next block."}</p>
     </section>`:`
-    <section class="today-session">
+    <section class="today-session" data-type="${s.type}" style="--tint:${TYPE_TINT[s.type]||"var(--gray)"}">
       <div class="ts-kicker"><span class="ts-dot t-${s.type}"></span>${s.title.startsWith(TYPE_NAMES[s.type]||"\u0000")?"Today's session":TYPE_NAMES[s.type]||s.type}${skipped?' · <span style="color:var(--text-3)">skipped</span>':""}</div>
       <h2 class="ts-title">${s.title}</h2>
       <p class="ts-detail">${detailText}</p>
       ${exPreview}
+      ${paceBand(s)}
       ${targets.length&&!strengthSess?`<div class="ts-targets">${targets.map(t=>`<span class="chip">${t}</span>`).join("")}</div>`:""}
       ${done?`
         <div class="ts-done">${iconCheck()} <span>Done${lg.actualDistance?` · ${lg.actualDistance} km`:""}${lg.actualDuration?` · ${lg.actualDuration} min`:""}${lg.pace?` · ${lg.pace}/km`:""}${lg.avgHR?` · HR ${lg.avgHR}`:""}</span></div>
@@ -4050,8 +4133,17 @@ function renderToday(){
 
       ${inPlan?`
       <section class="today-section">
-        <div class="sh"><b>This week</b><span>${km.toFixed(1)} / ${week.targetKm} km</span></div>
-        <div class="progress mt-8"><div class="progress-fill" style="width:${Math.min(100,week.targetKm?km/week.targetKm*100:0)}%"></div></div>
+        <div class="tw-top">
+          <div class="tw-text">
+            <div class="sh"><b>This week</b></div>
+            <div class="tw-big">${km.toFixed(1)}<span> / ${week.targetKm} km</span></div>
+            <div class="tw-sub">${doneCount} of ${planned} sessions done</div>
+          </div>
+          <svg class="ring tw-ring" viewBox="0 0 84 84" aria-label="${Math.round(week.targetKm?km/week.targetKm*100:0)} percent of the week's kilometres">
+            <circle class="ring-bg" cx="42" cy="42" r="36" stroke-width="8"/>
+            <circle class="ring-fg" cx="42" cy="42" r="36" stroke-width="8" stroke-dasharray="226.19" stroke-dashoffset="226.19" data-target="${(226.19*(1-Math.min(1,week.targetKm?km/week.targetKm:0))).toFixed(2)}"/>
+          </svg>
+        </div>
         ${strip}
         <div class="tw-meta">${doneCount}/${planned} sessions · long run ${week.longRunKm} km Sat${week.bikeMin?` · bike ${week.bikeMin}'`:""}${week.fuel?` · fuel ${week.fuel} g/h`:""}</div>
       </section>
@@ -4087,6 +4179,8 @@ function renderToday(){
     </div>`;
 
   const root=document.getElementById("view-today");
+  const ringFg=root.querySelector(".tw-ring .ring-fg");
+  if(ringFg){const target=ringFg.dataset.target;const go=()=>{ringFg.style.strokeDashoffset=target;};requestAnimationFrame(()=>requestAnimationFrame(go));setTimeout(go,80);}
   const bDone=root.querySelector("#td-done");
   if(bDone)bDone.addEventListener("click",()=>{toggleDone(date,wIdx,dow);flash(s.type==="rest"?"Rest day logged":"Session marked done");});
   const bUndo=root.querySelector("#td-undo");
