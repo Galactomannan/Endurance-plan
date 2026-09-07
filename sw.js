@@ -6,10 +6,14 @@
 
    Bump CACHE whenever you ship a new index.html so old shells are evicted. */
 
-const CACHE = "fuji-v8-2026-07";
+const CACHE = "fuji-v9-2026-09-rebuild";
 const ASSETS = [
   "./",
   "./index.html",
+  "./js/plan-spec.js",
+  "./js/plan-engine.js",
+  "./js/strength-program.js",
+  "./js/intel.js",
   "./assets/fuji-kawaguchi.jpg",
   "./assets/fuji-kawaguchi-960.jpg",
   "./manifest.json",
