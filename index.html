@@ -15,6 +15,10 @@
 <link rel="preload" as="image" href="assets/fuji-kawaguchi.jpg" media="(min-width:821px)">
 <link rel="preload" as="image" href="assets/fuji-kawaguchi-960.jpg" media="(max-width:820px)">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="./js/plan-spec.js"></script>
+<script src="./js/plan-engine.js"></script>
+<script src="./js/strength-program.js"></script>
+<script src="./js/intel.js"></script>
 <style>
 /* ============================================================
    APPLE WATCH ULTRA 3 × WHOOP — Premium Design System
@@ -976,6 +980,19 @@ body{
 .t-rest{background:var(--gray)!important}
 .t-mp_long{background:var(--blue)!important}
 .t-tune_race{background:var(--orange)!important}
+.t-strength_a{background:var(--purple)!important}
+.guard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+.guard-item{padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--bg-elev)}
+.guard-item .gl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);font-weight:700}
+.guard-item .gv{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.guard-item .gs{font-size:11.5px;color:var(--text-2);margin-top:4px;line-height:1.45}
+.guard-flags{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.guard-flag{font-size:12.5px;line-height:1.5;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg-elev)}
+.guard-flag.bad{border-color:rgba(244,63,94,.4);background:var(--red-soft)}
+.guard-flag.warn{border-color:rgba(255,107,0,.35);background:var(--orange-soft)}
+.guard-flag.ok{border-color:rgba(52,211,153,.3);background:var(--green-soft)}
+.t-bike{background:var(--yellow)!important}
+.t-walk_run{background:var(--green)!important;opacity:0.7}
 
 /* TID bars */
 .tid-row{margin-bottom:14px}
@@ -1891,7 +1908,7 @@ input,textarea,select{-webkit-appearance:none;appearance:none;border-radius:11px
       <div class="countdown-num" id="cd-days">—</div>
       <div class="countdown-label">days to Fuji</div>
       <div class="progress"><div class="progress-fill" id="cd-progress"></div></div>
-      <div class="countdown-meta" id="cd-meta">Week — / 23</div>
+      <div class="countdown-meta" id="cd-meta">Week — / 14</div>
       <div class="countdown-meta" id="cd-half" style="color:var(--blue)"></div>
     </div>
   </aside>
@@ -1927,74 +1944,34 @@ input,textarea,select{-webkit-appearance:none;appearance:none;border-radius:11px
    1. CONSTANTS — ATHLETE / PHASES / STORAGE
    ========================================================================= */
 
+const PLAN_SPEC = FUJI_PLAN_SPEC;
 const ATHLETE = {
-  name:"James",age:30,sex:"Male",weight:85,height:176,
-  vo2max:55.1,hrMax:197,
-  vt1_hr:155,vt1_speed:8.1,vt1_pace:"7:24",
-  vt2_hr:171,vt2_speed:10.0,vt2_pace:"6:00",
-  vvo2max:13.9,
-  testDate:"4 April 2026",
+  ...PLAN_SPEC.athlete,
   zones:{
     z1:{name:"Z1 — Aerobic Base",hrMax:154,color:"#30D158"},
     z2:{name:"Z2 — Threshold",hrMin:155,hrMax:171,color:"#FF9F0A"},
     z3:{name:"Z3 — VO₂max",hrMin:172,color:"#FF453A"}
   },
   race:{
-    name:"Fuji Marathon",date:"2026-12-13",
-    goal:"Sub 5:00:00",goalPace:"7:06/km",
-    targetHR:"150–160 bpm",elevation:"240m gain",
-    temp:"5–10°C",cutoff:"6:00:00"
+    name:PLAN_SPEC.race.name,date:PLAN_SPEC.race.date,
+    goal:PLAN_SPEC.race.goal,goalPace:PLAN_SPEC.race.goalPace,
+    targetHR:PLAN_SPEC.race.targetHR,elevation:PLAN_SPEC.race.elevation,
+    temp:PLAN_SPEC.race.temp,cutoff:PLAN_SPEC.race.cutoff,startTime:PLAN_SPEC.race.startTime
   },
   halfRace:{
     name:"Amazing Thailand Marathon Bangkok — Half",date:"2026-11-28",
-    goal:"Sub 2:30:00",goalPace:"7:06/km",targetHR:"158–168 bpm"
+    goal:"Controlled test · 7:45/km",goalPace:"7:45/km",targetHR:"≤160 bpm",startTime:"02:00"
   },
-  planStart:"2026-07-06",
-  totalWeeks:23
+  planStart:PLAN_SPEC.startDate,
+  totalWeeks:PLAN_SPEC.totalWeeks
 };
 
-/* Secondary races — overlaid on the Fuji plan */
-const SECONDARY_RACES = [
-  {
-    id:"hyrox",name:"Thai Hyrox · Doubles Men",short:"Hyrox",
-    date:"2026-08-16",color:"#BF5AF2",icon:"💪",tier:"B-Race",
-    weekInPlan:6,dayInPlan:6, // Sun of W6 (recovery week)
-    specs:{format:"8×1 km run + 8 stations",division:"MEN OPEN",duration:"~60–90 min",partner:"Doubles (workload split allowed)"},
-    estimate:"75 – 90 min",
-    impactNote:"Falls on W6 Sunday — a recovery week → the race replaces the Sunday rest slot and the recovery cost absorbs naturally. Mon W7 is set to a recovery jog (Strength A skipped that week). No other changes."
-  },
-  {
-    id:"atmbkk",name:"Amazing Thailand Marathon Bangkok — Half",short:"BKK Half",
-    date:"2026-11-28",color:"#0A84FF",icon:"🏃",tier:"B+ · Fuji rehearsal",
-    weekInPlan:21,dayInPlan:5, // Sat of W21
-    goal:"Sub 2:30",
-    specs:{distance:"21.1 km",surface:"Road · flat",start:"Early-morning start (BKK)",temp:"~24–30 °C"},
-    estimate:"2:25 – 2:30",
-    impactNote:"Falls on W21 Saturday — the race IS the final peak long run and the full Fuji dress rehearsal (D-15, same 7:06/km goal pace). W22–23 taper straight into Fuji."
-  }
-];
+/* Races come from the plan spec: done (trail, hyrox), the half test, and Fuji */
+const SECONDARY_RACES = PLAN_SPEC.races.filter(r=>r.status==="planned"&&r.id!=="fuji");
+const COMPLETED_RACES = PLAN_SPEC.races.filter(r=>r.status==="done");
+const FUJI_RACE = PLAN_SPEC.races.find(r=>r.id==="fuji");
 
-/* Completed races — results log */
-const COMPLETED_RACES = [
-  {
-    id:"trail",name:"The North Face Trail 25k",short:"Trail 25k",
-    date:"2026-06-28",color:"#30D158",icon:"🏔",
-    result:"7:46:41",
-    specs:{distance:"25 km",gain:"+1094 m",surface:"Trail / mountain",temp:"~30 °C · BKK summer"},
-    note:"7 h 46 on feet — a brutal day and a massive aerobic-durability deposit. Recovery fully absorbed before the plan reset on 6 Jul."
-  }
-];
-
-const PHASES = [
-  {name:"Re-Base",short:"Base",weeks:[1,6],kmRange:[30,42],tid:[82,3,15],color:"#30D158",
-    focus:"Return to training · rebuild Z1 aerobic base + reintroduce Z3 dose. Patience — volume before intensity."},
-  {name:"Build",short:"Build",weeks:[7,14],kmRange:[42,54],tid:[78,12,10],color:"#FF9F0A",
-    focus:"POL→PYR bridge · alternate VO₂max (Z3) and threshold (Z2). MP intro in long runs."},
-  {name:"Race Specific",short:"Spec",weeks:[15,21],kmRange:[50,60],tid:[77,18,5],color:"#FF453A",
-    focus:"PYRAMIDAL · MP + HM-pace specificity at 7:06/km, gut training. Ends with Bangkok Half (sub 2:30)."},
-  {name:"Taper",short:"Taper",weeks:[22,23],kmRange:[36,22],tid:[80,12,8],color:"#0A84FF",
-    focus:"2-week taper off the Half. Volume down, intensity touches, carb load D-3. Fuji on W23 Sunday."}
-];
+/* PHASES are defined by the plan engine (section 4) */
 
 const ARCHIVE_32_PHASES = [
   {name:"Base Building",short:"Base",weeks:[1,8],kmRange:[35,46],tid:[82,3,15],color:"#30D158",
@@ -2369,202 +2346,29 @@ function daysUntil(iso){
    4. PLAN GENERATION
    ========================================================================= */
 
-function phaseForWeek(w){
-  for(const p of PHASES){if(w>=p.weeks[0]&&w<=p.weeks[1])return p;}
-  return PHASES[3];
+/* Plan engine — the schedule is data (js/plan-spec.js) turned into weeks by js/plan-engine.js.
+   gateDate = the first running day after the foot injury; it lives in settings and re-shapes the plan. */
+function planGateDate(){
+  const st=Store.get(STORAGE.settings,{});
+  const g=st&&typeof st.gateDate==="string"?st.gateDate:"";
+  return /^\d{4}-\d{2}-\d{2}$/.test(g)?g:PLAN_SPEC.startDate;
 }
-
-function isRecoveryWeek(w){return w%3===0 && w<21;} // recovery every 3rd wk, none from race block on
-function isTuneRaceWeek(w){return w===21;} // Bangkok Half race week (Sat 28 Nov)
-function isHillWeek(w){return [5,10,14].includes(w);} // hill repeats every ~5 weeks (Fuji 240m gain)
-
-function targetKmFor(w){
-  const p=phaseForWeek(w);
-  const len=p.weeks[1]-p.weeks[0];
-  const wIn=w-p.weeks[0];
-  let km=p.kmRange[0]+(p.kmRange[1]-p.kmRange[0])*(len?wIn/len:0);
-  if(isRecoveryWeek(w))km*=0.7;
-  if(isTuneRaceWeek(w))km*=0.75; // half-race week — mini taper, race km included Sat
-  return Math.round(km);
+let PLAN_OBJ=FujiPlanEngine.buildPlan(PLAN_SPEC,{gateDate:planGateDate()});
+let PLAN=PLAN_OBJ.weeks;
+let PHASES=PLAN_OBJ.phases;
+function rebuildPlan(){
+  PLAN_OBJ=FujiPlanEngine.buildPlan(PLAN_SPEC,{gateDate:planGateDate()});
+  PLAN=PLAN_OBJ.weeks;
+  PHASES=PLAN_OBJ.phases;
 }
-
-function longRunMinFor(w){
-  let m;
-  if(w<=6)        m=90+(w-1)*6;                   // 90→120 · rebuild
-  else if(w<=14)  m=115+(w-7)*(40/7);             // 115→155 · build
-  else if(w<=20)  m=150+(w-15)*6;                 // 150→180 · race-specific peak
-  else if(w===21) m=150;                          // Bangkok Half race day (~2:30)
-  else            m=75;                           // taper
-  if(isRecoveryWeek(w))m*=0.7;
-  if(isTuneRaceWeek(w))m=150;                     // half-marathon race day
-  return Math.min(185,Math.max(35,Math.round(m/5)*5));
-}
-
-function easyMinFor(w,longer){
-  // longer=Tue (longer easy), false=Fri (shorter)
-  let base;
-  if(w<=6)        base=longer?40:30;
-  else if(w<=14)  base=longer?48:38;
-  else if(w<=20)  base=longer?55:42;
-  else            base=longer?40:30;              // race week / taper
-  if(isRecoveryWeek(w))base=Math.round(base*0.75);
-  return base;
-}
-
-function speedSessionFor(w){
-  const evPOL='POLARIZED · Z3 builds VO₂max ceiling (Stöggl 2014; Muñoz 2014)';
-  const evBridge='POL→PYR block periodization (Filipas 2021; Esteve-Lanao 2017)';
-  const evPYR='PYRAMIDAL race-specific · goal-pace specificity (Casado 2022; Stellingwerff 2018)';
-
-  if(isTuneRaceWeek(w))
-    return {type:"speed",title:"Pre-race strides 30min",detail:"30min easy Z1 + 4×100m strides @ HM effort · stay fresh for Saturday's half",duration:30,hrTarget:"<155 + strides",zone:"z1",evidence:'Race-week sharpener (Mujika 2003)'};
-  if(isRecoveryWeek(w))
-    return {type:"speed",title:"Easy fartlek (recovery wk)",detail:"4×1min pickup HR 160–168 / 2min easy · 35min total",duration:35,hrTarget:"160–168",zone:"mixed",evidence:'Recovery wk · light intensity touch'};
-
-  // Phase 1 (W1–6) — return to training · rebuild Z3 dose
-  if(w<=2)  return {type:"speed",title:"Fartlek 6×2min (re-intro)",detail:"6×2min @ HR 168–175 / 2min jog · ~40min · first quality back — smooth, not heroic",duration:40,hrTarget:"168–175",zone:"z2",evidence:evPOL};
-  if(w<=5)  return {type:"speed",title:"VO₂max 5×3min",detail:"5×3min @ HR >175 (Z3) / 3min jog · ~45min",duration:45,hrTarget:">175 (Z3)",zone:"z3",evidence:evPOL};
-
-  // Phase 2 (W7–14) — POL→PYR bridge · alternating Z3/Z2
-  if(w<=8)   return {type:"speed",title:"VO₂max 4×4min",detail:"4×4min @ HR >175 (Z3) / 4min jog · ~50min · maintain VO₂max stim",duration:50,hrTarget:">175 (Z3)",zone:"z3",evidence:evBridge};
-  if(w===10) return {type:"speed",title:"Tempo 2×10min",detail:"2×10min @ HR 160–168 (Z2) / 5min jog · ~55min · introduce sustained Z2",duration:55,hrTarget:"160–168",zone:"z2",evidence:evBridge};
-  if(w===11) return {type:"speed",title:"VO₂max 4×4min (maintenance)",detail:"4×4min @ HR >175 (Z3) / 4min jog · ~50min",duration:50,hrTarget:">175 (Z3)",zone:"z3",evidence:evBridge};
-  if(w===13) return {type:"speed",title:"Threshold 3×8min",detail:"3×8min @ VT2 HR 168–171 / 4min jog · ~55min",duration:55,hrTarget:"168–171",zone:"z2",evidence:evBridge};
-  if(w===14) return {type:"speed",title:"Threshold 4×7min",detail:"4×7min @ HR 168–170 (just under VT2 171) / 3min jog · ~60min · final Z2 build before race-specific",duration:60,hrTarget:"168–170",zone:"z2",evidence:evBridge};
-
-  // Phase 3 (W15–21) — race-specific PYRAMIDAL @ goal pace 7:06/km
-  if(w<=17) return {type:"speed",title:"Marathon-pace tempo 3×12min",detail:"3×12min @ MP 7:06/km (HR 150–160) / 3min jog · Practice race fueling",duration:60,hrTarget:"150–160",zone:"z2",evidence:evPYR};
-  if(w<=19) return {type:"speed",title:"Half-pace 3×10min",detail:"3×10min @ HM effort 7:00–7:06/km (HR 160–168) / 3min jog · sharpen for Bangkok Half",duration:55,hrTarget:"160–168",zone:"z2",evidence:evPYR};
-  if(w<=20) return {type:"speed",title:"Half-pace 2×15min",detail:"2×15min @ HM effort 7:00–7:06/km (HR 160–168) / 4min jog · final sharpener before race week",duration:55,hrTarget:"160–168",zone:"z2",evidence:evPYR};
-
-  // Phase 4 (W22–23) — taper · maintain intensity touches
-  return {type:"speed",title:"Easy fartlek 4×2min",detail:"4×2min pickup / 3min easy · maintain intensity touch",duration:35,hrTarget:"165–172",zone:"mixed",evidence:'Taper · maintain intensity touch'};
-}
-
-function buildLongRun(w){
-  const min=longRunMinFor(w);
-  const ev1='Z1 long run • Maximize fat oxidation, suppress VLamax (Seiler 2010)';
-  const ev2='Long run + MP segment • Race specificity (Stellingwerff 2018)';
-  if(w<=6){
-    return {type:"long_run",title:`Long run ${min}min`,detail:`Continuous Z1 • HR <150 throughout • target cadence 175–180 spm`,duration:min,hrTarget:"<150 (Z1)",zone:"z1",evidence:ev1};
-  }
-  if(w<=14){
-    return {type:"mp_long",title:`Long run ${min}min + 15min MP`,detail:`Z1 base + last 15min @ MP 7:06/km (HR 150–160) • Practice 30g CHO/hr fueling`,duration:min,hrTarget:"<150 / 150–160",zone:"z2",evidence:ev2};
-  }
-  if(w<=20){
-    return {type:"mp_long",title:`Long run ${min}min + 25min MP`,detail:`Z1 base + last 25min @ MP 7:06/km (HR 150–160) • Race fueling: 60g CHO/hr + 500ml fluid/hr`,duration:min,hrTarget:"<150 / 150–160",zone:"z2",evidence:ev2};
-  }
-  if(w===21){
-    return {type:"tune_race",title:`RACE — Bangkok Half Marathon`,detail:`Amazing Thailand Marathon Bangkok · Goal sub 2:30 (7:06/km) · HR 158–168. Full Fuji dress rehearsal: kit, fueling 45–60g CHO/hr, negative split.`,duration:min,hrTarget:"158–168 race effort",zone:"z2",evidence:'Race rehearsal • Tune-up race D-15 (Mujika 2010)'};
-  }
-  // Taper
-  return {type:"long_run",title:`Long run ${min}min`,detail:`Easy Z1 + last 15min @ MP feel • Taper — keep race rhythm alive, drop volume`,duration:min,hrTarget:"<150",zone:"z1",evidence:ev1};
-}
-
-function buildEasy(w,longer){
-  const min=easyMinFor(w,longer);
-  return {type:"easy_z1",title:`Easy run ${min}min`,detail:`Pure Z1 • HR <155 • Cadence target 175–180 spm • Nasal breathing if possible`,duration:min,hrTarget:"<155 (Z1)",zone:"z1",evidence:'Z1 volume drives mitochondrial density (Holloszy 1967; Seiler 2010)'};
-}
-
-function buildRecoveryRun(w){
-  return {type:"recovery",title:"Recovery jog 25–30min",detail:"Very easy Z1 • HR <140 if possible • Active recovery, blood flow",duration:28,hrTarget:"<140",zone:"z1",evidence:'Active recovery flush (Reilly & Ekblom 2005)'};
-}
-
-function buildStrength(day,w){
-  const phase=phaseForWeek(w);
-  const isTaper=w>=22;
-  const isRaceWk=w===23;
-  if(isRaceWk)
-    return {type:"rest",title:"Race week — no strength",detail:"Last heavy lift was D-10 to D-14. Full neuromuscular taper.",duration:0,hrTarget:"—",zone:"rest",evidence:'Strength taper • Last heavy ≥10d out (Ronnestad 2014)'};
-  const setsNote = phase.short==="Base"?"60→80% 1RM • 3 sets":isTaper?"≥80% 1RM • 2 sets, ↓50% volume":"≥80% 1RM • 3–4 sets";
-  if(day==="A")
-    return {type:"strength_a",title:"Strength A — Squat / Bench / Row + Box jump",detail:`${setsNote} • +Plyo 3×5 box jump • ≥6h from run`,duration:55,hrTarget:"strength",zone:"strength",evidence:'HL+Plyo = sig. RE improvement (Llanos-Lagos 2024)'};
-  return {type:"strength_b",title:"Strength B — Bulgarian SS / Hip thrust / OHP / Pull-up + Drop jump",detail:`${setsNote} • +Plyo 3×5 drop jump • ≥6h from run`,duration:55,hrTarget:"strength",zone:"strength",evidence:'HL+Plyo = sig. RE improvement (Llanos-Lagos 2024)'};
-}
-
-function buildHill(w){
-  return {type:"hill",title:"Hill repeats 8×60s",detail:"8×60s strong uphill (≥6%) / jog down recovery + 15min Z1 CD • Specific to Fuji 240m gain • BKK: bridge/overpass or treadmill incline",duration:60,hrTarget:"168–180",zone:"mixed",evidence:'Hill running improves RE (Barnes 2013) • Course specificity'};
-}
-
-function buildRest(){
-  return {type:"rest",title:"Rest day",detail:"Full rest. Walking & mobility OK. Sleep 8h+, hydrate, eat at maintenance.",duration:0,hrTarget:"—",zone:"rest",evidence:'Recovery enables adaptation (Kellmann 2018)'};
-}
-
-function buildWeek(w){
-  const phase=phaseForWeek(w);
-
-  // W21 — Bangkok Half race week (Sat 28 Nov · sub 2:30)
-  if(w===21){
-    return {weekNum:w,phase,isRecovery:false,targetKm:targetKmFor(w),days:[
-      {type:"strength_a",title:"Strength A — light (race week)",detail:"2 sets · ~70% 1RM · skip plyo • Keep neuromuscular tone, zero soreness for Saturday",duration:40,hrTarget:"strength",zone:"strength",evidence:'Race-week strength: cut volume, keep a touch of intensity (Mujika 2003)'},
-      {type:"easy_z1",title:"Easy run 45min",detail:"Pure Z1 • HR <155 • Cadence 175–180 spm",duration:45,hrTarget:"<155 (Z1)",zone:"z1",evidence:'Z1 maintains aerobic base (Seiler 2010)'},
-      speedSessionFor(w),
-      {type:"easy_z1",title:"Easy jog 30min",detail:"Very easy Z1 • Stay loose, nothing hard",duration:30,hrTarget:"<150",zone:"z1",evidence:'Pre-race freshness'},
-      {type:"rest",title:"Rest — carb top-up",detail:"Full rest. D-1: 7–8 g/kg CHO (~600 g), low fiber, dinner by 7 PM. Lay out race kit — same kit as Fuji.",duration:0,hrTarget:"—",zone:"rest",evidence:'Pre-race CHO (Burke 2017)'},
-      buildLongRun(21), // RACE Saturday
-      {type:"rest",title:"Rest / 20min walk",detail:"Post-half recovery. 30g protein + 100g CHO within 60min after the race · easy walk only today.",duration:0,hrTarget:"—",zone:"rest",evidence:'Post-race recovery'}
-    ]};
-  }
-
-  // W22 — taper week 1 (post-half → Fuji)
-  if(w===22){
-    return {weekNum:w,phase,isRecovery:false,targetKm:targetKmFor(w),days:[
-      {type:"recovery",title:"Recovery jog 25min (post-half)",detail:"Very easy Z1 • HR <140 • Flush the race out of the legs",duration:25,hrTarget:"<140",zone:"z1",evidence:'Active recovery flush (Reilly & Ekblom 2005)'},
-      {type:"easy_z1",title:"Easy run 40min",detail:"Pure Z1 • HR <155 • Legs will feel flat post-race — normal",duration:40,hrTarget:"<155 (Z1)",zone:"z1",evidence:'Taper Z1 (Mujika 2003)'},
-      speedSessionFor(w),
-      {type:"strength_b",title:"Strength B — LAST lift (D-10)",detail:"2 sets · ≥80% 1RM · 50% volume · light plyo only • Final heavy stimulus before Fuji",duration:40,hrTarget:"strength",zone:"strength",evidence:'Strength taper • Last heavy D-10 to D-14 (Ronnestad 2014)'},
-      {type:"easy_z1",title:"Easy run 30min",detail:"Pure Z1 • HR <155",duration:30,hrTarget:"<155 (Z1)",zone:"z1",evidence:'Taper Z1'},
-      {type:"mp_long",title:"Long run 75min + 15min MP",detail:"Z1 + last 15min @ 7:06/km (HR 150–160) • Keep race rhythm alive",duration:75,hrTarget:"<150 / 150–160",zone:"z2",evidence:'Taper: volume down, intensity touch (Mujika 2003)'},
-      buildRest()
-    ]};
-  }
-
-  // W23 — FUJI RACE WEEK (Sun 13 Dec · sub 5:00)
-  if(w===23){
-    return {weekNum:w,phase,isRecovery:false,targetKm:targetKmFor(w),days:[
-      {type:"easy_z1",title:"Easy run 30min",detail:"Pure Z1 • HR <155 • The hay is in the barn",duration:30,hrTarget:"<155",zone:"z1",evidence:'Race-week freshness (Mujika 2003)'},
-      {type:"easy_z1",title:"Easy run 30min + 4×100m strides",detail:"Z1 + 4×100m strides on flat • Activate nervous system",duration:30,hrTarget:"<155",zone:"z1",evidence:'Pre-race priming (Mujika 2003)'},
-      buildRest(),
-      {type:"easy_z1",title:"Easy jog 20min + 3×100m strides",detail:"Easy shakeout • Stay loose",duration:20,hrTarget:"<150",zone:"z1",evidence:'Pre-race shakeout'},
-      {type:"rest",title:"Rest — carb load",detail:"Full rest. D-3→D-1: 10 g/kg CHO (~850 g/day). Expect +1–2 kg — that's glycogen, it's good.",duration:0,hrTarget:"—",zone:"rest",evidence:'Carb load (Burke 2017)'},
-      {type:"easy_z1",title:"Race-day shakeout 15min",detail:"Race tomorrow! Easy 15min + 2 strides. Kit check, early night.",duration:15,hrTarget:"<140",zone:"z1",evidence:'Race-eve activation'},
-      {type:"tune_race",title:"FUJI MARATHON — RACE DAY",detail:"Sub 5:00 goal • 7:06/km avg • HR 150–160. Fuel 60–90g CHO/hr + 500–700ml fluid/hr. First 5k conservative — pace, not place.",duration:300,hrTarget:"150–160 → 170 final",zone:"z2",evidence:'Race execution per plan'}
-    ]};
-  }
-
-  const days=[];
-  const isRec=isRecoveryWeek(w);
-  // Mon: Strength A (most weeks), recovery jog on recovery weeks
-  if(isRec) days.push(buildRecoveryRun(w));
-  else      days.push(buildStrength("A",w));
-  // Tue: Easy Z1 (longer)
-  days.push(buildEasy(w,true));
-  // Wed: Speed
-  days.push(speedSessionFor(w));
-  // Thu: Strength B (or easy on recovery weeks)
-  if(isRec) days.push(buildEasy(w,false));
-  else      days.push(buildStrength("B",w));
-  // Fri: Easy Z1 (shorter)
-  days.push(buildEasy(w,false));
-  // Sat: Long run / Hill
-  if(isHillWeek(w)) days.push(buildHill(w));
-  else               days.push(buildLongRun(w));
-  // Sun: Recovery jog or rest
-  if(isRec) days.push(buildRest());
-  else       days.push(buildRecoveryRun(w));
-
-  // W6 Sunday — Thai Hyrox Doubles lands on the recovery week
-  if(w===6){
-    days[6]={type:"tune_race",title:"RACE — Thai Hyrox Doubles",detail:"8×1km run + 8 stations · Men Doubles · target 75–90 min. The recovery week was your taper — race hard, have fun.",duration:80,hrTarget:"165–180 mixed",zone:"mixed",evidence:'B-race · fitness test, no plan disruption'};
-  }
-  // W7 Monday — post-Hyrox: swap Strength A → recovery jog
-  if(w===7){
-    days[0]={type:"recovery",title:"Recovery jog 25–30min (post-Hyrox)",detail:"Very easy Z1 • HR <140 • Strength A skipped this week — resume with Strength B on Thu",duration:28,hrTarget:"<140",zone:"z1",evidence:'Post-race active recovery (Reilly & Ekblom 2005)'};
-  }
-  return {weekNum:w,phase,isRecovery:isRec,targetKm:targetKmFor(w),days};
-}
-
-const PLAN = (function(){const p=[];for(let w=1;w<=ATHLETE.totalWeeks;w++)p.push(buildWeek(w));return p;})();
+function phaseForWeek(w){return (PLAN[w-1]&&PLAN[w-1].phase)||PHASES[PHASES.length-1];}
+function isRecoveryWeek(w){return !!(PLAN[w-1]&&PLAN[w-1].isRecovery);}
+function isTuneRaceWeek(w){return !!(PLAN[w-1]&&PLAN[w-1].race==="atmbkk");}
+function isRaceWeek(w){return !!(PLAN[w-1]&&PLAN[w-1].race==="fuji");}
+function isHillWeek(w){return !!(PLAN[w-1]&&PLAN[w-1].days.some(d=>d.type==="hill"));}
+function targetKmFor(w){return PLAN[w-1]?PLAN[w-1].targetKm:0;}
+function longRunMinFor(w){const lr=PLAN[w-1]&&PLAN[w-1].days[5];return lr?lr.duration:0;}
+function weekRaceLabel(w){const r=PLAN[w-1]&&PLAN[w-1].race;if(!r)return "";const race=PLAN_SPEC.races.find(x=>x.id===r);return race?race.short:"";}
 
 /* =========================================================================
    5. APP STATE
@@ -2969,7 +2773,7 @@ function renderWeekly(){
   document.getElementById("view-weekly").innerHTML=`
     ${masthead("weekly",{
       title:"Weekly Plan",
-      dek:`Phase ${PHASES.indexOf(phase)+1} of 4 · ${phase.focus}`,
+      dek:`Phase ${PHASES.indexOf(phase)+1} of ${PHASES.length} · ${phase.focus}`,
       right:`<button class="btn btn-ghost" id="btn-today-jump">Today</button>
         <button class="btn btn-primary" id="btn-log-session">${iconPlus()} Log Session</button>`
     })}
@@ -2994,10 +2798,11 @@ function renderWeekly(){
         <span class="chip" style="background:${phase.color}33;color:${phase.color}">${phase.name}</span>
         <span class="chip">${week.targetKm} km target</span>
         <span class="chip">${week.days.filter(d=>d.type!=="rest").length} sessions</span>
-        ${week.isRecovery?'<span class="chip chip-green">Recovery week</span>':""}
-        ${w===6?'<span class="chip chip-purple">Hyrox Sunday</span>':""}
-        ${isTuneRaceWeek(w)?'<span class="chip chip-blue">Bangkok Half Saturday</span>':""}
-        ${w===ATHLETE.totalWeeks?'<span class="chip chip-red">Fuji race week</span>':""}
+        ${week.isRecovery?'<span class="chip chip-green">Down week</span>':""}
+        ${week.label?`<span class="chip">${escapeHtml(week.label)}</span>`:""}
+        ${week.bikeMin?`<span class="chip" style="color:var(--yellow)">bike ${week.bikeMin}'</span>`:""}
+        ${isTuneRaceWeek(w)?'<span class="chip chip-blue">ATM Half test · Saturday 02:00</span>':""}
+        ${isRaceWeek(w)?'<span class="chip chip-red">Fuji race week</span>':""}
       </div>
     </div>
 
@@ -3094,14 +2899,14 @@ function tidBar(label,actual,target,color){
 }
 
 function nextMilestone(w){
-  // Next recovery, next phase, races
   const items=[];
-  for(let i=w+1;i<=ATHLETE.totalWeeks;i++){if(isRecoveryWeek(i)){items.push({d:i-w,t:`Recovery week (W${i})`});break;}}
+  for(let i=w+1;i<=ATHLETE.totalWeeks;i++){if(isRecoveryWeek(i)){items.push({d:i-w,t:`Down week (W${i})`});break;}}
   const ph=phaseForWeek(w);
-  if(ph.weeks[1]<ATHLETE.totalWeeks) items.push({d:ph.weeks[1]-w+1,t:`Next phase: ${PHASES[PHASES.indexOf(ph)+1].name} (W${ph.weeks[1]+1})`});
-  if(w<6)  items.push({d:6-w,t:"Thai Hyrox Doubles (W6 Sun)"});
-  if(w<21) items.push({d:21-w,t:"Bangkok Half — sub 2:30 (W21 Sat)"});
-  items.push({d:ATHLETE.totalWeeks-w,t:"Fuji Marathon (W23 Sun)"});
+  const nextPh=PHASES[PHASES.indexOf(ph)+1];
+  if(nextPh) items.push({d:ph.weeks[1]-w+1,t:`Next phase: ${nextPh.name} (W${nextPh.weeks[0]})`});
+  const peak=PLAN.find(x=>x.capMin&&x.weekNum>w);
+  if(peak) items.push({d:peak.weekNum-w,t:`Longest run ${peak.longRunKm} km (W${peak.weekNum})`});
+  PLAN.forEach(x=>{if(x.race&&x.weekNum>=w){const r=PLAN_SPEC.races.find(rr=>rr.id===x.race);items.push({d:x.weekNum-w,t:`${r?r.short:x.race} (W${x.weekNum})`});}});
   items.sort((a,b)=>a.d-b.d);
   return items.slice(0,3).map(i=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12.5px"><b style="color:var(--orange)">${i.d}wk</b> · ${i.t}</div>`).join("");
 }
@@ -3172,12 +2977,16 @@ function openSessionModal(wIdx,dIdx,date){
       <div class="field">
         <label>Session type</label>
         <select id="f-type">
-          ${["easy_z1","speed","long_run","mp_long","strength_a","strength_b","hill","recovery","tune_race","rest"].map(t=>`<option value="${t}" ${t===(lg.type||session.type)?"selected":""}>${typeLabel(t)}</option>`).join("")}
+          ${["easy_z1","walk_run","speed","long_run","mp_long","hill","bike","strength_a","strength_b","recovery","tune_race","rest"].map(t=>`<option value="${t}" ${t===(lg.type||session.type)?"selected":""}>${typeLabel(t)}</option>`).join("")}
         </select>
       </div>
       <div class="field-row">
         <div class="field"><label>Duration (min)</label><input id="f-dur" type="number" inputmode="numeric" value="${lg.actualDuration||session.duration||""}"></div>
         <div class="field"><label>Distance (km)</label><input id="f-dist" type="number" step="0.1" inputmode="decimal" value="${lg.actualDistance||""}"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Elapsed incl. stops (min)</label><input id="f-elapsed" type="number" inputmode="numeric" value="${lg.elapsedDuration||""}" placeholder="watch total time"></div>
+        <div class="field"><label>Stopped time</label><input id="f-stopped" value="${(lg.elapsedDuration&&lg.actualDuration&&Number(lg.elapsedDuration)>=Number(lg.actualDuration))?Math.round(lg.elapsedDuration-lg.actualDuration)+" min · "+FujiIntel.stopPct(lg.actualDuration*60,lg.elapsedDuration*60)+"%":"—"}" disabled></div>
       </div>
       <div class="field-row">
         <div class="field"><label>Avg pace (M:SS/km)</label><input id="f-pace" value="${lg.pace||""}" placeholder="auto from dur+dist"></div>
@@ -3231,6 +3040,7 @@ function openSessionModal(wIdx,dIdx,date){
     localDate:date,
     distanceKm:lg.actualDistance?Number(lg.actualDistance):null,
     durationMin:lg.actualDuration?Number(lg.actualDuration):null,
+    elapsedMin:lg.elapsedDuration?Number(lg.elapsedDuration):null,
     pace:lg.pace||"",
     avgHR:lg.avgHR?Number(lg.avgHR):null,
     maxHR:lg.maxHR?Number(lg.maxHR):null,
@@ -3275,6 +3085,7 @@ function openSessionModal(wIdx,dIdx,date){
     const patch=sessionPatchFromStravaActivity(activity,session,lg);
     setFieldValue("f-type",patch.type);
     setFieldValue("f-dur",patch.actualDuration);
+    setFieldValue("f-elapsed",patch.elapsedDuration);
     setFieldValue("f-dist",patch.actualDistance);
     setFieldValue("f-pace",patch.pace);
     setFieldValue("f-hr",patch.avgHR);
@@ -3374,6 +3185,7 @@ function openSessionModal(wIdx,dIdx,date){
       return;
     }
     const dur=document.getElementById("f-dur").value||null;
+    const elapsed=document.getElementById("f-elapsed").value||null;
     const dist=document.getElementById("f-dist").value||null;
     let pace=document.getElementById("f-pace").value||null;
     if(!pace&&dur&&dist)pace=calcPace(dist,dur);
@@ -3386,6 +3198,7 @@ function openSessionModal(wIdx,dIdx,date){
       status:curStatus||"done",
       type:document.getElementById("f-type").value,
       actualDuration:dur,
+      elapsedDuration:elapsed,
       actualDistance:dist,
       pace:pace,
       avgHR:document.getElementById("f-hr").value||null,
@@ -3422,7 +3235,7 @@ function openSessionModal(wIdx,dIdx,date){
   if(del)del.addEventListener("click",()=>{deleteSessionLog(date);closeModal();rerenderAfterSessionChange();});
 }
 
-function typeLabel(t){return {easy_z1:"Easy Z1 run",speed:"Speed / Intervals",long_run:"Long run",mp_long:"Long run + MP",strength_a:"Strength A",strength_b:"Strength B",hill:"Hill repeats",recovery:"Recovery jog",tune_race:"Race / Tune-up",rest:"Rest day"}[t]||t;}
+function typeLabel(t){return {easy_z1:"Easy Z1 run",speed:"Cruise intervals / T",long_run:"Long run",mp_long:"Long run + goal pace",strength_a:"Strength A",strength_b:"Strength B",hill:"Hills / incline",recovery:"Recovery jog",tune_race:"Race / Test",rest:"Rest day",bike:"Bike Z1",walk_run:"Walk-run"}[t]||t;}
 
 /* =========================================================================
    12. MODAL SYSTEM
@@ -3529,9 +3342,9 @@ function renderDashboard(){
 
   const currentPhase=phaseForWeek(wIdx);
   const planPct=Math.round(wIdx/ATHLETE.totalWeeks*100);
-  const firstCompleted=COMPLETED_RACES[0];
-  const hyrox=SECONDARY_RACES.find(r=>r.id==="hyrox");
-  const half=SECONDARY_RACES.find(r=>r.id==="atmbkk");
+  const trail=PLAN_SPEC.races.find(r=>r.id==="trail");
+  const hyrox=PLAN_SPEC.races.find(r=>r.id==="hyrox");
+  const half=PLAN_SPEC.races.find(r=>r.id==="atmbkk");
   const countdownForRace=iso=>{
     const d=daysUntil(iso);
     if(d>0)return {count:`D-${d}`,label:"days to race"};
@@ -3540,24 +3353,24 @@ function renderDashboard(){
   };
   const raceCards=[
     {
-      color:"var(--green)",status:"Finished",name:firstCompleted.name,date:fmtShort(parseISO(firstCompleted.date)),
-      detail:`${firstCompleted.specs.distance} trail · ${firstCompleted.specs.gain}`,
-      value:firstCompleted.result,unit:"official time",go:"sideraces",...countdownForRace(firstCompleted.date)
+      color:"var(--green)",status:"Finished",name:trail.name,date:fmtShort(parseISO(trail.date)),
+      detail:`${trail.specs.distance} trail · ${trail.specs.gain}`,
+      value:trail.result,unit:"official time",go:"sideraces",...countdownForRace(trail.date)
     },
     {
-      color:"var(--purple)",status:"Hyrox · W6",name:hyrox.name,date:fmtShort(parseISO(hyrox.date)),
-      detail:"Doubles Men · 8 x 1 km + stations",
-      value:hyrox.estimate.replace(/\s+/g," "),unit:"estimate",go:"sideraces",...countdownForRace(hyrox.date)
+      color:"var(--purple)",status:"Done · Aug",name:hyrox.name,date:fmtShort(parseISO(hyrox.date)),
+      detail:hyrox.specs.format,
+      value:hyrox.result==="not recorded"?"—":hyrox.result,unit:hyrox.result==="not recorded"?"result not logged":"result",go:"sideraces",...countdownForRace(hyrox.date)
     },
     {
-      color:"var(--blue)",status:"Bangkok · W21",name:"Bangkok Half",date:fmtShort(parseISO(half.date)),
-      detail:"Fuji pace rehearsal · 21.1 km",
-      value:"Sub 2:30",unit:ATHLETE.halfRace.goalPace,go:"sideraces",...countdownForRace(half.date)
+      color:"var(--blue)",status:`Test · W${half.weekInPlan}`,name:"ATM Bangkok Half",date:fmtShort(parseISO(half.date)),
+      detail:"02:00 start · 21.1 km continuous · sets the Fuji tier",
+      value:"7:45",unit:"/km · HR ≤160",go:"sideraces",...countdownForRace(half.date)
     },
     {
-      color:"var(--orange)",status:"A-race · W23",name:ATHLETE.race.name,date:fmtShort(parseISO(ATHLETE.race.date)),
-      detail:`${ATHLETE.race.elevation} · HR ${ATHLETE.race.targetHR}`,
-      value:"Sub 5:00",unit:ATHLETE.race.goalPace,go:"raceweek",...countdownForRace(ATHLETE.race.date)
+      color:"var(--orange)",status:`A-race · W${FUJI_RACE.weekInPlan}`,name:"Fuji Marathon",date:fmtShort(parseISO(FUJI_RACE.date)),
+      detail:`6 h cutoff · Saiko #3 at 27.3 km by 13:00`,
+      value:"< 6:00",unit:"7:30 to Saiko · Tier 1 ≈5:35–5:45",go:"raceweek",...countdownForRace(FUJI_RACE.date)
     }
   ];
 
@@ -3573,14 +3386,14 @@ function renderDashboard(){
                 <div class="poster-brand-meta">${fmtLong(todayUTC())} · Week ${wIdx} / ${ATHLETE.totalWeeks}</div>
               </div>
             </div>
-            <div class="poster-season">Trail → Hyrox → Half → Fuji</div>
+            <div class="poster-season">Trail → Hyrox → Half test → Fuji</div>
           </div>
 
           <div class="poster-main">
             <div>
               <div class="poster-kicker">Fuji Marathon · 13 December 2026</div>
               <h1 class="poster-title">Road to Fuji</h1>
-              <p class="poster-copy">A 23-week rebuild from the post-trail reset to a sub-5 Fuji Marathon, with Hyrox and the Bangkok Half kept inside the same season plan.</p>
+              <p class="poster-copy">A 14-week rebuild from the September foot injury to a Fuji finish inside the 6-hour cutoff — 7:30/km to Saiko, a 30 km continuous long run at D-22, and the ATM Half as the pacing test.</p>
               <div class="poster-meta-row">
                 <span class="poster-pill">Current block: ${currentPhase.name}</span>
                 <span class="poster-pill">This week: ${curKm.toFixed(0)} / ${curTarget} km</span>
@@ -3639,8 +3452,8 @@ function renderDashboard(){
             <div class="detail-sub">${currentPhase.focus}</div>
           </div>
           <div class="row">
-            <span class="chip chip-blue">Half sub 2:30</span>
-            <span class="chip chip-orange">Full sub 5:00 · 7:06/km</span>
+            <span class="chip chip-blue">Half test · 7:45/km</span>
+            <span class="chip chip-orange">Fuji · finish &lt;6:00 · 7:30 to Saiko</span>
           </div>
         </div>
 
@@ -3672,6 +3485,9 @@ function renderDashboard(){
             <div style="font-size:9.5px;color:var(--text-3);margin-top:4px;font-style:italic">Gabbett 2016 · sweet spot 0.8–1.3</div>
           </div>
         </div>
+
+        <!-- ===== LOAD & FORM GUARD ===== -->
+        ${renderGuardCard(wIdx)}
 
         <!-- ===== VOLUME CHART ===== -->
         <div class="card mb-16">
@@ -3738,6 +3554,98 @@ function renderDashboard(){
   });
 
   drawVolumeChart(wIdx,log);
+}
+
+/* ---------- Load & form guard: real weekly km (Strava runs + manual log), ACWR, long-run jump,
+   latest long-run quality from streams, plan progression warnings, decision rules ---------- */
+const RUN_SPORTS=["Run","TrailRun","VirtualRun"];
+function runsByDate(){
+  const st=Store.get(STORAGE.strava,{});
+  const byDate={};
+  (st.activities||[]).forEach(a=>{
+    if(!RUN_SPORTS.includes(a.sportType)||!a.localDate)return;
+    const cur=byDate[a.localDate]||{km:0,longest:0};
+    cur.km+=a.distanceKm||0;cur.longest=Math.max(cur.longest,a.distanceKm||0);
+    byDate[a.localDate]=cur;
+  });
+  const log=Store.get(STORAGE.sessions,{});
+  Object.entries(log).forEach(([date,lg])=>{
+    if(byDate[date]||!lg)return;
+    if((lg.status==="done"||lg.status==="modified")&&lg.actualDistance){
+      const km=parseFloat(lg.actualDistance)||0;
+      byDate[date]={km,longest:km};
+    }
+  });
+  return byDate;
+}
+function weeklyRunSeries(endWeekIdx,lookbackWeeks=8){
+  const byDate=runsByDate();
+  const first=addDays(parseISO(ATHLETE.planStart),-7*lookbackWeeks);
+  const series=[];
+  for(let i=0;i<lookbackWeeks+endWeekIdx;i++){
+    const ws=addDays(first,i*7);
+    let km=0,longest=0;
+    for(let d=0;d<7;d++){const r=byDate[fmtISO(addDays(ws,d))];if(r){km+=r.km;longest=Math.max(longest,r.longest);}}
+    series.push({start:fmtISO(ws),km:Math.round(km*10)/10,longest:Math.round(longest*10)/10,planWeek:i-lookbackWeeks+1});
+  }
+  return series;
+}
+function latestAnalyzedLongRun(){
+  const st=Store.get(STORAGE.strava,{});
+  const withIntel=(st.activities||[]).filter(a=>a.intel&&a.distanceKm>=15).sort((a,b)=>String(b.localDate).localeCompare(String(a.localDate)));
+  if(withIntel.length)return withIntel[0];
+  const log=Store.get(STORAGE.sessions,{});
+  const fromLog=Object.entries(log).filter(([d,lg])=>lg&&lg.intel).sort((a,b)=>b[0].localeCompare(a[0]));
+  return fromLog.length?{localDate:fromLog[0][0],name:fromLog[0][1].title,distanceKm:parseFloat(fromLog[0][1].actualDistance)||0,intel:fromLog[0][1].intel}:null;
+}
+function renderGuardCard(wIdx){
+  const G=PLAN_SPEC.guards;
+  const week=PLAN[wIdx-1];
+  const series=weeklyRunSeries(wIdx);
+  const idx=series.length-1;
+  const kms=series.map(x=>x.km);
+  const trailing=kms.slice(Math.max(0,idx-4),idx);
+  const acwr=FujiIntel.acwrKm(kms,idx);
+  const guard=FujiIntel.weeklyGuard(week.targetKm,trailing);
+  const priorLongest=series.slice(Math.max(0,idx-2),idx).map(x=>x.longest);
+  const jump=FujiIntel.longRunJump(week.longRunKm,priorLongest);
+  const lr=latestAnalyzedLongRun();
+  const flags=[];
+  const violations=FujiPlanEngine.checkProgression(PLAN_OBJ,G);
+  (PLAN_OBJ.warnings||[]).forEach(w=>flags.push({cls:"warn",text:w}));
+  violations.forEach(v=>flags.push({cls:"bad",text:`Plan guard: ${v.rule} in W${v.week} — ratio ${v.ratio} (limit ${v.limit}). Edit js/plan-spec.js.`}));
+  if(guard.capped)flags.push({cls:"bad",text:`Decision rule 2 — this week's ${week.targetKm} km is above 1.5× your trailing average (${guard.avg} km). Cap the week at ${guard.capKm} km.`});
+  else if(guard.caution)flags.push({cls:"warn",text:`This week is ${guard.ratio}× your trailing 4-week average (${guard.avg} km) — above the 1.3× caution line. Keep every easy run easy.`});
+  if(jump.flag)flags.push({cls:"bad",text:`Long-run jump: ${week.longRunKm} km is ${jump.ratio}× the longest run of the last two weeks (${jump.max} km). Repeat ${Math.round(jump.max*1.2)} km instead.`});
+  if(lr&&lr.intel){
+    const i=lr.intel;
+    if(i.stopPct!==null&&i.stopPct>G.stopPctMax)flags.push({cls:"warn",text:`${fmtShort(parseISO(lr.localDate))} long run: ${i.stopPct}% stopped time (limit ${G.stopPctMax}%). Next long run repeats the distance.`});
+    if(i.cadenceDecayPct!==null&&i.cadenceDecayPct< -G.cadenceDecayMax)flags.push({cls:"warn",text:`${fmtShort(parseISO(lr.localDate))} long run: cadence fell ${Math.abs(i.cadenceDecayPct)}% (${i.cadenceStartSpm}→${i.cadenceEndSpm} spm). Form broke down late — shorten stride, plan the walk breaks.`});
+    if(i.hrDriftPct!==null&&i.hrDriftPct>G.hrDriftMax)flags.push({cls:"warn",text:`${fmtShort(parseISO(lr.localDate))} long run: HR drift ${i.hrDriftPct}% (limit ${G.hrDriftMax}%). Too fast for the day, heat, or fuel.`});
+  }
+  const today=todayISO();
+  PLAN_SPEC.decisionRules.filter(r=>[1,4].includes(r.id)).forEach(r=>{
+    const due=r.id===1?"2026-10-04":"2026-11-15";
+    const past=today>due;
+    flags.push({cls:past?"warn":"ok",text:`Decision rule ${r.id} · ${r.when}: ${r.rule}${past?" — due, decide now.":""}`});
+  });
+  if(!flags.some(f=>f.cls==="bad"))flags.unshift({cls:"ok",text:"No hard guard is tripped this week. Continuous long run, easy days easy, same shoe."});
+  const lrLine=lr&&lr.intel?`${lr.distanceKm} km · ${fmtShort(parseISO(lr.localDate))} · stops ${lr.intel.stopPct}% · cadence ${lr.intel.cadenceStartSpm}→${lr.intel.cadenceEndSpm} · drift ${lr.intel.hrDriftPct??"—"}%`:"Sync Strava, then Analyze long runs in Settings";
+  const lrOk=lr&&lr.intel&&lr.intel.stopPct<=G.stopPctMax&&(lr.intel.cadenceDecayPct??0)>=-G.cadenceDecayMax;
+  return `
+    <div class="card mb-16" style="border:1px solid ${flags.some(f=>f.cls==="bad")?"rgba(244,63,94,0.35)":"rgba(52,211,153,0.25)"}">
+      <div class="row" style="justify-content:space-between;align-items:baseline">
+        <div class="card-h" style="margin:0">LOAD &amp; FORM GUARD · W${wIdx}</div>
+        <div class="small muted">Strava runs + manual log · rules from the plan spec</div>
+      </div>
+      <div class="guard-grid">
+        <div class="guard-item"><div class="gl">ACWR · km</div><div class="gv" style="color:${!acwr?"var(--text-2)":acwr.flag?"var(--red)":acwr.caution?"var(--orange)":"var(--green)"}">${acwr?acwr.ratio.toFixed(2):"—"}</div><div class="gs">${acwr?`this week ${acwr.acute} km vs ${acwr.chronic} km avg`:"trailing average below 15 km — building baseline"}</div></div>
+        <div class="guard-item"><div class="gl">Week vs trailing</div><div class="gv" style="color:${guard.capped?"var(--red)":guard.caution?"var(--orange)":"var(--green)"}">${guard.ratio!==null?guard.ratio.toFixed(2)+"×":"—"}</div><div class="gs">${week.targetKm} km planned · cap ${guard.capKm??"—"} km (1.5×)</div></div>
+        <div class="guard-item"><div class="gl">Long-run jump</div><div class="gv" style="color:${jump.flag?"var(--red)":"var(--green)"}">${jump.ratio!==null?jump.ratio.toFixed(2)+"×":"—"}</div><div class="gs">${week.longRunKm} km vs longest ${jump.max??"—"} km in prior 2 wk · limit 1.25×</div></div>
+        <div class="guard-item"><div class="gl">Latest long run</div><div class="gv" style="color:${lr&&lr.intel?(lrOk?"var(--green)":"var(--orange)"):"var(--text-2)"}">${lr&&lr.intel?(lrOk?"clean":"flagged"):"—"}</div><div class="gs">${escapeHtml(lrLine)}</div></div>
+      </div>
+      <div class="guard-flags">${flags.slice(0,6).map(f=>`<div class="guard-flag ${f.cls}">${escapeHtml(f.text)}</div>`).join("")}</div>
+    </div>`;
 }
 
 function computeACWR(log,wIdx){
@@ -3837,7 +3745,7 @@ function renderLongRun(){
   document.getElementById("view-longrun").innerHTML=`
     ${masthead("longrun",{
       title:"Long Run Log",
-      dek:"The weekly aerobic anchor, W1 to race day — duration first, pace honest.",
+      dek:"The weekly anchor, W1 to race day — continuous first, pace second. Stops, cadence decay and HR drift come from Strava streams after Analyze in Settings.",
       right:mhStat(`${lrs.filter(l=>l.done).length}<span style="font-size:18px;color:var(--text-2)">/${lrs.length}</span>`,"long runs done")
     })}
     <div class="card mb-16">
@@ -3847,7 +3755,7 @@ function renderLongRun(){
     <div class="tbl-wrap">
       <table class="tbl">
         <thead><tr>
-          <th>Wk</th><th>Date</th><th>Phase</th><th>Planned</th><th>Actual</th><th>Dist</th><th>Pace</th><th>HR</th><th>Decoupling</th><th>RPE</th><th>Notes</th>
+          <th>Wk</th><th>Date</th><th>Phase</th><th>Planned</th><th>Actual</th><th>Elapsed</th><th>Stops</th><th>Dist</th><th>Pace</th><th>HR</th><th>Cadence Δ</th><th>Decoupling</th><th>RPE</th><th>Notes</th>
         </tr></thead>
         <tbody>${lrs.map(l=>{
           const lg=log[l.date]||{};
@@ -3859,9 +3767,12 @@ function renderLongRun(){
             <td><span class="chip" style="background:${l.phase.color}33;color:${l.phase.color};font-size:10px;padding:2px 8px">${l.phase.short}</span></td>
             <td>${l.planned}min</td>
             <td>${l.actual?`<span class="status-done">${l.actual}min</span>`:`<span class="muted">—</span>`}</td>
+            <td>${lg.elapsedDuration?lg.elapsedDuration+"min":"—"}</td>
+            <td>${(()=>{const sp=lg.intel?lg.intel.stopPct:(lg.elapsedDuration&&l.actual?FujiIntel.stopPct(l.actual*60,lg.elapsedDuration*60):null);return sp===null||sp===undefined?"—":`<span style="color:${sp>PLAN_SPEC.guards.stopPctMax?"var(--orange)":"var(--green)"};font-weight:700">${sp}%</span>`;})()}</td>
             <td>${l.distance?l.distance+" km":"—"}</td>
             <td>${lg.pace?lg.pace+"/km":"—"}</td>
             <td>${l.avgHR||"—"}</td>
+            <td>${lg.intel&&lg.intel.cadenceDecayPct!==null&&lg.intel.cadenceDecayPct!==undefined?`<span style="color:${lg.intel.cadenceDecayPct< -PLAN_SPEC.guards.cadenceDecayMax?"var(--orange)":"var(--green)"};font-weight:700">${lg.intel.cadenceDecayPct}%</span><div class="muted" style="font-size:10.5px">${lg.intel.cadenceStartSpm}→${lg.intel.cadenceEndSpm}</div>`:"—"}</td>
             <td>${dec!==null?`<span style="color:${z.color};font-weight:700">${dec.toFixed(1)}%</span>`:`<span class="muted">—</span>`}</td>
             <td>${l.rpe||"—"}</td>
             <td style="max-width:200px;color:var(--text-2);font-size:12px">${l.notes?escapeHtml(l.notes).substr(0,80):""}</td>
@@ -3869,6 +3780,7 @@ function renderLongRun(){
       </table>
     </div>
     <div class="small muted mt-12" style="line-height:1.6">
+      <b style="color:var(--text)">Guards</b> · stopped time &lt;${PLAN_SPEC.guards.stopPctMax}% · cadence decay &lt;${PLAN_SPEC.guards.cadenceDecayMax}% · HR drift &lt;${PLAN_SPEC.guards.hrDriftMax}% — miss one and next week's long run repeats the distance.<br>
       <b style="color:var(--text)">Decoupling reading guide</b> · &lt;5% = aerobic durability good · 5–10% = moderate fitness gap · &gt;10% = significant aerobic deficit (under-trained, dehydrated, glycogen-depleted, or hot conditions). Mechanism: cardiac drift from plasma-volume loss + thermoregulation + glycogen depletion (Coyle 2005 <i>Sports Med</i>). 5% threshold from Friel coaching framework — useful heuristic, not RCT-validated.
     </div>
   `;
@@ -4079,97 +3991,73 @@ function iconYouTube(){return `<svg viewBox="0 0 24 24" fill="currentColor"><pat
 // YouTube search URL helper — links to a search so videos never go stale
 function ytSearch(q){return "https://www.youtube.com/results?search_query="+encodeURIComponent(q);}
 
-const STRENGTH_DAYS={
-  A:[
-    {n:"Barbell Back Squat",p:"3×5 · ≥80% 1RM · 3 min rest",tag:"Primary HL / RE",icon:SVG_BARBELL,
-     yt:ytSearch("barbell back squat proper form technique")},
-    {n:"Romanian Deadlift",p:"3×6 · 75% 1RM · 2 min",tag:"Posterior chain",icon:SVG_BARBELL,
-     yt:ytSearch("romanian deadlift proper form tutorial")},
-    {n:"Bench Press",p:"3×6–8 · 75% 1RM · 90s",tag:"AA superset →",icon:SVG_PRESS,
-     yt:ytSearch("barbell bench press proper form technique")},
-    {n:"Barbell Bent-Over Row",p:"3×6–8 · 75% 1RM · 90s",tag:"AA superset",icon:SVG_PULLUP,
-     yt:ytSearch("barbell bent over row proper form tutorial")},
-    {n:"Single-leg Calf Raise",p:"3×12 · BW+ · 60s",tag:"Tendon stiffness",icon:SVG_FOOT,
-     yt:ytSearch("single leg calf raise form technique running")},
-    {n:"Box Jump",p:"3×5 · BW · 2 min",tag:"Plyometric / SSC",plyo:true,icon:SVG_JUMP,
-     yt:ytSearch("box jump plyometric technique proper landing form")}
-  ],
-  B:[
-    {n:"Bulgarian Split Squat",p:"3×6/leg · ≥80% 1RM · 2 min",tag:"Unilateral HL",icon:SVG_LUNGE,
-     yt:ytSearch("bulgarian split squat proper form dumbbell barbell")},
-    {n:"Hip Thrust",p:"3×8 · 75% 1RM · 90s",tag:"Glute power",icon:SVG_HIP,
-     yt:ytSearch("barbell hip thrust proper form glutes")},
-    {n:"Overhead Press",p:"3×6–8 · 75% 1RM · 90s",tag:"AA superset →",icon:SVG_PRESS,
-     yt:ytSearch("overhead press barbell proper form tutorial")},
-    {n:"Pull-up / Lat Pulldown",p:"3×6–8 · BW/weighted · 90s",tag:"AA superset",icon:SVG_PULLUP,
-     yt:ytSearch("pull up proper form tutorial lat pulldown")},
-    {n:"Single-leg Hop",p:"3×5/leg · BW · 2 min",tag:"Reactive strength",icon:SVG_JUMP,
-     yt:ytSearch("single leg hop plyometric reactive strength technique")},
-    {n:"Drop Jump",p:"3×5 · 20–30cm box · 2 min",tag:"Tendon stiffness",plyo:true,icon:SVG_DOWN,
-     yt:ytSearch("drop jump plyometric technique tendon stiffness")}
-  ]
-};
-const PERIODIZATION=[
-  ["Phase 1 (W1–6)","60→80% 1RM","Re-learn patterns first","2–3 sets"],
-  ["Phase 2 (W7–14)","≥80% 1RM","Full HL protocol","3–4 sets"],
-  ["Phase 3 (W15–21)","≥80% 1RM","Maintain, ↓20% sets","3 sets"],
-  ["Phase 4 (W22–23)","≥80% 1RM (last D-10)","1×/wk, 50% volume","2 sets"]
-];
+const STRENGTH_ICONS={barbell:SVG_BARBELL,hip:SVG_HIP,lunge:SVG_LUNGE,press:SVG_PRESS,pullup:SVG_PULLUP,foot:SVG_FOOT,jump:SVG_JUMP,down:SVG_DOWN};
+function strengthIcon(id){return STRENGTH_ICONS[id]||SVG_BARBELL;}
+function currentPlanWeek(){const wi=weekIndexForDate(todayUTC());return Math.max(1,Math.min(ATHLETE.totalWeeks,wi));}
 
 function renderStrength(){
   const log=Store.get(STORAGE.strength,[]);
   const recent=log.slice(-5).reverse();
+  const w=State.strengthWeek||currentPlanWeek();
+  const phase=FujiStrength.phaseForWeek(w);
+  const A=FujiStrength.sessionFor(w,"A"),B=FujiStrength.sessionFor(w,"B");
+  const exCards=sess=>sess?`<div class="grid grid-2">${sess.exercises.map(e=>`
+          <div class="ex-card ${e.plyo?"plyo":""}">
+            <a class="ex-yt-btn" href="${e.yt}" target="_blank" rel="noopener noreferrer" aria-label="Watch ${escapeHtml(e.name)} on YouTube">${iconYouTube()}</a>
+            <div class="ex-icon">${strengthIcon(e.icon)}</div>
+            <div class="ex-name">${escapeHtml(e.name)}</div>
+            <div class="ex-prescription">${escapeHtml(e.prescription)}</div>
+            <span class="ex-tag">${escapeHtml(e.tag)}${e.plyo?` · ${e.contacts} contacts`:""}</span>
+          </div>`).join("")}</div>`:`<div class="muted small">No session this week — ${escapeHtml(phase.note)}</div>`;
+  const contacts=FujiStrength.plyoContacts(A)+FujiStrength.plyoContacts(B);
 
   document.getElementById("view-strength").innerHTML=`
     ${masthead("strength",{
       title:"Strength & Plyometric",
-      dek:"Two sessions a week — Day A Monday, Day B Thursday. Heavy load plus plyo is what moves running economy.",
+      dek:"Two sessions a week — A Monday, B Thursday, ≥6 h from the run. Foot and ankle first, heavy later, plyometrics counted in ground contacts.",
       right:`<button class="btn btn-primary" id="btn-log-strength">${iconPlus()} Log session</button>`
     })}
 
-    <details open>
-      <summary>Why HL + Plyometric — Evidence</summary>
+    <div class="week-bar mb-16">
+      <div class="week-nav">
+        <button class="wk-arrow" id="st-prev" aria-label="Previous week">${iconLeft()}</button>
+        <div class="wk-label">
+          <div style="font-weight:700;font-size:15px;font-family:var(--font-display)">W${w} · ${escapeHtml(phase.name)}</div>
+          <div class="wk-range">${fmtShort(dateForWeekDay(w,0))} — ${fmtShort(dateForWeekDay(w,6))} · load ${escapeHtml(A?A.load:phase.load)} · plyo cap ${phase.plyoCap} contacts</div>
+        </div>
+        <button class="wk-arrow" id="st-next" aria-label="Next week">${iconRight()}</button>
+      </div>
+      <div class="row">
+        <span class="chip" style="background:${phase.color}33;color:${phase.color}">${escapeHtml(phase.name)}</span>
+        <span class="chip">${contacts} plyo contacts this week</span>
+        ${w===currentPlanWeek()?'<span class="today-badge">This week</span>':""}
+      </div>
+    </div>
+
+    <div class="warn-box mb-16">${escapeHtml(phase.note)}</div>
+
+    <div class="grid grid-2">
+      <div>
+        <div class="card-h" style="margin-bottom:12px">Day A — Monday${A?` · ${escapeHtml(A.load)}`:""}</div>
+        ${exCards(A)}
+      </div>
+      <div>
+        <div class="card-h" style="margin-bottom:12px">Day B — Thursday${B?` · ${escapeHtml(B.load)}`:""}</div>
+        ${exCards(B)}
+      </div>
+    </div>
+
+    <details class="mt-16">
+      <summary>Why high-load + plyometric — evidence</summary>
       <div class="evidence-banner mt-8">
-        <b>High-load (≥80% 1RM) + Plyometric</b> is the only strength training combination with statistically significant improvement in running economy and RE durability (Llanos-Lagos et al. 2024, <i>Sports Med</i> meta-analysis, ES=0.35; Zanini et al. 2025, <i>MSSE</i> RCT). Plyometric training is effective at speeds ≤12 km/h (ES=0.307, p=0.017). Separate endurance + strength sessions by <b>≥6h</b> to minimize AMPK/mTOR interference (Fyfe 2018).
+        <b>High-load (≥80% 1RM) + plyometrics</b> is the only strength combination with a reliable running-economy effect (Llanos-Lagos 2024, combined ES −0.65) — and the effect is speed-dependent: small at marathon pace, which is why the program's first job here is <b>injury protection and late-race mechanics</b>, not economy. Plyometric benefit exists at ≤12 km/h (ES −0.31). Tendon adaptation lags muscle, so contacts rise slowly (≤80 → ≤120 → ≤80). Last heavy lift ≥10 days out (Rønnestad 2014). Separate lifting and running by ≥6 h (Fyfe 2018).
       </div>
     </details>
 
-    <div class="grid grid-2 mt-16">
-      <div>
-        <div class="card-h" style="margin-bottom:12px">Day A — Mon · Horizontal Push/Pull + Lower</div>
-        <div class="grid grid-2">${STRENGTH_DAYS.A.map(e=>`
-          <div class="ex-card ${e.plyo?"plyo":""}">
-            ${e.yt?`<a class="ex-yt-btn" href="${e.yt}" target="_blank" rel="noopener noreferrer" aria-label="Watch ${e.n} on YouTube">${iconYouTube()}</a>`:""}
-            <div class="ex-icon">${e.icon||""}</div>
-            <div class="ex-name">${e.n}</div>
-            <div class="ex-prescription">${e.p}</div>
-            <span class="ex-tag">${e.tag}</span>
-          </div>`).join("")}</div>
-      </div>
-      <div>
-        <div class="card-h" style="margin-bottom:12px">Day B — Thu · Vertical Push/Pull + Lower</div>
-        <div class="grid grid-2">${STRENGTH_DAYS.B.map(e=>`
-          <div class="ex-card ${e.plyo?"plyo":""}">
-            ${e.yt?`<a class="ex-yt-btn" href="${e.yt}" target="_blank" rel="noopener noreferrer" aria-label="Watch ${e.n} on YouTube">${iconYouTube()}</a>`:""}
-            <div class="ex-icon">${e.icon||""}</div>
-            <div class="ex-name">${e.n}</div>
-            <div class="ex-prescription">${e.p}</div>
-            <span class="ex-tag">${e.tag}</span>
-          </div>`).join("")}</div>
-      </div>
-    </div>
-
-    <div class="card mt-16">
-      <div class="card-h">Plyometric Progression</div>
-      <div style="font-size:13px;line-height:1.5;color:var(--text-2)">
-        Phase 1 W1–4: 3 sets per exercise. Phase 2+: 4 sets. Cap ground contacts at <b style="color:var(--text)">60–80 in W1–4</b>, progress to <b style="color:var(--text)">120–150 by Phase 2</b>. Tendon adaptation lags muscle — increase volume conservatively. Last heavy plyo session ≥10 days before race.
-      </div>
-    </div>
-
     <div class="tbl-wrap mt-16">
       <table class="tbl">
-        <thead><tr><th>Phase</th><th>Load</th><th>Volume note</th><th>Plyometric sets</th></tr></thead>
-        <tbody>${PERIODIZATION.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody>
+        <thead><tr><th>Weeks</th><th>Phase</th><th>Load</th><th>Plyo cap</th><th>Emphasis</th></tr></thead>
+        <tbody>${FujiStrength.STRENGTH_PHASES.map(p=>`<tr ${p===phase?'style="background:rgba(255,107,0,0.05)"':""}><td><b>W${p.weeks[0]}${p.weeks[1]!==p.weeks[0]?"–"+p.weeks[1]:""}</b></td><td style="color:${p.color};font-weight:600">${p.name}</td><td>${p.load}</td><td>${p.plyoCap||"—"}</td><td class="muted" style="font-size:12px">${p.note}</td></tr>`).join("")}</tbody>
       </table>
     </div>
 
@@ -4178,18 +4066,20 @@ function renderStrength(){
       ${recent.length?recent.map(l=>`
         <div style="padding:12px 0;border-bottom:1px solid var(--border)">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><b>Day ${l.day}</b> · ${fmtLong(parseISO(l.date))}</div>
+            <div><b>W${l.week||"?"} · Day ${l.day}</b> · ${fmtLong(parseISO(l.date))}</div>
             <span class="chip">RPE ${l.rpe||"—"}</span>
           </div>
           <div class="small muted mt-8">${(l.exercises||[]).filter(x=>x.done).length}/${(l.exercises||[]).length} exercises completed${l.notes?" · "+escapeHtml(l.notes):""}</div>
         </div>`).join(""):'<div class="muted">No strength sessions logged yet.</div>'}
     </div>
   `;
-
-  document.getElementById("btn-log-strength").addEventListener("click",openStrengthModal);
+  document.getElementById("st-prev").addEventListener("click",()=>{State.strengthWeek=Math.max(1,w-1);renderStrength();});
+  document.getElementById("st-next").addEventListener("click",()=>{State.strengthWeek=Math.min(ATHLETE.totalWeeks,w+1);renderStrength();});
+  document.getElementById("btn-log-strength").addEventListener("click",()=>openStrengthModal(w));
 }
 
-function openStrengthModal(){
+function openStrengthModal(week){
+  const w0=week||currentPlanWeek();
   const html=`
     <div class="modal-h">
       <div class="modal-title">Log Strength Session</div>
@@ -4198,6 +4088,7 @@ function openStrengthModal(){
     <div class="modal-body">
       <div class="field-row">
         <div class="field"><label>Date</label><input type="date" id="s-date" value="${todayISO()}"></div>
+        <div class="field"><label>Week</label><select id="s-week">${PLAN.map(wk=>`<option value="${wk.weekNum}" ${wk.weekNum===w0?"selected":""}>W${wk.weekNum} · ${fmtShort(dateForWeekDay(wk.weekNum,0))}</option>`).join("")}</select></div>
         <div class="field"><label>Day</label><select id="s-day"><option value="A">A — Mon</option><option value="B">B — Thu</option></select></div>
       </div>
       <div class="field"><label>Exercises completed</label><div id="s-ex"></div></div>
@@ -4205,28 +4096,32 @@ function openStrengthModal(){
         <div class="field"><label>RPE (1–10)</label><input type="number" id="s-rpe" min="1" max="10" inputmode="numeric"></div>
         <div class="field"><label>Duration (min)</label><input type="number" id="s-dur" inputmode="numeric"></div>
       </div>
-      <div class="field"><label>Notes (loads, soreness, observations)</label><textarea id="s-notes" placeholder="e.g. Squat 100kg ×5 felt strong; right hamstring tight"></textarea></div>
+      <div class="field"><label>Notes (loads, soreness, foot)</label><textarea id="s-notes" placeholder="e.g. Squat 90 kg ×5 · right foot 1/10 next morning"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn modal-close">Cancel</button>
       <button class="btn btn-primary" id="s-save">Save</button>
     </div>`;
   showModal(html);
+  function current(){return FujiStrength.sessionFor(parseInt(document.getElementById("s-week").value,10),document.getElementById("s-day").value);}
   function paint(){
-    const day=document.getElementById("s-day").value;
-    document.getElementById("s-ex").innerHTML=STRENGTH_DAYS[day].map((e,i)=>`
+    const sess=current();
+    document.getElementById("s-ex").innerHTML=sess?sess.exercises.map((e,i)=>`
       <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;cursor:pointer">
         <input type="checkbox" data-i="${i}" style="width:18px;height:18px;accent-color:var(--orange)">
-        <span>${e.n} <span class="muted small">— ${e.p}</span></span>
-      </label>`).join("");
+        <span>${escapeHtml(e.name)} <span class="muted small">— ${escapeHtml(e.prescription)}</span></span>
+      </label>`).join(""):'<div class="muted small">No session scheduled for this week/day.</div>';
   }
   paint();
   document.getElementById("s-day").addEventListener("change",paint);
+  document.getElementById("s-week").addEventListener("change",paint);
   document.getElementById("s-save").addEventListener("click",()=>{
+    const sess=current();
     const day=document.getElementById("s-day").value;
-    const exs=STRENGTH_DAYS[day].map((e,i)=>({name:e.n,plan:e.p,done:document.querySelector(`#s-ex input[data-i="${i}"]`).checked}));
+    const week=parseInt(document.getElementById("s-week").value,10);
+    const exs=sess?sess.exercises.map((e,i)=>({name:e.name,plan:e.prescription,done:!!document.querySelector(`#s-ex input[data-i="${i}"]`)?.checked})):[];
     const log=Store.get(STORAGE.strength,[]);
-    log.push({date:document.getElementById("s-date").value,day,exercises:exs,rpe:document.getElementById("s-rpe").value,duration:document.getElementById("s-dur").value,notes:document.getElementById("s-notes").value,ts:Date.now()});
+    log.push({date:document.getElementById("s-date").value,week,day,exercises:exs,rpe:document.getElementById("s-rpe").value,duration:document.getElementById("s-dur").value,notes:document.getElementById("s-notes").value,ts:Date.now()});
     Store.set(STORAGE.strength,log);
     closeModal();renderStrength();flash("Strength session saved");
   });
@@ -4266,7 +4161,7 @@ function renderSpeed(){
   document.getElementById("view-speed").innerHTML=`
     ${masthead("speed",{
       title:"Speed Sessions",
-      dek:`Every quality workout across the ${ATHLETE.totalWeeks}-week plan — from VO₂max rebuild to goal-pace sharpeners.`,
+      dek:`Every Wednesday quality session across the ${ATHLETE.totalWeeks}-week plan — incline walks, cruise intervals, and the Bunkado hill rehearsal. Only one hard day mid-week; the long run is the other.`,
       right:mhStat(`${completedPct}<span style="font-size:18px;color:var(--text-2)">%</span>`,"completed")
     })}
     <div class="grid grid-3 mb-16">
@@ -4276,12 +4171,9 @@ function renderSpeed(){
     </div>
     <div class="row mb-16">
       <span class="card-h" style="margin:0">Filter:</span>
-      <div class="seg" id="speed-filter" style="max-width:400px">
+      <div class="seg" id="speed-filter" style="max-width:520px">
         <button data-v="all" class="${filter==="all"?"active":""}">All</button>
-        <button data-v="Base" class="${filter==="Base"?"active":""}">Base</button>
-        <button data-v="Build" class="${filter==="Build"?"active":""}">Build</button>
-        <button data-v="Spec" class="${filter==="Spec"?"active":""}">Race-Spec</button>
-        <button data-v="Taper" class="${filter==="Taper"?"active":""}">Taper</button>
+        ${PHASES.map(p=>`<button data-v="${p.short}" class="${filter===p.short?"active":""}">${p.short}</button>`).join("")}
       </div>
     </div>
     <div class="tbl-wrap">
@@ -4326,7 +4218,7 @@ function renderProfile(){
       <div class="avatar" style="width:64px;height:64px;font-size:28px">J</div>
       <div>
         <div style="font-size:22px;font-weight:700">James</div>
-        <div class="muted small mt-8">${ATHLETE.age} y · ${ATHLETE.sex} · ${ATHLETE.weight} kg · ${ATHLETE.height} cm</div>
+        <div class="muted small mt-8">${ATHLETE.age} y · ${ATHLETE.sex} · ${ATHLETE.weight} kg · ${ATHLETE.height} cm · gate ${planGateDate()}</div>
       </div>
     </div>
 
@@ -4409,16 +4301,16 @@ function renderProfile(){
     </div>
 
     <div class="card mb-16">
-      <div class="card-h">Training Zones — 3-Zone Model · POL→PYR Block Periodization</div>
+      <div class="card-h">Training Zones — GXT 3-zone model · Bangkok HR caps</div>
       <div class="grid grid-3 mt-12">
-        <div class="zone-card zone-z1"><div class="zh">Z1 — Aerobic Base</div><div class="zhr">&lt; 155 bpm</div><div class="zd">Fat oxidation · VLamax suppression · mitochondrial density. <b>~78–82% of weekly volume across all phases.</b></div></div>
-        <div class="zone-card zone-z2"><div class="zh">Z2 — Threshold</div><div class="zhr">155–171 bpm</div><div class="zd">Tempo · marathon pace · race specificity. <b>3% Phase 1 → 18% Phase 3</b> (specificity ramp).</div></div>
-        <div class="zone-card zone-z3"><div class="zh">Z3 — VO₂max</div><div class="zhr">&gt; 171 bpm</div><div class="zd">VO₂max intervals · neuromuscular sharpening. <b>15% Phase 1 → 5% Phase 3</b> (front-loaded ceiling build).</div></div>
+        <div class="zone-card zone-z1"><div class="zh">Z1 — Aerobic Base</div><div class="zhr">&lt; 155 bpm</div><div class="zd">Easy runs, walk-run, bike, long-run base. Cap easy days at <b>150</b> in Bangkok heat. <b>80–95% of weekly time.</b></div></div>
+        <div class="zone-card zone-z2"><div class="zh">Z2 — Threshold</div><div class="zhr">155–171 bpm</div><div class="zd">Goal-pace segments (7:30, cap <b>162</b>) and cruise intervals (165–170). <b>5% in Return → 17% in Peak.</b></div></div>
+        <div class="zone-card zone-z3"><div class="zh">Z3 — VO₂max</div><div class="zhr">&gt; 171 bpm</div><div class="zd">Not prescribed in this plan. Strides and the hill top-outs touch it; nothing else should. <b>≤5%.</b></div></div>
       </div>
       <div class="warn-box mt-16" style="border-color:#0A84FF;background:rgba(10,132,255,0.06)">
-        <b style="color:#0A84FF">TID by phase (block periodization):</b><br>
-        Phase 1 <b>POL 82/3/15</b> → Phase 2 <b>bridge 78/12/10</b> → Phase 3 <b>PYR 77/18/5</b> → Phase 4 <b>taper 80/12/8</b>.<br>
-        <span class="small muted">Build VO₂max ceiling first (POL), bridge with mixed work, then specialize at race pace (PYR). See Periodization view for rationale.</span>
+        <b style="color:#0A84FF">TID by phase (session-goal, run + bike):</b><br>
+        ${PHASES.map(p=>`<span style="color:${p.color};font-weight:700">${p.name}</span> ${p.tid.join("/")}`).join(" → ")}<br>
+        <span class="small muted">Easy is easy at every stage; the only intensity that grows is goal pace inside the long run.</span>
       </div>
       <div class="warn-box mt-16">
         <b>⚠ Apple Watch Zone 2 misalignment</b><br>
@@ -4429,23 +4321,24 @@ function renderProfile(){
     <div class="card mb-16">
       <div class="card-h">Goals & Performance Benchmarks</div>
       <div class="grid grid-3 mt-12">
-        <div><div class="metric-label">Half goal — BKK · 28 Nov</div><div class="metric-value" style="font-size:22px;color:var(--blue)">Sub 2:30</div><div class="metric-sub">7:06/km avg</div></div>
-        <div><div class="metric-label">Marathon goal — Fuji · 13 Dec</div><div class="metric-value" style="font-size:22px;color:var(--orange)">Sub 5:00</div><div class="metric-sub">7:06/km avg — same pace, one rhythm</div></div>
-        <div><div class="metric-label">Trail 25k — 28 Jun ✓</div><div class="metric-value" style="font-size:22px;color:var(--green)">7:46:41</div><div class="metric-sub">+1094 m · finished</div></div>
-        <div><div class="metric-label">Current 21 km best</div><div class="metric-value" style="font-size:22px">3:20:00</div><div class="metric-sub">avg 9:28/km</div></div>
-        <div><div class="metric-label">Current Z1 pace</div><div class="metric-value" style="font-size:22px">8:30–8:50</div><div class="metric-sub">/km · Bangkok heat</div></div>
-        <div><div class="metric-label">Pre-plan volume</div><div class="metric-value" style="font-size:22px">739 km</div><div class="metric-sub">over 5 months</div></div>
+        <div><div class="metric-label">Half test — ATM · 28 Nov</div><div class="metric-value" style="font-size:22px;color:var(--blue)">7:45/km</div><div class="metric-sub">continuous · HR ≤160 · stops &lt;5%</div></div>
+        <div><div class="metric-label">Marathon — Fuji · 13 Dec</div><div class="metric-value" style="font-size:22px;color:var(--orange)">&lt; 6:00</div><div class="metric-sub">Tier 1 ≈5:35–5:45 · 7:30 to Saiko</div></div>
+        <div><div class="metric-label">Trail 25k — 28 Jun ✓</div><div class="metric-value" style="font-size:22px;color:var(--green)">7:46:41</div><div class="metric-sub">+1,153 m · finished</div></div>
+        <div><div class="metric-label">Longest run</div><div class="metric-value" style="font-size:22px">27.0 km</div><div class="metric-sub">29 Aug · 8:11/km moving · 20% stopped</div></div>
+        <div><div class="metric-label">Best 21.1 km (moving)</div><div class="metric-value" style="font-size:22px">2:54:16</div><div class="metric-sub">8 Aug · 8:14/km · elapsed 4:26</div></div>
+        <div><div class="metric-label">Easy pace · Bangkok</div><div class="metric-value" style="font-size:22px">8:30–9:15</div><div class="metric-sub">/km at HR &lt;150 · goal segments 7:30 at ≤162</div></div>
       </div>
     </div>
 
     <div class="card mb-16">
       <div class="card-h">Physiological Notes</div>
       <ul style="font-size:13.5px;line-height:1.7;color:var(--text);padding-left:18px;margin-top:6px">
-        <li><b style="color:var(--orange)">Plan reset (6 Jul 2026):</b> post-Trail recovery + training gap → 23-week rebuild to Fuji. Goals recalibrated honestly: Half sub 2:30 + Full sub 5:00 — both exactly 7:06/km. One pace to master; consistency beats heroics.</li>
-        <li><b style="color:var(--orange)">Primary lever:</b> Running Economy + aerobic durability — VO₂max already 96th percentile, ceiling reached. The Trail 25k (7h46 on feet) showed durability, not engine, is the limiter.</li>
-        <li><b style="color:var(--orange)">Key target:</b> VLamax suppression via Z1 volume → preserves fat oxidation at marathon pace, prevents glycogen depletion.</li>
-        <li><b style="color:var(--orange)">Heat → Cold transition:</b> Bangkok 30–35 °C training builds heat acclimatization. Fuji 5–10 °C gives ~2–3% performance bonus. Hold sauna 3–4×/wk × 30 min through W20, then taper sauna with training (1–2×/wk W21–22, last sauna D-3) so heat stress doesn't compete with neuromuscular freshening.</li>
-        <li><b style="color:var(--orange)">INSCYD pending:</b> will establish VLamax, FatMax, fuel combustion curves for zone recalibration in Phase 3.</li>
+        <li><b style="color:var(--orange)">Plan rebuilt (7 Sep 2026):</b> right lateral-foot pain after the 27 km run on 29 Aug — a 2.7× jump on the longest run of the previous two weeks, cadence 157→130 spm, HR 162 (Z3) for 3 h 41, 56 min of stops. Second injury of the year after a load spike (April: back + PF). The 23-week sub-5:00 plan assumed 45+ km/week now; this one starts from a walk-run week and lets the gate date move.</li>
+        <li><b style="color:var(--orange)">Primary lever:</b> continuity, not speed. Moving pace on GPS long runs improved 10:08 → 8:10 /km between February and August — enough for the cutoff. Elapsed pace (10:15–12:36 with stops) is not. Fuji's Saiko checkpoint needs 8:47 cumulative after the climb, every stop counted.</li>
+        <li><b style="color:var(--orange)">Engine:</b> VO₂max 55.1 (96th percentile) is not the limiter; VT1 155 / VT2 171 anchor the caps. Easy &lt;150, goal segments ≤162, cruise 165–170 — all Bangkok numbers; expect the same pace 5–10 bpm lower at Fuji.</li>
+        <li><b style="color:var(--orange)">Heat → cold:</b> every run so far was at 28–32 °C. Marathon performance falls ~10% between WBGT 10 and 25 °C for 3 h+ runners (Ely 2007), so the same effort is worth 6–10% at 2–8 °C. That gap, plus 14 weeks, is where 7:30 comes from. No heat work needed; dress in removable layers, drink to plan.</li>
+        <li><b style="color:var(--orange)">Shoes:</b> 22 pairs in Strava; half of August was in carbon plates and the 27 km was in a pair not worn for 35 days. Return block on one daily trainer; plated shoes only on cruise-interval days from W7; the race shoe is the pair from the W10 long run and the half.</li>
+        <li><b style="color:var(--orange)">Data quality:</b> treadmill sessions carry manually entered distance ~18–20% above the device — indoor paces are not used for zones. Strava's estimated 5K (35:27) is stale; the half test is the real benchmark.</li>
       </ul>
     </div>
 
@@ -4807,8 +4700,8 @@ function renderPeriodization(){
   document.getElementById("view-periodization").innerHTML=`
     ${masthead("periodization",{
       title:"Periodization",
-      dek:`${ATHLETE.totalWeeks}-week macrocycle · four mesocycles · one weekly rhythm. Polarized first, pyramidal when it matters.`,
-      right:mhStat("POL→PYR","block sequence")
+      dek:`${ATHLETE.totalWeeks}-week macrocycle · five blocks · one weekly rhythm. Return, base, build, peak, taper — every step ≤15% and every long run ≤1.25× the last two weeks.`,
+      right:mhStat("≤1.25×","long-run step")
     })}
 
     <div class="card mb-16">
@@ -4827,9 +4720,9 @@ function renderPeriodization(){
             <span class="chip" style="background:${p.color}33;color:${p.color}">W${p.weeks[0]}–${p.weeks[1]}</span>
           </div>
           <div class="grid grid-3 mt-12">
-            <div><div class="metric-label">Volume</div><div style="font-size:15px;font-weight:600;margin-top:4px">${p.kmRange[0]}→${p.kmRange[1]} km/wk</div></div>
+            <div><div class="metric-label">Volume</div><div style="font-size:15px;font-weight:600;margin-top:4px">${(()=>{const ks=PLAN.filter(w=>w.phase.id===p.id).map(w=>w.targetKm);return ks.length?`${Math.min(...ks)}→${Math.max(...ks)} km/wk`:"—";})()}</div></div>
             <div><div class="metric-label">TID Z1/Z2/Z3</div><div style="font-size:15px;font-weight:600;margin-top:4px">${p.tid.join(" / ")}</div></div>
-            <div><div class="metric-label">Style</div><div style="font-size:13px;font-weight:600;margin-top:4px">${i===0?"POL":i===1?"POL→PYR":i===2?"PYR":"Maintain"}</div></div>
+            <div><div class="metric-label">Weeks</div><div style="font-size:13px;font-weight:600;margin-top:4px">${p.weeks[1]-p.weeks[0]+1} wk</div></div>
           </div>
           <div class="small muted mt-12">${p.focus}</div>
         </div>`).join("")}
@@ -4841,27 +4734,27 @@ function renderPeriodization(){
         <table class="tbl" style="font-size:12.5px">
           <thead><tr><th>Day</th><th>Session</th><th>Zone</th><th>Rationale</th></tr></thead>
           <tbody>
-            <tr><td><b>Mon</b></td><td>Strength A + Plyo (Box jump)</td><td>Strength</td><td>Fresh after Sun rest · ≥6h before Tue easy run (AMPK/mTOR buffer · Fyfe 2018)</td></tr>
-            <tr><td><b>Tue</b></td><td>Easy long Z1</td><td>Z1</td><td>Aerobic base · capillary density · fat oxidation · spaced from Mon strength</td></tr>
-            <tr><td><b>Wed</b></td><td>Quality session (Z3 / Z2 / MP)</td><td>varies by phase</td><td>Mid-week after 1d easy · primary intensity stimulus</td></tr>
-            <tr><td><b>Thu</b></td><td>Strength B + Plyo (Drop jump)</td><td>Strength</td><td>48h post-A · different patterns (vertical / unilateral)</td></tr>
-            <tr><td><b>Fri</b></td><td>Easy short Z1</td><td>Z1</td><td>Pre-long-run shakeout · keep legs primed but not loaded</td></tr>
-            <tr><td><b>Sat</b></td><td>Long run (MP segment from W7)</td><td>Z1 / Z2</td><td>Weekly aerobic anchor · race-day rehearsal from Build phase on</td></tr>
-            <tr><td><b>Sun</b></td><td>Recovery jog OR rest</td><td>Z1 / rest</td><td>Active recovery flush · prep for Mon strength</td></tr>
+            <tr><td><b>Mon</b></td><td>Strength A</td><td>Strength</td><td>Fresh after Sunday's spin · ≥6 h from any run (Fyfe 2018)</td></tr>
+            <tr><td><b>Tue</b></td><td>Easy run (longest easy day)</td><td>Z1</td><td>Aerobic volume at HR &lt;150 · cadence ≥170</td></tr>
+            <tr><td><b>Wed</b></td><td>Quality: strides / incline / cruise intervals / hills</td><td>Z1–Z2</td><td>The one hard mid-week day · Bunkado rehearsal lives here</td></tr>
+            <tr><td><b>Thu</b></td><td>Strength B + short easy run</td><td>Strength + Z1</td><td>48 h after A · unilateral + descent prep · easy km ≥6 h from the lift</td></tr>
+            <tr><td><b>Fri</b></td><td>Rest</td><td>rest</td><td>Fresh for the long run · kit and fuel laid out</td></tr>
+            <tr><td><b>Sat</b></td><td>Long run (continuous · M segments from W8)</td><td>Z1 / Z2</td><td>The race rehearsal · planned 30 s walks · same shoe every week</td></tr>
+            <tr><td><b>Sun</b></td><td>Bike Z1</td><td>Z1</td><td>Second long day without impact · time on task the foot cannot yet pay for</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="warn-box mt-16"><b>Recovery weeks (every 3rd):</b> Mon strength → easy jog · Wed quality → light fartlek · long run → 70% volume. Allows supercompensation before next 2-wk load block (Issurin 2010).</div>
+      <div class="warn-box mt-16"><b>Down weeks (W6, W9):</b> volume −25–35%, long run held, Wednesday stays light. Every third week, as in Fitzgerald's plans — the injury history says this is not optional.</div>
     </div>
 
     <div class="card">
-      <div class="card-h">Why POL→PYR block periodization</div>
+      <div class="card-h">Why this shape</div>
       <div class="small" style="line-height:1.7;margin-top:10px">
-        <b style="color:#30D158">Phase 1 — POLARIZED (Z3 dominant quality):</b> VO₂max ceiling and capacity are most trainable when fresh. With base volume ramping up, <b>Z3 stimulus drives mitochondrial density and capillarization</b> alongside Z1 volume. Minimal Z2 because threshold work has limited transfer when aerobic engine isn't fully built. Stöggl & Sperlich 2014 (<i>Front Physiol</i>): POL improved VO₂max +6% vs +4% for threshold-heavy in 9 wk RCT.<br><br>
-        <b style="color:#FF9F0A">Phase 2 — BRIDGE (alternating Z3 / Z2):</b> Maintain VO₂max gains (every other week Z3 maintenance) while introducing sustained Z2 to build lactate clearance and preview MP feel. Block periodization (Filipas 2021) outperforms static TID by ~2.4% time-trial.<br><br>
-        <b style="color:#FF453A">Phase 3 — PYRAMIDAL (Z2 race-specific):</b> Marathon is run AT Z2 — at this stage, <b>specificity wins</b>. Z2 volume builds fueling tolerance, mental durability, and race-pace economy. Casado 2022 review: world-class marathoners avg ~80/15/5 (pyramidal) — what they actually do, not what theory says they "should".<br><br>
-        <b style="color:#0A84FF">Phase 4 — TAPER (maintain):</b> Volume drops sharply (Mujika 2003: 40–60% cut) but intensity touches preserved (Z3 every 5–7 d) to lock in adaptations.<br><br>
-        <b>This is NOT pyramidal-throughout</b> (which would shortchange VO₂max in Phase 1) <b>nor strict polarized</b> (which would shortchange race specificity). Block periodization gets the best of both.
+        <b style="color:#34D399">Return (W1–3):</b> Daniels' rule for coming back — 33 → 50 → 75% of the pre-break load, walk-run first, and leg-involved cross-training (the bike) to shrink the fitness loss. Symptom-led: the gate date in Settings moves the whole plan.<br><br>
+        <b style="color:#60A5FA">Base (W4–6):</b> back to 100% of base, then a plateau week and a down week. Daniels prefers 3–4 week plateaus before bumping volume; the two injuries this year both followed weeks that skipped this.<br><br>
+        <b style="color:#FF9F0A">Build (W7–9):</b> two quality days, never adjacent — cruise intervals or hills on Wednesday, the long run on Saturday with the first 7:30 segments. For a recreational runner pyramidal and polarized distributions perform the same (Rosenblat 2024); what matters is that easy days are easy and the long run is continuous.<br><br>
+        <b style="color:#F43F5E">Peak (W10–12):</b> 46 and 50 km with the 30 km continuous run at D-22 — the Higdon position for the longest run — then the half at D-15 as the pacing test. Runners whose longest run is under 30 km hit the wall more often; the time cap (4:00) and the ≤1.25× step keep it from becoming another 2.7× jump.<br><br>
+        <b style="color:#C084FC">Taper (W13–14):</b> −30% with goal-pace touches and strides; last lift D-13. Amateur endurance tapers lose more from over-resting than from under-resting.
       </div>
     </div>
   `;
@@ -4871,11 +4764,7 @@ function renderPeriodization(){
   const labels=PLAN.map(w=>"W"+w.weekNum);
   const km=PLAN.map(w=>w.targetKm);
   const colors=PLAN.map(w=>w.isRecovery?w.phase.color+"55":w.phase.color);
-  const races=[
-    {label:"Hyrox",weekIdx:5,color:"#BF5AF2"},
-    {label:"Half",weekIdx:20,color:"#0A84FF"},
-    {label:"Fuji",weekIdx:22,color:"#FF9F0A"}
-  ];
+  const races=PLAN.filter(w=>w.race).map(w=>{const r=PLAN_SPEC.races.find(x=>x.id===w.race);return {label:r?r.short:w.race,weekIdx:w.weekNum-1,color:r?r.color:"#FF9F0A"};});
   if(periodChart)periodChart.destroy();
   periodChart=new Chart(ctx,{
     type:"bar",
@@ -4916,301 +4805,95 @@ function renderPeriodization(){
    17b. SIDE RACES VIEW — Trail 25k + Hyrox Doubles
    ========================================================================= */
 function renderSideRaces(){
-  const hyrox=SECONDARY_RACES[0];
-  const half=SECONDARY_RACES[1];
-  const trail=COMPLETED_RACES[0];
-  const hDays=daysUntil(hyrox.date);
-  const aDays=daysUntil(half.date);
-  document.getElementById("view-sideraces").innerHTML=`
-    ${masthead("sideraces",{
-      title:"Side Races",
-      dek:"One result banked, two starts ahead — every ticket punched on the way to Fuji.",
-      right:mhStat(Math.max(0,aDays),"days to BKK Half")
-    })}
-
-    <!-- =============== AMAZING THAILAND BKK HALF =============== -->
-    <article class="ticket" style="--tc:${half.color}">
+  const half=PLAN_SPEC.races.find(r=>r.id==="atmbkk");
+  const hyrox=PLAN_SPEC.races.find(r=>r.id==="hyrox");
+  const trail=PLAN_SPEC.races.find(r=>r.id==="trail");
+  const hDays=daysUntil(half.date);
+  const splits=[["5 km","38:45"],["10 km","1:17:30"],["15 km","1:56:15"],["20 km","2:35:00"],["21.1 km","2:43:30"]];
+  const ticketHead=(no,r,sub,days)=>`
       <div class="ticket-head">
         <div class="ticket-id">
-          <div class="ticket-no">Race 03 · W21 Saturday · D-15 to Fuji</div>
-          <div class="ticket-name">${half.name}</div>
-          <div class="ticket-sub">${fmtLong(parseISO(half.date))} · goal <b style="color:${half.color}">sub 2:30</b> · 7:06/km</div>
+          <div class="ticket-no">${no}</div>
+          <div class="ticket-name">${r.name}</div>
+          <div class="ticket-sub">${sub}</div>
         </div>
         <div class="ticket-side">
-          <div class="ticket-count"><div class="n">${Math.max(0,aDays)}</div><div class="l">days out</div></div>
-          <div class="ticket-date"><div class="d">${parseISO(half.date).getUTCDate()}</div><div class="m">${MONTHS[parseISO(half.date).getUTCMonth()]} 2026</div></div>
+          <div class="ticket-count"><div class="n">${days}</div><div class="l">${typeof days==="number"?"days out":""}</div></div>
+          <div class="ticket-date"><div class="d">${parseISO(r.date).getUTCDate()}</div><div class="m">${MONTHS[parseISO(r.date).getUTCMonth()]} 2026</div></div>
           <div class="ticket-code" aria-hidden="true"></div>
         </div>
       </div>
-      <div class="ticket-rip" aria-hidden="true"></div>
-      <div class="ticket-body">
+      <div class="ticket-rip" aria-hidden="true"></div>`;
+  document.getElementById("view-sideraces").innerHTML=`
+    ${masthead("sideraces",{
+      title:"Side Races",
+      dek:"One test and two results. The half is not raced — it decides how Fuji is paced.",
+      right:mhStat(Math.max(0,hDays),"days to the half")
+    })}
 
+    <article class="ticket" style="--tc:${half.color}">
+      ${ticketHead(`Race 03 · W${half.weekInPlan} Saturday · D-15 to Fuji`,half,`${fmtLong(parseISO(half.date))} · ${half.startTime} start · <b style="color:${half.color}">controlled test at 7:45/km</b>`,Math.max(0,hDays))}
+      <div class="ticket-body">
       <div class="grid grid-4">
         <div><div class="metric-label">Distance</div><div style="font-size:18px;font-weight:700;margin-top:4px">${half.specs.distance}</div></div>
         <div><div class="metric-label">Surface</div><div style="font-size:18px;font-weight:700;margin-top:4px">${half.specs.surface}</div></div>
         <div><div class="metric-label">Start</div><div style="font-size:13px;font-weight:600;margin-top:6px">${half.specs.start}</div></div>
         <div><div class="metric-label">Temp</div><div style="font-size:18px;font-weight:700;margin-top:4px;color:${half.color}">${half.specs.temp}</div></div>
       </div>
-
-      <div class="warn-box mt-16" style="border-color:${half.color};background:rgba(10,132,255,0.06)">
+      <div class="warn-box mt-16" style="border-color:${half.color};background:rgba(96,165,250,0.06)">
         <b style="color:${half.color}">Plan impact — </b>${half.impactNote}
       </div>
-
       <details open class="mt-16">
-        <summary>Pacing plan — sub 2:30 (7:06/km avg)</summary>
-        <div class="tbl-wrap mt-12">
-          <table class="tbl" style="font-size:12.5px">
-            <thead><tr><th>Segment</th><th>Pace</th><th>HR</th><th>Cue</th></tr></thead>
-            <tbody>
-              <tr><td><b>km 0–5</b></td><td>7:09–7:12</td><td>&lt;160</td><td>"Cool air, cool head — settle."</td></tr>
-              <tr><td><b>km 5–15</b></td><td>7:06</td><td>160–166</td><td>"Lock the rhythm · drink at every aid."</td></tr>
-              <tr><td><b>km 15–19</b></td><td>7:02–7:06</td><td>164–168</td><td>"Now it's a race."</td></tr>
-              <tr><td><b>km 19–21.1</b></td><td>as able</td><td>up to 172</td><td>"Empty the tank."</td></tr>
-            </tbody>
-          </table>
+        <summary>Pass criteria → Tier 1 at Fuji</summary>
+        <div class="grid grid-3 mt-12">
+          <div class="macro-card"><div class="ml">Pace</div><div class="mv">7:45</div><div class="ms">/km continuous · ${half.estimate}</div></div>
+          <div class="macro-card"><div class="ml">Heart rate</div><div class="mv">≤160</div><div class="ms">average · VT1 is 155</div></div>
+          <div class="macro-card"><div class="ml">Stopped time</div><div class="mv">&lt;5%</div><div class="ms">30 s walk at water only</div></div>
         </div>
-        <div class="row mt-12">
-          <span class="chip">5k 35:30</span><span class="chip">10k 1:11:00</span><span class="chip">15k 1:46:30</span><span class="chip">20k 2:22:00</span><span class="chip chip-blue">Finish 2:29:52</span>
-        </div>
+        <div class="row mt-12">${splits.map(x=>`<span class="chip">${x[0]} ${x[1]}</span>`).join("")}</div>
+        <div class="small muted mt-12">Why 7:45 and not 7:30: Bangkok at 02:00 is 24–28 °C; the same effort at Fuji's 2–8 °C is worth 6–10% (Ely 2007). 7:45 here at HR ≤160 is the evidence that 7:30 in the cold is a marathon pace, not a 10 km pace.</div>
       </details>
-
       <details class="mt-12">
-        <summary>Why this race matters — Fuji dress rehearsal (D-15)</summary>
+        <summary>02:00 start logistics</summary>
         <div class="small mt-12" style="line-height:1.7">
           <ul style="padding-left:18px">
-            <li><b style="color:${half.color}">Same goal pace as Fuji (7:06/km):</b> the half at 2:30 and the full at 5:00 are the <b>exact same pace</b>. Racing it locks the rhythm into your legs.</li>
-            <li><b style="color:${half.color}">Kit rehearsal:</b> race shoes, socks, shorts, anti-chafe — wear exactly what you'll wear at Fuji.</li>
-            <li><b style="color:${half.color}">Fueling rehearsal:</b> gel every 35–40 min (45–60 g CHO/hr) + drink at aid stations — same rhythm as Fuji, shorter day.</li>
-            <li><b style="color:${half.color}">Negative-split discipline:</b> practice holding back km 0–5. If you can't hold back in the half, you won't at Fuji.</li>
-            <li><b style="color:${half.color}">Timing:</b> D-15 sits inside the classic 2–3 wk tune-up window (Mujika 2010) — enough stimulus to sharpen, enough time to recover.</li>
+            <li>Friday: rest, carbs 7–8 g/kg, dinner by 18:00, in bed by 20:00, alarm 00:00.</li>
+            <li>00:15 — 100 g CHO (rice, banana, sports drink) + 400 ml water · 01:30 — gel + 200 ml.</li>
+            <li>Every 5 km: gel + water. Same gels as the Fuji plan.</li>
+            <li>Race shoe = the pair from the W10 long run. Race kit, chest strap.</li>
+            <li>After: 30 g protein + 100 g CHO within an hour · walk Sunday · W13 taper starts Monday.</li>
           </ul>
         </div>
       </details>
-
       <details class="mt-12">
-        <summary>Fueling — 2:30 half</summary>
-        <div class="small mt-12" style="line-height:1.7">
-          <ul style="padding-left:18px;margin-top:6px">
-            <li><b>D-1:</b> 7–8 g/kg CHO (~600 g) · low fiber · dinner by 7 PM — mini rehearsal of the Fuji carb load</li>
-            <li><b>Race morning (2.5–3 h pre):</b> 150 g CHO — easy-digest (toast + banana + honey) + 400–500 ml water</li>
-            <li><b>30 min pre:</b> 1 gel + 200 mg caffeine</li>
-            <li><b>In-race:</b> gel at 40 min and 1:20 (+1 spare) · sports drink at aid stations ≈ 45–60 g CHO/hr</li>
-            <li><b>Fluid:</b> 400–600 ml/hr — BKK humidity even pre-dawn · electrolyte drink, not plain water</li>
-            <li><b>Post:</b> 30 g protein + 100 g CHO within 60 min — recovery here IS the start of the Fuji taper</li>
-          </ul>
-        </div>
-      </details>
-
-      <details class="mt-12">
-        <summary>Race week + post-race (W21 → taper)</summary>
-        <div class="small mt-12" style="line-height:1.7">
-          <b style="color:${half.color}">W21 (race week):</b> Mon light strength · Tue easy 45 · Wed 30 min + strides · Thu easy 30 · Fri REST + carb top-up · Sat RACE · Sun rest / 20 min walk.<br>
-          <b style="color:${half.color}">W22 (taper 1):</b> Mon recovery jog — legs flat is normal · Thu = LAST heavy lift (D-10) · Sat 75 min + 15 min MP.<br>
-          <b style="color:${half.color}">W23:</b> Fuji race week — shakeouts, carb load D-3, race Sunday.<br><br>
-          ⚠ If the half goes badly (heat, GI, pacing blow-up) — <b>nothing changes for Fuji</b>. It's a rehearsal: take the lesson, trust the taper.
-        </div>
+        <summary>If the test fails</summary>
+        <div class="small mt-12" style="line-height:1.7">HR above 160 to hold 7:45, or stops above 5%, or the foot complains → Fuji is run on Tier 2 (8:00 flat with walk breaks from km 2.5, ≈5:49). That still finishes with 10 minutes to spare. The tier is a pacing decision, not a judgement.</div>
       </details>
       </div>
     </article>
 
-    <!-- =============== HYROX DOUBLES =============== -->
     <article class="ticket" style="--tc:${hyrox.color}">
-      <div class="ticket-head">
-        <div class="ticket-id">
-          <div class="ticket-no">Race 02 · W6 Sunday · recovery week</div>
-          <div class="ticket-name">${hyrox.name}</div>
-          <div class="ticket-sub">${fmtLong(parseISO(hyrox.date))} · target <b style="color:${hyrox.color}">${hyrox.estimate}</b></div>
-        </div>
-        <div class="ticket-side">
-          <div class="ticket-count"><div class="n">${Math.max(0,hDays)}</div><div class="l">days out</div></div>
-          <div class="ticket-date"><div class="d">${parseISO(hyrox.date).getUTCDate()}</div><div class="m">${MONTHS[parseISO(hyrox.date).getUTCMonth()]} 2026</div></div>
-          <div class="ticket-code" aria-hidden="true"></div>
-        </div>
-      </div>
-      <div class="ticket-rip" aria-hidden="true"></div>
+      ${ticketHead("Race 02 · 16 August · done",hyrox,`${fmtLong(parseISO(hyrox.date))} · result <b style="color:${hyrox.color}">${hyrox.result}</b>`,"✓")}
       <div class="ticket-body">
-
-      <div class="grid grid-4">
+      <div class="grid grid-2">
         <div><div class="metric-label">Format</div><div style="font-size:13px;font-weight:600;margin-top:4px">${hyrox.specs.format}</div></div>
         <div><div class="metric-label">Division</div><div style="font-size:13px;font-weight:600;margin-top:4px;color:${hyrox.color}">${hyrox.specs.division}</div></div>
-        <div><div class="metric-label">Duration</div><div style="font-size:13px;font-weight:600;margin-top:4px">${hyrox.specs.duration}</div></div>
-        <div><div class="metric-label">Partner format</div><div style="font-size:13px;font-weight:600;margin-top:4px">${hyrox.specs.partner}</div></div>
       </div>
-
-      <div class="warn-box mt-16" style="border-color:${hyrox.color};background:rgba(191,90,242,0.06)">
-        <b style="color:${hyrox.color}">Plan impact — </b>${hyrox.impactNote}
-      </div>
-
-      <details open class="mt-16">
-        <summary>The 8 stations — MEN OPEN standards (from rulebook)</summary>
-        <div class="tbl-wrap mt-12">
-          <table class="tbl" style="font-size:12.5px">
-            <thead><tr><th>#</th><th>Station</th><th>Distance / Reps</th><th>Load (Men Open)</th><th>Pacing target</th></tr></thead>
-            <tbody>
-              <tr><td><b>1</b></td><td>SkiErg</td><td>1000 m</td><td>—</td><td>~3:45–4:15</td></tr>
-              <tr><td><b>2</b></td><td>Sled Push</td><td>4 × 12.5 m</td><td>152 kg incl. sled</td><td>~3:00–4:30 · short steps, low body, drive legs</td></tr>
-              <tr><td><b>3</b></td><td>Sled Pull</td><td>4 × 12.5 m</td><td>103 kg incl. sled</td><td>~2:30–3:30 · hand-over-hand or walk-back</td></tr>
-              <tr><td><b>4</b></td><td>Burpee Broad Jump</td><td>80 m</td><td>BW</td><td>~3:30–5:00 · efficient form, jump ≥0.6 m/rep</td></tr>
-              <tr><td><b>5</b></td><td>Rowing</td><td>1000 m</td><td>—</td><td>~3:30–4:00 · big legs, smooth</td></tr>
-              <tr><td><b>6</b></td><td>Farmers Carry</td><td>200 m</td><td>2 × 24 kg</td><td>~1:40–2:30 · don't drop, locked grip</td></tr>
-              <tr><td><b>7</b></td><td>Sandbag Lunges</td><td>100 m</td><td>20 kg sandbag (rear-rack)</td><td>~3:00–4:30 · knee touches floor each rep</td></tr>
-              <tr><td><b>8</b></td><td>Wall Balls</td><td>100 reps</td><td>6 kg @ 3.05 m target</td><td>~3:30–5:30 · ball must hit target line</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="small muted mt-8">8×1km run between stations · target run pace 4:30–5:30/km on tired legs.</div>
-      </details>
-
-      <details class="mt-12">
-        <summary>Doubles split strategy (Men's Doubles — both work simultaneously, split workload)</summary>
-        <div class="small mt-12" style="line-height:1.7">
-          <b style="color:${hyrox.color}">Rules recap:</b> only ONE partner works at a time on most stations (except runs — both run together). Tag-out anytime. Choose split based on each partner's strengths.<br><br>
-          <b style="color:${hyrox.color}">Default 50/50 splits:</b>
-          <ul style="padding-left:18px;margin-top:6px">
-            <li><b>SkiErg / Row 1000m:</b> 500 m each, swap mid (or 250+250+250+250 for big-engine athletes)</li>
-            <li><b>Sled Push:</b> 1 length each (4 lengths total = 2 each) — heaviest leg-strength athlete absorbs more</li>
-            <li><b>Sled Pull:</b> 1 length each, swap</li>
-            <li><b>Burpee Broad Jump 80m:</b> sets of 5 reps · alternating · smooth handover</li>
-            <li><b>Farmers Carry 200m:</b> 100m each (or shorter swaps if grip fails)</li>
-            <li><b>Lunges 100m:</b> 50m each (or 20m short swaps if quads cooked)</li>
-            <li><b>Wall Balls 100 reps:</b> sets of 10 alternating · OR 25 / 25 / 25 / 25 if both fresh</li>
-            <li><b>Run:</b> both together, pace on weaker partner</li>
-          </ul>
-          <b style="color:${hyrox.color}">Strategy tip:</b> agree on splits BEFORE race day, rehearse at least once in W5. Communicate failure points — drop the bag/ball EARLY rather than fail rep.
-        </div>
-      </details>
-
-      <details class="mt-12">
-        <summary>Optional Hyrox prep overlay (W4–W6)</summary>
-        <div class="small mt-12" style="line-height:1.7">
-          ⚠ <b>This adds load while you're rebuilding base.</b> Only do it if recovery is good (sleep ≥7h, soreness ≤2/5). If marginal — skip and race on engine fitness.<br><br>
-          <b style="color:${hyrox.color}">Modification:</b> swap <b>Mon Strength A</b> in W4 and W5 → Hyrox-specific session. Keep Strength B (Thu) for posterior chain.<br>
-          <b style="color:${hyrox.color}">W4: Hyrox primer</b><br>
-          • 4 stations + 4×400m run<br>
-          • Stations: SkiErg 500m → Wall Ball 25 → Row 500m → Lunge 50m (10kg)<br>
-          • 60–70 min, RPE 8<br><br>
-          <b style="color:${hyrox.color}">W5: Hyrox half-simulator</b><br>
-          • 4 rounds: 800m run + 1 station — rotate stations: SkiErg 500m / Row 500m / Wall ball 25 / Burpee broad 40m<br>
-          • Time it. ~50–60 min. Rehearse partner splits if possible.<br><br>
-          <b style="color:${hyrox.color}">W6 (race week — already a recovery week):</b><br>
-          • Mon: light primer 3 stations × short — 20 min (swap the recovery jog)<br>
-          • Tue: easy run as planned<br>
-          • Wed: easy fartlek as planned (no extra)<br>
-          • Thu: easy run as planned<br>
-          • Fri: easy 20–30 min · carb prep dinner<br>
-          • Sat: reduced long run 60 min OR 15 min shakeout + 3 strides · gear check<br>
-          • Sun: RACE
-        </div>
-      </details>
-
-      <details class="mt-12">
-        <summary>Goal time targets (Men's Doubles · per individual contribution)</summary>
-        <div class="small mt-12" style="line-height:1.7">
-          With James's VO₂max 55.1 + 21k 3:20 baseline + minimal Hyrox-specific work: realistic <b style="color:${hyrox.color}">75–90 min</b> finish for Men's Doubles.<br>
-          <ul style="padding-left:18px;margin-top:6px">
-            <li><b>Sub 90 (B-goal · "race fun, finish strong"):</b> achievable on current fitness</li>
-            <li><b>Sub 80 (A-goal · with 4-wk overlay):</b> requires partner of similar fitness + smart splits + good day</li>
-            <li><b>Sub 75 (Stretch):</b> requires Hyrox-specific weekly training for 8+ wk · realistic only post-Fuji 2027</li>
-          </ul>
-        </div>
-      </details>
-
-      <details class="mt-12">
-        <summary>Fueling — 75–90 min Hyrox</summary>
-        <div class="small mt-12" style="line-height:1.7">
-          Indoor effort, low fluid loss, no fueling window mid-race → mostly pre-race loading.<br>
-          <ul style="padding-left:18px;margin-top:6px">
-            <li><b>D-1:</b> normal eating, 5–6 g/kg CHO (no need for full carb load — race is short)</li>
-            <li><b>Race morning (2–3 h pre):</b> 100–150 g CHO, easy-digest (toast + banana + honey + small coffee)</li>
-            <li><b>30 min pre:</b> 1 gel + 200 mg caffeine</li>
-            <li><b>Mid-race:</b> water sips between stations only. 1 gel at km 4 (after row) if going &gt;75 min</li>
-            <li><b>Post:</b> 30g whey + 100g carb within 30 min · electrolyte 500ml</li>
-          </ul>
-        </div>
-      </details>
-
-      <details class="mt-12">
-        <summary>Gear — Hyrox</summary>
-        <div class="grid grid-2 mt-12 small" style="line-height:1.9">
-          <div>
-            <b style="color:${hyrox.color}">Worn:</b><br>
-            ☐ Cross-training shoes (firm sole — Nano X / TYR CXT / Metcon) NOT cushioned runners<br>
-            ☐ Compression shorts + tech tee<br>
-            ☐ Light grip gloves OR chalk (sled pull rope friction)<br>
-            ☐ Wrist bands (sweat) · headband<br>
-            ☐ HR strap (optional but useful for pacing)
-          </div>
-          <div>
-            <b style="color:${hyrox.color}">Bag drop:</b><br>
-            ☐ 1L water + electrolyte<br>
-            ☐ 1–2 gels<br>
-            ☐ Towel<br>
-            ☐ Recovery shake (post-race)<br>
-            ☐ Dry change of clothes<br>
-            ☐ Race brief + bib confirmation
-          </div>
-        </div>
-        <div class="small muted mt-12">⚠ <b>Mandatory:</b> chip on ankle from start to finish (if not worn = DNS). Check station signage on warmup.</div>
-      </details>
-
-      <details class="mt-12">
-        <summary>Common Hyrox penalties to avoid (from rulebook)</summary>
-        <div class="small mt-12" style="line-height:1.7">
-          <ul style="padding-left:18px;margin-top:6px">
-            <li><b>Wrong direction in/out of station:</b> 2 min penalty</li>
-            <li><b>Out of order / missed station / missed 1km run:</b> general time penalty + must redo</li>
-            <li><b>Doubles partners running separately or working separately when not allowed:</b> general penalty</li>
-            <li><b>Wall Ball miss:</b> rep doesn't count if ball doesn't hit target line (3.05m)</li>
-            <li><b>Lunge form: knee must touch floor</b> · standing knee fully extended</li>
-            <li><b>Sled stops short:</b> must reach the white line completely</li>
-            <li><b>Burpee chest+thighs to floor</b> · jump over line 2-foot landing</li>
-          </ul>
-        </div>
-      </details>
+      <div class="small muted mt-12">${hyrox.note}</div>
       </div>
     </article>
 
-    <!-- =============== TRAIL 25k — COMPLETED =============== -->
     <article class="ticket" style="--tc:${trail.color}">
-      <div class="ticket-head">
-        <div class="ticket-id">
-          <div class="ticket-no">Race 01 · 28 June · result banked</div>
-          <div class="ticket-name">${trail.name}</div>
-          <div class="ticket-sub">${fmtLong(parseISO(trail.date))} · ${trail.specs.distance} · ${trail.specs.gain} · ${trail.specs.temp}</div>
-        </div>
-        <div class="ticket-side">
-          <span class="stamp">Finished</span>
-          <div class="ticket-count"><div class="n" style="font-size:30px">${trail.result}</div><div class="l">official time</div></div>
-          <div class="ticket-code" aria-hidden="true"></div>
-        </div>
-      </div>
-      <div class="ticket-rip" aria-hidden="true"></div>
+      ${ticketHead("Race 01 · 28 June · result banked",trail,`${fmtLong(parseISO(trail.date))} · ${trail.specs.distance} · ${trail.specs.gain} · ${trail.specs.temp}`,"✓")}
       <div class="ticket-body">
-
-      <div class="warn-box" style="border-color:${trail.color};background:rgba(48,209,88,0.06)">
-        <b style="color:${trail.color}">Banked — </b>${trail.note}
+      <div class="grid grid-3">
+        <div><div class="metric-label">Official time</div><div style="font-size:22px;font-weight:800;margin-top:4px;color:${trail.color}">${trail.result}</div></div>
+        <div><div class="metric-label">Surface</div><div style="font-size:13px;font-weight:600;margin-top:6px">${trail.specs.surface}</div></div>
+        <div><div class="metric-label">Relative effort</div><div style="font-size:22px;font-weight:800;margin-top:4px">500</div></div>
       </div>
-
-      <details class="mt-12">
-        <summary>Takeaways → carried into this plan</summary>
-        <div class="small mt-12" style="line-height:1.7">
-          <ul style="padding-left:18px">
-            <li><b style="color:${trail.color}">Aerobic durability is the limiter</b> — 7 h 46 on feet dwarfs any training day. The rebuilt plan peaks the long run at 3 h and uses the Bangkok Half as the final rehearsal instead of chasing more heroic days.</li>
-            <li><b style="color:${trail.color}">Heat management works</b> — Bangkok training transferred; keep the sauna / heat-exposure rhythm through W20.</li>
-            <li><b style="color:${trail.color}">Fuel early, fuel often</b> — the difference between hour 4 and hour 7 is what you ate in hours 1–3. Locked into the Fuji fueling plan (60–90 g/hr from km 5).</li>
-            <li><b style="color:${trail.color}">Goals recalibrated honestly</b> — Half sub 2:30 + Full sub 5:00, both at 7:06/km. One pace to master.</li>
-          </ul>
-        </div>
-      </details>
+      <div class="small muted mt-12">${trail.note}</div>
       </div>
     </article>
-
-    <div class="card">
-      <div class="card-h">Combined load awareness</div>
-      <div class="small" style="line-height:1.7">
-        These races ladder into Fuji. <b>Hyrox (W6 Sun)</b> lands on a recovery week — race it, then one recovery jog Monday and back on plan. <b>Bangkok Half (W21 Sat)</b> IS the plan: final peak long run + full dress rehearsal at goal pace, 15 days out. If ACWR (Dashboard) creeps above 1.4 at any point, drop the optional Hyrox overlay first, protect the long runs second. <b>Fuji is the A-race</b> — everything else serves it.
-      </div>
-    </div>
   `;
 }
 
@@ -5522,156 +5205,150 @@ function renderKnowledge(){
 /* =========================================================================
    18. RACE WEEK VIEW
    ========================================================================= */
+function clockAt(sec){
+  const [h,m]=PLAN_SPEC.race.startTime.split(":").map(Number);
+  const t=h*3600+m*60+sec;
+  return `${Math.floor(t/3600)}:${String(Math.floor((t%3600)/60)).padStart(2,"0")}`;
+}
 function renderRaceWeek(){
-  const targets={
-    pace:"7:06/km",
-    hrEarly:"150–158 bpm (km 0–30)",
-    hrMid:"155–162 bpm (km 30–38)",
-    hrLate:"158–168 bpm (km 38–finish)",
-    cadence:"175–180 spm",
-    fueling:"60–90 g CHO/hr · 500–700 ml fluid/hr",
-    splits:["10 km: 1:11:00","Half: 2:30:00","30 km: 3:33:00","Finish: 4:59:30"]
-  };
+  const R=PLAN_SPEC.race;
+  const tiers=R.tiers.map(t=>FujiIntel.raceProjection(t,R.checkpoints));
+  const t1=tiers[0],t2=tiers[1];
+  const days=daysUntil(R.date);
   document.getElementById("view-raceweek").innerHTML=`
     ${masthead("raceweek",{
       title:"Race Week — Fuji",
-      dek:"Sunday 13 December 2026 · sub 5:00 · everything below is decided before the gun, not during.",
-      right:mhStat(Math.max(0,daysUntil(ATHLETE.race.date)),"days to start")
+      dek:`Sunday ${fmtLong(parseISO(R.date)).replace(/^[A-Za-z]+, /,"")} · ${R.startTime} start · finish inside 6:00 · everything below is decided before the gun, not during.`,
+      right:mhStat(Math.max(0,days),"days to start")
     })}
 
-    <div class="warn-box mb-16" style="border-color:rgba(10,132,255,0.5);background:rgba(10,132,255,0.06)">
-      <b style="color:#0A84FF">D-15 — Bangkok Half (Sat 28 Nov · sub 2:30)</b> — full dress rehearsal at the exact Fuji goal pace (7:06/km): same kit, same fueling rhythm, same negative-split discipline. Race it, recover Sunday, then the 2-week taper carries you here. Details in Side Races.
+    <div class="warn-box mb-16" style="border-color:rgba(96,165,250,0.5);background:rgba(96,165,250,0.06)">
+      <b style="color:#60A5FA">D-15 — ATM Bangkok Half (Sat 28 Nov · 02:00)</b> — controlled 21.1 km at 7:45/km, HR ≤160, stops &lt;5%. Pass → Tier 1 below. Otherwise Tier 2. Details in Side Races.
     </div>
 
     <div class="card mb-16">
-      <div class="card-h">Race Targets</div>
-      <div class="grid grid-2 mt-12">
-        <div><div class="metric-label">Goal</div><div class="metric-value" style="color:var(--orange);font-size:22px">${ATHLETE.race.goal}</div><div class="metric-sub">${targets.pace} avg</div></div>
-        <div><div class="metric-label">HR — early (km 0–30)</div><div class="metric-value" style="font-size:18px">${targets.hrEarly}</div><div class="metric-sub">Stay disciplined; do NOT chase faster</div></div>
-        <div><div class="metric-label">HR — mid (km 30–38)</div><div class="metric-value" style="font-size:18px">${targets.hrMid}</div><div class="metric-sub">Allow drift</div></div>
-        <div><div class="metric-label">HR — late (km 38–42)</div><div class="metric-value" style="font-size:18px">${targets.hrLate}</div><div class="metric-sub">All-out if able</div></div>
-        <div><div class="metric-label">Cadence</div><div class="metric-value" style="font-size:18px">${targets.cadence}</div></div>
-        <div><div class="metric-label">Fueling</div><div class="metric-value" style="font-size:18px">${targets.fueling}</div><div class="metric-sub">Multi-transportable (glucose+fructose)</div></div>
+      <div class="card-h">Checkpoints · what the course demands (official, mtfujimarathon.com)</div>
+      <div class="tbl-wrap mt-12">
+        <table class="tbl" style="font-size:12.5px">
+          <thead><tr><th>Checkpoint</th><th>km</th><th>Closes</th><th>Cumulative pace needed</th><th>${t1.label}</th><th>${t2.label}</th></tr></thead>
+          <tbody>${R.checkpoints.map((c,i)=>{
+            const a=t1.checkpoints[i],b=t2.checkpoints[i];
+            const need=Math.round(c.cutoffSec/c.km);
+            return `<tr ${c.hardest?'style="background:rgba(244,63,94,0.06)"':""}>
+              <td><b>${c.name}</b>${c.hardest?' <span class="chip chip-red" style="font-size:10px;padding:2px 8px">tight after the climb</span>':""}</td>
+              <td>${c.km}</td>
+              <td>${clockAt(c.cutoffSec)} <span class="muted">(${FujiIntel.fmtHMS(c.cutoffSec)})</span></td>
+              <td>${FujiIntel.fmtPace(need)}/km</td>
+              <td style="color:var(--green)">${clockAt(a.arrivalSec)} · <b>+${Math.round(a.bufferSec/60)} min</b></td>
+              <td style="color:${b.bufferSec<600?"var(--orange)":"var(--text)"}">${clockAt(b.arrivalSec)} · +${Math.round(b.bufferSec/60)} min</td>
+            </tr>`;}).join("")}</tbody>
+        </table>
       </div>
-      <div class="divider"></div>
-      <div class="card-h">Pacing Splits (target)</div>
-      <div class="row" style="margin-top:10px">${targets.splits.map(s=>`<span class="chip">${s}</span>`).join("")}</div>
+      <div class="row mt-12">
+        <span class="chip chip-green">Tier 1 finish ≈ ${FujiIntel.fmtHMS(t1.finishSec)} · avg ${FujiIntel.fmtPace(t1.avgPaceSec)}/km incl. ${t1.walkBreaks} walk breaks</span>
+        <span class="chip">Tier 2 finish ≈ ${FujiIntel.fmtHMS(t2.finishSec)} · avg ${FujiIntel.fmtPace(t2.avgPaceSec)}/km</span>
+      </div>
+      <div class="small muted mt-12">Arrival times include a 30 s walk at every aid station (planned, not a stop). The number that matters is Saiko #3: cumulative 8:47/km <b>after</b> the 100 m climb, with every stop counted.</div>
+    </div>
+
+    <div class="grid grid-2 mb-16">
+      ${R.tiers.map((t,ti)=>`
+      <div class="card" style="border:1px solid ${ti===0?"rgba(52,211,153,0.35)":"var(--border)"}">
+        <div class="card-h" style="color:${ti===0?"var(--green)":"var(--text-2)"}">${t.label}</div>
+        <div class="small muted" style="margin-top:-4px">${t.condition}</div>
+        <table class="tbl mt-12" style="font-size:12.5px">
+          <thead><tr><th>km</th><th>Pace</th><th>HR cap</th><th></th></tr></thead>
+          <tbody>${t.segments.map(sg=>`<tr><td>${sg.fromKm}–${sg.toKm}</td><td><b>${FujiIntel.fmtPace(sg.paceSec)}</b></td><td>${sg.hrCap?"≤"+sg.hrCap:"free"}</td><td class="muted">${sg.note}</td></tr>`).join("")}</tbody>
+        </table>
+        <div class="small muted mt-12">Walk 30 s at each aid station from km ${t.walkBreaks.fromKm} (every ~${t.walkBreaks.everyKm} km).</div>
+      </div>`).join("")}
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-h">Course · ${R.location}</div>
+      <div class="tbl-wrap mt-12">
+        <table class="tbl" style="font-size:12.5px">
+          <thead><tr><th>km</th><th>Terrain</th><th>Plan</th></tr></thead>
+          <tbody>${R.profile.map(pp=>`<tr><td>${pp.fromKm}–${pp.toKm}</td><td>${pp.terrain}</td><td class="muted">${pp.note}</td></tr>`).join("")}</tbody>
+        </table>
+      </div>
+      <div class="small muted mt-12">${R.elevation} · ${R.weather}. Sources: official course page (checkpoints), race reports for the climb and descent.</div>
     </div>
 
     <div class="grid grid-2 mb-16">
       <div class="card">
         <div class="card-h">Carb-Loading Protocol (D-3 → D-1)</div>
         <ul style="font-size:13px;line-height:1.7;padding-left:18px">
-          <li><b>D-3 to D-1:</b> 10 g CHO/kg/day = <b style="color:var(--orange)">850 g/day</b> for 85 kg (Burke 2017 review)</li>
-          <li>Low-fiber, low-fat, easy-digest: white rice, ramen, mochi, white bread, banana, sports drinks</li>
-          <li>D-1 dinner: large rice/noodles + lean protein, finish by 7 PM</li>
-          <li>Race morning (3 h pre): 200 g CHO (oatmeal + banana + honey), 500 ml water</li>
-          <li>30 min pre: 1 gel + 200 ml water</li>
-          <li><b>Expect +1–2 kg weight gain</b> from glycogen+water — this is correct</li>
+          <li><b>D-3 to D-1:</b> 10 g CHO/kg/day = <b style="color:var(--orange)">~850 g/day</b> (Burke 2017)</li>
+          <li>Low-fiber, low-fat, easy-digest: white rice, udon, mochi, white bread, banana, sports drinks</li>
+          <li>D-1 dinner: rice/noodles + lean protein, finish by 19:00</li>
+          <li>Race morning (3 h pre): 200 g CHO · 500 ml water · 30 min pre: 1 gel + 200 ml</li>
+          <li><b>Expect +1–2 kg</b> — glycogen and water, that is the point</li>
         </ul>
       </div>
       <div class="card">
-        <div class="card-h">RACE-MORNING TIMELINE · START 09:00</div>
+        <div class="card-h">RACE-MORNING TIMELINE · START ${R.startTime}</div>
         <div class="timeline mt-16">
-          <div class="tl-step"><div class="tl-dot"></div>
-            <div class="tl-time">05:45</div>
-            <div class="tl-action">Wake</div>
-            <div class="tl-detail">500 ml water + electrolyte (rehydrate after sleep)</div>
-          </div>
-          <div class="tl-step"><div class="tl-dot"></div>
-            <div class="tl-time">06:00</div>
-            <div class="tl-action">Breakfast — 3h pre-race</div>
-            <div class="tl-detail">200 g CHO · oatmeal + banana + honey + jam · low fiber, low fat</div>
-          </div>
-          <div class="tl-step"><div class="tl-dot"></div>
-            <div class="tl-time">07:00</div>
-            <div class="tl-action">Body prep</div>
-            <div class="tl-detail">Toilet · gear check · Body Glide anti-chafe (nipples, thighs, armpits) · sip 200 ml water</div>
-          </div>
-          <div class="tl-step"><div class="tl-dot"></div>
-            <div class="tl-time">07:45</div>
-            <div class="tl-action">Travel to start</div>
-            <div class="tl-detail">Stay calm · throwaway warm layer (Fuji 5–10 °C) · last sips of water</div>
-          </div>
-          <div class="tl-step"><div class="tl-dot"></div>
-            <div class="tl-time">08:20</div>
-            <div class="tl-action">Bag drop</div>
-            <div class="tl-detail">Porta-potty · final mental rehearsal · pace plan check</div>
-          </div>
-          <div class="tl-step"><div class="tl-dot"></div>
-            <div class="tl-time">08:30</div>
-            <div class="tl-action">Warm-up · K7 routine</div>
-            <div class="tl-detail">5 min jog + leg swings + dynamic mobility + 4×100m strides progressing 70→95% effort</div>
-          </div>
-          <div class="tl-step"><div class="tl-dot"></div>
-            <div class="tl-time">08:50</div>
-            <div class="tl-action">Caffeine activation</div>
-            <div class="tl-detail">1 caffeinated gel (3 mg/kg ≈ 250 mg) + 200 ml water · Pickering 2018 Sports Med</div>
-          </div>
-          <div class="tl-step"><div class="tl-dot" style="background:var(--orange);box-shadow:0 0 18px var(--orange-glow);width:24px;height:24px;left:-32px"></div>
-            <div class="tl-time" style="font-size:17px">09:00</div>
-            <div class="tl-action" style="color:var(--orange);font-size:16px;font-weight:800">START — FUJI MARATHON</div>
-            <div class="tl-detail">First 5 km <b style="color:var(--orange)">conservative</b> · HR &lt; 155 · K14 negative split execution</div>
-          </div>
+          <div class="tl-step"><div class="tl-dot"></div><div class="tl-time">05:45</div><div class="tl-action">Wake</div><div class="tl-detail">500 ml water + electrolyte · it will be 0–5 °C outside</div></div>
+          <div class="tl-step"><div class="tl-dot"></div><div class="tl-time">06:00</div><div class="tl-action">Breakfast — 3 h pre-race</div><div class="tl-detail">200 g CHO · rice + banana + honey · low fiber, low fat</div></div>
+          <div class="tl-step"><div class="tl-dot"></div><div class="tl-time">07:15</div><div class="tl-action">Body prep</div><div class="tl-detail">Toilet · anti-chafe · tape anything that rubbed on the 30 km run · gloves, buff, throwaway top</div></div>
+          <div class="tl-step"><div class="tl-dot"></div><div class="tl-time">07:45</div><div class="tl-action">Walk to Funatsuhama</div><div class="tl-detail">10 min from Kawaguchiko station · bag drop · porta-potty queue is long</div></div>
+          <div class="tl-step"><div class="tl-dot"></div><div class="tl-time">08:30</div><div class="tl-action">Warm-up</div><div class="tl-detail">8 min jog + leg swings + 3×60 m relaxed strides · keep the layer on until the corral</div></div>
+          <div class="tl-step"><div class="tl-dot"></div><div class="tl-time">08:50</div><div class="tl-action">Caffeine</div><div class="tl-detail">1 caffeinated gel (~3 mg/kg) + 200 ml water</div></div>
+          <div class="tl-step"><div class="tl-dot" style="background:var(--orange);box-shadow:0 0 18px var(--orange-glow);width:24px;height:24px;left:-32px"></div><div class="tl-time" style="font-size:17px">${R.startTime}</div><div class="tl-action" style="color:var(--orange);font-size:16px;font-weight:800">START — FUJI MARATHON</div><div class="tl-detail">First 4 km uphill at <b style="color:var(--orange)">7:45, HR ≤152</b> · the cold will lie to you about effort</div></div>
         </div>
       </div>
     </div>
 
     <div class="grid grid-2 mb-16">
       <div class="card">
-        <div class="card-h">In-Race Fueling Plan</div>
+        <div class="card-h">In-Race Fueling · 60 g CHO/h</div>
         <table class="tbl" style="font-size:12.5px">
           <thead><tr><th>km</th><th>Fuel</th><th>CHO (g)</th></tr></thead>
-          <tr><td>5</td><td>Gel + 200 ml sports drink</td><td>30+15</td></tr>
-          <tr><td>10</td><td>200 ml sports drink</td><td>15</td></tr>
-          <tr><td>15</td><td>Gel + water</td><td>30</td></tr>
-          <tr><td>20</td><td>200 ml sports drink</td><td>15</td></tr>
-          <tr><td>25</td><td>Gel + water</td><td>30</td></tr>
-          <tr><td>30</td><td>Caffeinated gel + sports drink</td><td>30+15</td></tr>
-          <tr><td>35</td><td>Gel + water</td><td>30</td></tr>
-          <tr><td>38</td><td>200 ml sports drink</td><td>15</td></tr>
-          <tr><td>40</td><td>Sports drink (or gel if able)</td><td>15</td></tr>
+          <tr><td>5</td><td>Gel + water</td><td>25–30</td></tr>
+          <tr><td>10</td><td>Gel + sports drink</td><td>30+10</td></tr>
+          <tr><td>15</td><td>Gel + water</td><td>25–30</td></tr>
+          <tr><td>19–20</td><td><b>Gel before the climb</b> + water + salt</td><td>30</td></tr>
+          <tr><td>25</td><td>Gel + sports drink</td><td>30+10</td></tr>
+          <tr><td>30</td><td>Caffeinated gel + water</td><td>30</td></tr>
+          <tr><td>35</td><td>Gel + sports drink</td><td>30+10</td></tr>
+          <tr><td>38–40</td><td>Sports drink or half gel</td><td>15</td></tr>
         </table>
-        <div class="small muted mt-12">Total ~240–270 g CHO over ~5 h ≈ <b>50–55 g/hr</b> — treat as the floor; top up with sports drink at extra aid stations toward 60 g/hr. Practiced in long runs from the Build phase onward.</div>
+        <div class="small muted mt-12">≈ 300 g over ~5.6 h = 55–60 g/h. Practised at 30 g/h from W7 and 60 g/h from W10. Cold suppresses thirst — drink to the plan, 300–400 ml/h.</div>
       </div>
       <div class="card">
         <div class="card-h">Gear Checklist</div>
         <ul style="font-size:13px;line-height:1.8;list-style:none">
-          <li>☐ Race shoes (broken in, ≤300km)</li>
-          <li>☐ Race singlet + shorts (rehearsed in long runs)</li>
-          <li>☐ Bib + safety pins / race belt</li>
-          <li>☐ HR monitor (chest strap > optical for race)</li>
-          <li>☐ Watch (full charge, race screen configured)</li>
-          <li>☐ Anti-chafe (Body Glide, Vaseline) — nipples, inner thighs, armpits</li>
-          <li>☐ Gels × 8 (6 plain + 2 caffeinated) — ~5 h out there</li>
-          <li>☐ Throwaway warm layer for start (Fuji 5–10 °C)</li>
-          <li>☐ Hat / visor + thin gloves</li>
-          <li>☐ Toilet paper</li>
-          <li>☐ Post-race: dry warm clothes, recovery shake, sandals</li>
+          <li>☐ Race shoes — the pair from the W10 long run and the half, nothing new</li>
+          <li>☐ Long-sleeve base + throwaway layer for the start (2–8 °C)</li>
+          <li>☐ Thin gloves + buff · shed after km 5</li>
+          <li>☐ Bib + race belt · chest strap · watch charged, race screen = pace + HR + elapsed</li>
+          <li>☐ Gels × 9 (7 plain + 2 caffeinated) + salt</li>
+          <li>☐ Anti-chafe · tape · toilet paper</li>
+          <li>☐ Post-race: dry warm clothes, recovery drink, sandals, onsen</li>
         </ul>
       </div>
     </div>
 
     <div class="card mb-16">
-      <div class="card-h">Heat → Cold Transition Notes</div>
+      <div class="card-h">Heat → Cold Transition</div>
       <ul style="font-size:13px;line-height:1.7;padding-left:18px">
-        <li>Bangkok training (30–35 °C) provides heat acclimatization → ~2–3% performance bonus at Fuji 5–10 °C</li>
-        <li>Heat exposure: 3–4×/wk × 30 min sauna through W20, then taper to 1–2×/wk W21–22 (parallel to training taper), last sauna D-3</li>
-        <li>Race day: dress for ~10 °C warmer than ambient (you'll warm up fast)</li>
-        <li>Hydration: cold weather suppresses thirst — <b>drink to plan, not to thirst</b></li>
-        <li>Pre-race: throwaway long-sleeve + space blanket at start corral</li>
+        <li>Every training run was at 28–32 °C. At 2–8 °C the same HR buys 6–10% more pace (Ely 2007) — that is where 7:30 comes from. Do not spend it in the first 4 km.</li>
+        <li>Dress for 10 °C warmer than the air once moving; removable layers, not a jacket you keep.</li>
+        <li>Thirst disappears in the cold — drink to the schedule. Sweat still happens under layers.</li>
+        <li>No sauna or heat work is needed for this race; sleep and legs matter more.</li>
       </ul>
     </div>
 
     <div class="card">
       <div class="card-h">Mental Cues</div>
       <div class="grid grid-2 mt-12">
-        <div><b style="color:var(--orange)">km 0–10:</b> "Hold back, this should feel easy"</div>
-        <div><b style="color:var(--orange)">km 10–21:</b> "Settle in, fuel on schedule"</div>
-        <div><b style="color:var(--orange)">km 21–30:</b> "The race starts at 30 km"</div>
-        <div><b style="color:var(--orange)">km 30–38:</b> "This is the work — you trained for this hurt"</div>
-        <div><b style="color:var(--orange)">km 38–42:</b> "Empty the tank. Go."</div>
-        <div><b style="color:var(--orange)">Mantras:</b> "Smooth. Strong. Patient." / "One km at a time."</div>
+        <div><b style="color:var(--orange)">km 0–4:</b> "Uphill, cold, calm — 7:45 is the plan"</div>
+        <div><b style="color:var(--orange)">km 4–20:</b> "7:30, walk the water, gel on time"</div>
+        <div><b style="color:var(--orange)">km 20–22:</b> "Cadence up the hill — this is the treadmill session"</div>
+        <div><b style="color:var(--orange)">km 22–34:</b> "Saiko is banked at 27.3 — hold 7:45"</div>
+        <div><b style="color:var(--orange)">km 34–36:</b> "Short steps down, save the quads"</div>
+        <div><b style="color:var(--orange)">km 36–42:</b> "Everything is banked. Bring it home."</div>
       </div>
     </div>
   `;
@@ -5743,6 +5420,7 @@ function sessionPatchFromStravaActivity(activity,planned,existing={}){
     type:typeFromStravaActivity(activity,planned),
     title:planned.title||activity.name,
     actualDuration:activity.durationMin||planned.duration||"",
+    elapsedDuration:activity.elapsedMin||"",
     actualDistance:activity.distanceKm?Number(activity.distanceKm).toFixed(1):"",
     pace:activity.pace||"",
     avgHR:activity.avgHR||"",
@@ -5809,9 +5487,25 @@ function applyStravaActivitiesToSessions(activities){
   Store.set(STORAGE.strava,{
     ...syncState,
     lastSync:new Date().toISOString(),
-    lastSummary:summary
+    lastSummary:summary,
+    activities:compactStravaActivities(activities,syncState.activities||[])
   });
   return summary;
+}
+
+/* Keep a compact copy of every run (not just the one matched per day) so the load guard
+   can see real weekly kilometres, including weeks before the plan started. */
+function compactStravaActivities(activities,previous){
+  const byId=new Map((previous||[]).map(a=>[String(a.id),a]));
+  (activities||[]).filter(isStravaTrainingActivity).forEach(a=>{
+    byId.set(String(a.id),{
+      id:String(a.id),name:a.name,sportType:a.sportType,localDate:a.localDate,
+      distanceKm:Number(a.distanceKm)||0,durationMin:Number(a.durationMin)||0,elapsedMin:Number(a.elapsedMin)||0,
+      avgHR:a.avgHR||null,avgCadence:a.avgCadence||null,pace:a.pace||"",
+      intel:(byId.get(String(a.id))||{}).intel||null
+    });
+  });
+  return [...byId.values()].sort((a,b)=>String(a.localDate).localeCompare(String(b.localDate))).slice(-400);
 }
 
 function applyStravaActivitiesToArchive(activities){
@@ -5963,13 +5657,20 @@ async function renderStravaSettings(){
         </div>
       </div>
       <div class="integration-actions">
-        <button class="btn btn-primary" id="btn-strava-sync">Sync latest 60 days</button>
+        <button class="btn btn-primary" id="btn-strava-sync">Sync latest 90 days</button>
+        <button class="btn" id="btn-strava-intel">Analyze long runs</button>
         <button class="btn" id="btn-strava-disconnect">Disconnect</button>
       </div>
     </div>
     ${syncSummaryMarkup(local.lastSummary)}
   `;
   document.getElementById("btn-strava-sync").addEventListener("click",syncStravaActivities);
+  document.getElementById("btn-strava-intel").addEventListener("click",async()=>{
+    const b=document.getElementById("btn-strava-intel");b.disabled=true;b.textContent="Analyzing...";
+    try{const n=await enrichLongRunIntel(8);flash(`Analyzed ${n} long run${n===1?"":"s"} from Strava streams`);}
+    catch(err){alert(err.message||"Could not analyze long runs");}
+    renderSettings();
+  });
   document.getElementById("btn-strava-disconnect").addEventListener("click",disconnectStrava);
 }
 
@@ -5977,14 +5678,38 @@ async function syncStravaActivities(){
   const btn=document.getElementById("btn-strava-sync");
   if(btn){btn.disabled=true;btn.textContent="Syncing...";}
   try{
-    const data=await stravaFetch("/api/strava/activities?days=60");
+    const data=await stravaFetch("/api/strava/activities?days=90");
     const summary=applyStravaActivitiesToSessions(data.activities||[]);
-    flash(`Strava sync: ${summary.imported} imported, ${summary.updated} updated`);
+    let analyzed=0;
+    try{analyzed=await enrichLongRunIntel(4);}catch(_){}
+    flash(`Strava sync: ${summary.imported} imported, ${summary.updated} updated${analyzed?`, ${analyzed} long run${analyzed===1?"":"s"} analyzed`:""}`);
     renderSettings();
   }catch(err){
     alert(err.message||"Strava sync failed");
     renderStravaSettings();
   }
+}
+
+/* Fetch down-sampled streams for long runs (≥15 km) that have not been analyzed yet and
+   store stop%, cadence decay and HR drift next to the activity and the matching session. */
+async function enrichLongRunIntel(limit=6){
+  const st=Store.get(STORAGE.strava,{});
+  const acts=st.activities||[];
+  const todo=acts.filter(a=>RUN_SPORTS.includes(a.sportType)&&a.distanceKm>=15&&!a.intel).slice(-limit);
+  let done=0;
+  for(const a of todo){
+    try{
+      const data=await stravaFetch(`/api/strava/streams?id=${encodeURIComponent(a.id)}&points=400`);
+      const intel=FujiIntel.analyzeStreams(data.streams||{});
+      if(!intel)continue;
+      a.intel=intel;done++;
+      const log=Store.get(STORAGE.sessions,{});
+      const hit=Object.entries(log).find(([d,lg])=>lg&&String(lg.stravaId)===String(a.id));
+      if(hit){log[hit[0]]={...hit[1],intel,elapsedDuration:hit[1].elapsedDuration||Math.round(intel.elapsedSec/60)};Store.set(STORAGE.sessions,log);}
+    }catch(err){console.warn("[intel]",a.id,err.message);}
+  }
+  Store.set(STORAGE.strava,{...Store.get(STORAGE.strava,{}),activities:acts,lastIntel:new Date().toISOString()});
+  return done;
 }
 
 async function disconnectStrava(){
@@ -6027,10 +5752,15 @@ function renderSettings(){
         <div class="field"><label>Race date</label><input value="${ATHLETE.race.date}" disabled></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Plan start</label><input value="${ATHLETE.planStart}" disabled></div>
+        <div class="field"><label>Plan start (W1 Monday)</label><input value="${ATHLETE.planStart}" disabled></div>
         <div class="field"><label>Total weeks</label><input value="${ATHLETE.totalWeeks}" disabled></div>
       </div>
-      <div class="small muted">To change athlete data, edit the <code>ATHLETE</code> constant at the top of the script.</div>
+      <div class="field-row">
+        <div class="field"><label>Gate date — first running day after the foot injury</label><input type="date" id="cfg-gate" value="${planGateDate()}" min="${PLAN_SPEC.startDate}" max="${FujiPlanEngine.addDays(PLAN_SPEC.startDate,27)}"></div>
+        <div class="field" style="align-self:flex-end"><button class="btn btn-primary" id="cfg-gate-apply">Rebuild plan</button></div>
+      </div>
+      <div class="small muted">Slipping the gate by a week pushes the return block right and drops a week from the middle (W6, then W8) so the race date, the 30 km run at D-22 and the half test stay put. Three weeks is the compressed plan (decision rule 1).${PLAN_OBJ.slip?` · <b style="color:var(--orange)">Currently slipped ${PLAN_OBJ.slip} week${PLAN_OBJ.slip>1?"s":""}.</b>`:""}</div>
+      <div class="small muted mt-8">Plan data lives in <code>js/plan-spec.js</code>; the generator in <code>js/plan-engine.js</code>. Tests: <code>npm test</code>.</div>
     </div>
 
     <div class="card mb-16">
@@ -6122,6 +5852,14 @@ function renderSettings(){
     flash(`Repaired ${result.fixedCount} safe issue${result.fixedCount===1?"":"s"}`);
     renderSettings();
   });
+  document.getElementById("cfg-gate-apply").addEventListener("click",()=>{
+    const v=document.getElementById("cfg-gate").value;
+    const st=Store.get(STORAGE.settings,{});
+    Store.set(STORAGE.settings,{...st,gateDate:v});
+    rebuildPlan();State.init();
+    flash(PLAN_OBJ.slip?`Plan rebuilt · gate slipped ${PLAN_OBJ.slip} wk`:"Plan rebuilt · gate at W1");
+    renderSettings();renderCountdown();
+  });
   document.getElementById("btn-clear-sess").addEventListener("click",()=>{if(confirm("Clear all session logs?")){Store.clear(STORAGE.sessions);renderSettings();}});
   document.getElementById("btn-clear-archive").addEventListener("click",()=>{if(confirm("Clear all archive logs?")){Store.clear(STORAGE.archiveSessions);renderSettings();}});
   document.getElementById("btn-clear-strength").addEventListener("click",()=>{if(confirm("Clear all strength logs?")){Store.clear(STORAGE.strength);renderSettings();}});
@@ -6144,7 +5882,7 @@ function escapeHtml(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;",
 // (e.g. user logs "modified" and changes easy_z1 → speed).
 function typeToZone(t){
   if(!t)return null;
-  if(t==="easy_z1"||t==="recovery"||t==="long_run")return "z1";
+  if(t==="easy_z1"||t==="recovery"||t==="long_run"||t==="bike"||t==="walk_run")return "z1";
   if(t==="mp_long"||t==="tune_race")return "z2";
   if(t==="hill")return "mixed";
   if(t==="speed"||t==="strength_a"||t==="strength_b"||t==="rest")return null; // fall back to planned
@@ -6222,7 +5960,7 @@ function showWelcome(){
       <div style="font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-0.025em;margin-top:14px">Welcome back, James</div>
       <div class="welcome-hero-num mt-12">${fujiDays}</div>
       <div style="font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.22em;font-weight:600;margin-top:6px">Days to Fuji Marathon</div>
-      <div style="font-size:12px;color:var(--text-3);margin-top:8px">13 December 2026 · Sub 5:00 · 7:06/km · Half sub 2:30 on 28 Nov</div>
+      <div style="font-size:12px;color:var(--text-3);margin-top:8px">13 December 2026 · finish inside 6:00 · 7:30 to Saiko · ATM Half test on 28 Nov</div>
     </div>
     <div class="modal-body" style="padding-top:8px">
       <div class="grid grid-3" style="gap:10px;margin-top:6px">
@@ -6242,7 +5980,7 @@ function showWelcome(){
       <div style="font-size:13px;line-height:1.6">
         <b style="color:var(--orange);font-size:11px;letter-spacing:0.14em;text-transform:uppercase">Quick Start</b>
         <ul style="padding-left:18px;line-height:1.8;margin-top:8px;color:var(--text-2)">
-          <li><b style="color:var(--text)">Weekly Plan</b> — 23-week schedule. Tap any session to log.</li>
+          <li><b style="color:var(--text)">Weekly Plan</b> — 14-week rebuild to Fuji. Tap any session to log.</li>
           <li><b style="color:var(--text)">Dashboard</b> — race countdowns, ACWR load, Z1%, sparklines.</li>
           <li><b style="color:var(--text)">Plan Lab</b> — restored 32-week archive + Strava comparison workspace.</li>
           <li><b style="color:var(--text)">Knowledge</b> — warmup, mobility, glossary, emergencies.</li>
