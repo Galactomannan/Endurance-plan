@@ -1,7 +1,7 @@
 /* ============================================================================
    Records — what actually happened, aggregated for the Data view and the
    load guard. Pure functions over the session log, the compact Strava list,
-   the foot log and the readiness log. Classic script (FujiRecords), CommonJS
+   and the readiness log. Classic script (FujiRecords), CommonJS
    in tests.
    ============================================================================ */
 (function (root) {
@@ -125,18 +125,6 @@
     return [...byMonth.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([month, secs]) => ({ month, paceSec: Math.round(median(secs)), n: secs.length }));
   }
 
-  /* Last n days of foot check-ins; level = worst bucket recorded that day. */
-  function footStrip(foot, todayISO, n) {
-    const out = [];
-    for (let i = n - 1; i >= 0; i--) {
-      const date = addDaysISO(todayISO, -i);
-      const f = (foot || {})[date];
-      const levels = f ? [f.am, f.pm].filter(x => x === 0 || x === 1 || x === 2) : [];
-      out.push({ date, level: levels.length ? Math.max(...levels) : null });
-    }
-    return out;
-  }
-
   /* Heat: +0.5 % per °C of apparent temperature above the Bangkok reference the paces assume, ±10 % max. */
   function heatAdjustSec(baseSec, apparentC, refC, k) {
     if (apparentC === null || apparentC === undefined || !Number.isFinite(Number(apparentC))) return baseSec;
@@ -255,7 +243,7 @@
     };
   }
 
-  const api = { RUN_SPORTS, addDaysISO, daysBetween, weekStartFor, paceToSec, runsByDate, weeklyKm, longDayOf, longRunRows, easyPaceTrend, footStrip, heatAdjustSec, zoneForSession, tidForWeek, sweatRate, minutesByDate, weeklyLoad, planLoadFor, bodyStats };
+  const api = { RUN_SPORTS, addDaysISO, daysBetween, weekStartFor, paceToSec, runsByDate, weeklyKm, longDayOf, longRunRows, easyPaceTrend, heatAdjustSec, zoneForSession, tidForWeek, sweatRate, minutesByDate, weeklyLoad, planLoadFor, bodyStats };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.FujiRecords = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

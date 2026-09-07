@@ -8,13 +8,15 @@ It is a plan and a logbook, not something to use mid-run. Live at https://endura
 
 | Tab | What it is |
 |---|---|
-| **Today** | The day's session on the season dial, the Bangkok forecast turned into an expected easy pace, the morning foot check (above 3/10 swaps the run for a bike day, decision rule 3), and the log button |
+| **Today** | The day's session on the season dial, the Bangkok forecast turned into an expected easy pace, and the log button |
 | **Plan** | The week as a timeline with the logged numbers under each day; the 14-week season one tap away |
-| **Data** | Weekly km against the plan, the load guard (ACWR, week ratio, long-run jump, stopped time, cadence decay, HR drift), the logged intensity distribution against the phase target, every long run, the easy-pace trend at HR 140–158, the 14-day foot strip, morning numbers and sweat rate |
+| **Data** | Weekly km against the plan, the load guard (ACWR, week ratio, long-run jump, stopped time, cadence decay, HR drift), the logged intensity distribution against the phase target, the long-run build curve, every long run, weekly time on task split run and bike, the easy-pace trend at HR 140–158, morning numbers and sweat rate |
 | **Race** | Course profile and checkpoints with Tier 1 / Tier 2 arrival times, the pacing tiers, race morning, fuel, gear checklist, what to do about cramp, bonk and over-drinking, the half test, results |
 | **More** | Strength (the two weekly sessions and their log), Athlete (lab numbers, zones, paces), Archive (the 32-week plan before the injury), Evidence (one line per rule with its source), Settings |
 
 Logging a session pulls the matching Strava activity for that day (distance, moving and elapsed time, heart rate) and computes stopped time against the 8 % guard. Everything is editable.
+
+Charts are hand-drawn SVG in the app's own language; there is no chart library.
 
 ## Plan
 

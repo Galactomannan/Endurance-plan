@@ -13,24 +13,13 @@
     readiness: "fuji_readiness",
     settings: "fuji_settings",
     strava: "fuji_strava_sync",
-    archiveSessions: "fuji_archive_sessions",
-    foot: "fuji_foot"
+    archiveSessions: "fuji_archive_sessions"
   };
 
   const SESSION_STRAVA_FIELDS = [
     "stravaId", "stravaName", "stravaSport", "stravaUrl", "stravaStartDate",
     "maxHR", "avgWatts", "weightedWatts", "elevationGain"
   ];
-
-  /* Foot check-in buckets (decision rule 3: above 3/10 → three bike days) */
-  const FOOT = {
-    buckets: [
-      { id: 0, label: "0", short: "0", text: "no pain" },
-      { id: 1, label: "1 – 3", short: "1–3", text: "mild" },
-      { id: 2, label: "above 3", short: ">3", text: "above 3 · bike" }
-    ],
-    swapLevel: 2
-  };
 
   /* ---------- legacy 32-week archive (May → Dec 2026) ---------- */
   const ARCHIVE_32_PHASES = [
@@ -255,24 +244,11 @@
       set(STORAGE.sessions, all);
     }
 
-    /* foot check-in */
-    function getFoot(date) { const all = get(STORAGE.foot, {}); return (isPlainRecord(all) && all[date]) || null; }
-    function setFoot(date, slot, level) {
-      const all = get(STORAGE.foot, {});
-      const base = isPlainRecord(all) ? all : {};
-      base[date] = { ...(base[date] || {}), [slot]: level, ts: Date.now() };
-      set(STORAGE.foot, base);
-    }
-    function footSwapsToBike(date) {
-      const f = getFoot(date);
-      return !!f && f.am === FOOT.swapLevel;
-    }
-
-    return { ok, get, set, clear, exportAll, importAll, audit, repair, getSession, saveSession, deleteSession, getFoot, setFoot, footSwapsToBike };
+    return { ok, get, set, clear, exportAll, importAll, audit, repair, getSession, saveSession, deleteSession };
   }
 
   const api = {
-    STORAGE, SESSION_STRAVA_FIELDS, FOOT, createStore,
+    STORAGE, SESSION_STRAVA_FIELDS, createStore,
     ARCHIVE_32_PHASES, ARCHIVE_32_WEEKS, archive32LongRuns, archive32DateForWeekDay,
     isLegacyArchiveDateKey, isPreResetCurrentSessionDate,
     isPlainRecord, storageDefaultForKey, normalizeStorageValue, hasSessionStravaMetadata, clearStravaSessionFields

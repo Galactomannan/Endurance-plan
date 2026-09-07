@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const { createStore, STORAGE, SESSION_STRAVA_FIELDS, ARCHIVE_32_WEEKS, archive32LongRuns,
-  isLegacyArchiveDateKey, isPreResetCurrentSessionDate, normalizeStorageValue, FOOT } = require("../js/store.js");
+  isLegacyArchiveDateKey, isPreResetCurrentSessionDate, normalizeStorageValue } = require("../js/store.js");
 
 function memoryBackend(seed = {}) {
   const m = new Map(Object.entries(seed).map(([k, v]) => [k, JSON.stringify(v)]));
@@ -49,7 +49,7 @@ test("legacy archive: 32 weeks with race markers and long-run rows that attach l
 test("normalizeStorageValue coerces bad backup shapes", () => {
   assert.deepEqual(normalizeStorageValue(STORAGE.strength, { bad: true }), []);
   assert.deepEqual(normalizeStorageValue(STORAGE.sessions, "nope"), {});
-  assert.deepEqual(normalizeStorageValue(STORAGE.foot, [1]), {});
+  assert.deepEqual(normalizeStorageValue(STORAGE.readiness, [1]), {});
 });
 
 test("audit flags stale Strava metadata on a manual session and repair clears it", () => {
@@ -86,7 +86,7 @@ test("audit moves pre-reset sessions out of the current store into the archive",
 });
 
 test("audit flags wrong shapes without offering a safe fix", () => {
-  const S = createStore(memoryBackend({ [STORAGE.strength]: { not: "an array" }, [STORAGE.foot]: "bad" }));
+  const S = createStore(memoryBackend({ [STORAGE.strength]: { not: "an array" }, [STORAGE.readiness]: "bad" }));
   const a = S.audit();
   const codes = a.issues.map(i => i.code);
   assert.ok(codes.includes("storage_shape"));
@@ -102,19 +102,6 @@ test("session log: save merges, replace overwrites, delete removes", () => {
   assert.deepEqual(S.getSession("2026-09-12"), { status: "skipped" });
   S.deleteSession("2026-09-12");
   assert.equal(S.getSession("2026-09-12"), null);
-});
-
-test("foot log stores morning and after-run buckets per date and reads back", () => {
-  const S = createStore(memoryBackend());
-  assert.deepEqual(FOOT.buckets.map(b => b.id), [0, 1, 2]);
-  S.setFoot("2026-09-12", "am", 0);
-  S.setFoot("2026-09-12", "pm", 1);
-  assert.equal(S.getFoot("2026-09-12").am, 0);
-  assert.equal(S.getFoot("2026-09-12").pm, 1);
-  assert.equal(S.getFoot("2026-09-13"), null);
-  assert.equal(S.footSwapsToBike("2026-09-12"), false);
-  S.setFoot("2026-09-13", "am", 2);
-  assert.equal(S.footSwapsToBike("2026-09-13"), true);
 });
 
 test("export includes every storage key and import normalizes and ignores unknown keys", () => {
