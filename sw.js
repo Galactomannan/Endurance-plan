@@ -6,7 +6,7 @@
 
    Bump CACHE whenever you ship a new index.html so old shells are evicted. */
 
-const CACHE = "fuji-v9-2026-09-rebuild";
+const CACHE = "fuji-v10-2026-09-mobile";
 const ASSETS = [
   "./",
   "./index.html",
@@ -17,6 +17,9 @@ const ASSETS = [
   "./assets/fuji-kawaguchi.jpg",
   "./assets/fuji-kawaguchi-960.jpg",
   "./manifest.json",
+  "./assets/icon-180.png",
+  "./assets/icon-192.png",
+  "./assets/icon-512.png",
   "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"
 ];
 
