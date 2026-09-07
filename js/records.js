@@ -187,6 +187,59 @@
     };
   }
 
+  /* Aerobic time per day, split run / bike. Strava wins for a date and category,
+     manual logs fill the days it never saw. 80/20 is a rule about time, not distance. */
+  const RIDE_SPORTS = ["Ride", "VirtualRide", "GravelRide", "MountainBikeRide", "EBikeRide"];
+  const RUN_LOG_TYPES = ["easy_z1", "walk_run", "long_run", "mp_long", "speed", "hill", "recovery", "tune_race"];
+  function minutesByDate(activities, log) {
+    const by = {};
+    const put = (date, key, min) => {
+      if (!date || !(min > 0)) return;
+      if (!by[date]) by[date] = { runMin: 0, bikeMin: 0 };
+      by[date][key] += min;
+    };
+    (activities || []).forEach(a => {
+      const sport = String(a.sportType);
+      if (RUN_SPORTS.includes(sport)) put(a.localDate, "runMin", Number(a.durationMin) || 0);
+      else if (RIDE_SPORTS.includes(sport)) put(a.localDate, "bikeMin", Number(a.durationMin) || 0);
+    });
+    Object.entries(log || {}).forEach(([date, lg]) => {
+      if (!isDone(lg)) return;
+      const min = Number(lg.actualDuration) || 0;
+      if (!(min > 0)) return;
+      const key = lg.type === "bike" ? "bikeMin" : RUN_LOG_TYPES.includes(lg.type) ? "runMin" : null;
+      if (!key) return;
+      if (by[date] && by[date][key] > 0) return;   // Strava already covered this day
+      put(date, key, min);
+    });
+    return by;
+  }
+
+  /* Weekly aerobic load beside the load the plan asked for. */
+  function planLoadFor(week) {
+    let planRunMin = 0;
+    (week.days || []).forEach(s => { if (RUN_LOG_TYPES.includes(s.type)) planRunMin += s.duration || 0; });
+    return { planRunMin, planBikeMin: week.bikeMin || 0 };
+  }
+  function weeklyLoad(byMin, plan, opts) {
+    const o = { back: 8, ahead: 2, ...(opts || {}) };
+    const curStart = weekStartFor(o.today, plan.startDate);
+    const byStart = new Map((plan.weeks || []).map(w => [w.startDate, w]));
+    const rows = [];
+    for (let i = -o.back; i <= o.ahead; i++) {
+      const start = addDaysISO(curStart, i * 7);
+      let runMin = 0, bikeMin = 0;
+      for (let d = 0; d < 7; d++) {
+        const m = byMin[addDaysISO(start, d)];
+        if (m) { runMin += m.runMin; bikeMin += m.bikeMin; }
+      }
+      const w = byStart.get(start);
+      const plan = w ? planLoadFor(w) : { planRunMin: null, planBikeMin: null };
+      rows.push({ start, runMin: Math.round(runMin), bikeMin: Math.round(bikeMin), ...plan, planWeek: w ? w.weekNum : null, race: w ? w.race || null : null, down: !!(w && w.isRecovery), current: i === 0, future: i > 0 });
+    }
+    return rows;
+  }
+
   function bodyStats(readiness) {
     const entries = Object.entries(readiness || {}).map(([date, v]) => ({ date, ...(v || {}) })).sort((a, b) => a.date.localeCompare(b.date));
     const nums = (key, n) => entries.filter(e => e[key] !== null && e[key] !== undefined && e[key] !== "" && !isNaN(parseFloat(e[key]))).slice(-n).map(e => parseFloat(e[key]));
@@ -202,7 +255,7 @@
     };
   }
 
-  const api = { RUN_SPORTS, addDaysISO, daysBetween, weekStartFor, paceToSec, runsByDate, weeklyKm, longDayOf, longRunRows, easyPaceTrend, footStrip, heatAdjustSec, zoneForSession, tidForWeek, sweatRate, bodyStats };
+  const api = { RUN_SPORTS, addDaysISO, daysBetween, weekStartFor, paceToSec, runsByDate, weeklyKm, longDayOf, longRunRows, easyPaceTrend, footStrip, heatAdjustSec, zoneForSession, tidForWeek, sweatRate, minutesByDate, weeklyLoad, planLoadFor, bodyStats };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.FujiRecords = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

@@ -153,3 +153,54 @@ test("sweatRate returns loss, rate, dehydration percent and replacement targets"
   assert.equal(R.sweatRate({ pre: 85, post: 86, fluidMl: 0, durMin: 60 }), null);
   assert.equal(R.sweatRate({ pre: 85, post: 84, fluidMl: 0, durMin: 0 }), null);
 });
+
+test("minutesByDate splits Strava time into run and bike, with manual logs filling the gaps", () => {
+  const acts = [
+    { id: "1", sportType: "Run", localDate: "2026-09-12", durationMin: 46 },
+    { id: "2", sportType: "Run", localDate: "2026-09-12", durationMin: 20 },
+    { id: "3", sportType: "Ride", localDate: "2026-09-13", durationMin: 61 },
+    { id: "4", sportType: "Walk", localDate: "2026-09-13", durationMin: 30 }
+  ];
+  const log = {
+    "2026-09-12": { status: "done", type: "walk_run", actualDuration: "46" },
+    "2026-09-11": { status: "done", type: "walk_run", actualDuration: "35" },
+    "2026-09-10": { status: "done", type: "bike", actualDuration: "60" },
+    "2026-09-09": { status: "skipped", type: "walk_run", actualDuration: "40" },
+    "2026-09-08": { status: "done", type: "strength_a", actualDuration: "55" }
+  };
+  const m = R.minutesByDate(acts, log);
+  assert.equal(m["2026-09-12"].runMin, 66);
+  assert.equal(m["2026-09-12"].bikeMin, 0);
+  assert.equal(m["2026-09-13"].bikeMin, 61);
+  assert.equal(m["2026-09-13"].runMin, 0);
+  assert.equal(m["2026-09-11"].runMin, 35);
+  assert.equal(m["2026-09-10"].bikeMin, 60);
+  assert.equal(m["2026-09-09"], undefined);
+  assert.equal(m["2026-09-08"], undefined);
+});
+
+test("weeklyLoad totals run and bike minutes per week against what the plan asked for", () => {
+  const byMin = { "2026-09-09": { runMin: 35, bikeMin: 0 }, "2026-09-12": { runMin: 46, bikeMin: 0 }, "2026-09-08": { runMin: 0, bikeMin: 61 } };
+  const rows = R.weeklyLoad(byMin, PLAN, { today: "2026-09-12", back: 1, ahead: 1 });
+  assert.equal(rows.length, 3);
+  const w1 = rows[1];
+  assert.equal(w1.start, "2026-09-07");
+  assert.equal(w1.planWeek, 1);
+  assert.equal(w1.current, true);
+  assert.equal(w1.runMin, 81);
+  assert.equal(w1.bikeMin, 61);
+  assert.equal(w1.planRunMin, 120);
+  assert.equal(w1.planBikeMin, 120);
+  assert.equal(rows[0].planWeek, null);
+  assert.equal(rows[2].planWeek, 2);
+  assert.equal(rows[2].future, true);
+  assert.equal(rows[2].runMin, 0);
+});
+
+test("weeklyLoad counts strength and race days in neither bucket but keeps the plan's own totals", () => {
+  const rows = R.weeklyLoad({}, PLAN, { today: "2026-12-13", back: 0, ahead: 0 });
+  const race = rows[0];
+  assert.equal(race.planWeek, 14);
+  assert.ok(race.planRunMin >= 340, `race week run minutes ${race.planRunMin}`);
+  assert.equal(race.planBikeMin, 0);
+});

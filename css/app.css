@@ -85,7 +85,7 @@ p{text-wrap:pretty}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:var(--z-tabs);display:flex;justify-content:space-around;padding:8px 6px calc(10px + var(--safe-b));background:var(--bar);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-top:0.5px solid var(--line)}
 .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:60px;height:50px;font-size:10px;font-weight:500;letter-spacing:0.01em;color:var(--ink-3);border-radius:12px;transition:color .15s}
 .tab svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.tab.on{color:var(--ink)}
+.tab.on{color:var(--now)}
 .tab:active{color:var(--ink-2)}
 
 /* ---------- view head ---------- */
@@ -199,7 +199,7 @@ p{text-wrap:pretty}
 .wk button::after{content:"";position:absolute;left:0;right:0;top:20px;height:3px;border-radius:2px;background:var(--ink-4)}
 .wk button.past::after{background:var(--ink-3)}
 .wk button.now::after{background:var(--now);box-shadow:0 0 8px var(--now-glow)}
-.wk button.race::after{background:repeating-linear-gradient(90deg,var(--ink-2) 0 2px,transparent 2px 4px)}
+.wk button.race::after{background:repeating-linear-gradient(90deg,var(--now) 0 2px,transparent 2px 4px);opacity:0.75}
 .wk button.sel::before{content:"";position:absolute;left:50%;top:11px;width:4px;height:4px;border-radius:50%;background:var(--ink);transform:translateX(-50%)}
 .tl{position:relative;margin-top:22px;padding-left:26px}
 .tl::before{content:"";position:absolute;left:5px;top:8px;bottom:8px;width:1px;background:var(--line)}
@@ -208,6 +208,7 @@ p{text-wrap:pretty}
 .it.done::before{background:var(--ink);border-color:var(--ink)}
 .it.skip::before{border-style:dashed}
 .it.today::before{background:var(--now);border-color:var(--now);box-shadow:0 0 12px var(--now-glow)}
+.it.today .t{color:var(--ink)}
 .it .day{width:42px;flex:none;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:0.08em;padding-top:3px}
 .it .day b{display:block;font-size:20px;font-weight:500;color:var(--ink-2);letter-spacing:-0.02em;line-height:1;margin-bottom:3px}
 .it.today .day b{color:var(--now)}
@@ -293,10 +294,25 @@ p{text-wrap:pretty}
 .bars .cap.now{color:var(--now)}
 .bars .val{position:absolute;top:-18px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:10px;color:var(--ink-2)}
 .bars .val.now{color:var(--now)}
+.chart{margin-top:18px}
+.chart svg{width:100%;height:auto;overflow:visible}
+.bars.load{height:120px}
+.bars.load .b i{position:absolute;left:0;right:0;border-radius:2px 2px 0 0}
+.bars.load .b i:not(.plan):not(.bike){bottom:0;background:var(--ink-2)}
+.bars.load .b i.plan{z-index:1}
+.bars.load .b i.now{background:var(--now);box-shadow:0 0 12px var(--now-glow)}
+.bars.load .b i.bike{bottom:0;background:var(--ink-4)}
+.bars.season{height:78px;gap:3px;margin-top:16px}
+.bars.season .b i{background:var(--ink-4)}
+.bars.season .b i.down{background:var(--ink-5)}
+.bars.season .b i.race{background:repeating-linear-gradient(0deg,var(--now) 0 3px,transparent 3px 6px);opacity:0.5}
+.bars.season .b i.now{background:var(--now);box-shadow:0 0 10px var(--now-glow)}
+.bars.season .cap{bottom:-16px;font-size:9px}
 .legend{display:flex;gap:16px;margin-top:26px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);flex-wrap:wrap}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--ink-3);margin-right:6px;vertical-align:-1px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--ink-2);margin-right:6px;vertical-align:-1px}
 .legend i.p{background:transparent;border:1px dashed var(--ink-3)}
 .legend i.n{background:var(--now)}
+.legend i.bk{background:var(--ink-4)}
 .tbl{margin-top:10px;border-top:0.5px solid var(--line)}
 .tr{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:0.5px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--ink-2);width:100%;text-align:left}
 .tr b{color:var(--ink);font-weight:500}

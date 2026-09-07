@@ -395,25 +395,29 @@ function dialSvg(wIdx, inPlan, progress) {
     const stroke = now ? "var(--now)" : w.race ? "var(--ink-2)" : past ? "var(--ink-3)" : "var(--ink-4)";
     return `<path d="${arc(R, i * seg + gap / 2, (i + 1) * seg - gap / 2)}" fill="none" stroke="${stroke}" stroke-width="${now ? 7 : 5}" stroke-dasharray="${w.race ? "2 3" : "none"}" opacity="${w.isRecovery && !now ? 0.6 : 1}" ${now ? 'style="filter:drop-shadow(0 0 6px rgba(255,106,26,0.7))"' : ""}/>`;
   }).join("");
-  const labels = PLAN.filter(w => w.race).map(w => { const i = w.weekNum - 1; const [x, y] = pt(R + 24, (i + 0.5) * seg); return `<text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" text-anchor="middle" font-size="9" font-family="SF Mono, ui-monospace, Menlo, monospace" letter-spacing="1.2" fill="${w.race === "fuji" ? "var(--ink)" : "var(--ink-2)"}">${raceShort(w.race).toUpperCase().replace("BKK ", "")}</text>`; }).join("");
+  const labels = PLAN.filter(w => w.race).map(w => { const i = w.weekNum - 1; const [x, y] = pt(R + 24, (i + 0.5) * seg); return `<text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" text-anchor="middle" font-size="9" font-family="SF Mono, ui-monospace, Menlo, monospace" letter-spacing="1.2" fill="${w.race === "fuji" ? "var(--now)" : "var(--ink-2)"}">${raceShort(w.race).toUpperCase().replace("BKK ", "")}</text>`; }).join("");
   return `<svg viewBox="0 0 300 300" aria-hidden="true">${segs}${labels}
     <path d="${arc(r2, 0, 359.99)}" fill="none" stroke="var(--ink-5)" stroke-width="9"/>
-    <path id="dial-prog" d="${arc(r2, 0, 0.01)}" fill="none" stroke="var(--ink)" stroke-width="9" stroke-linecap="round" data-target="${Math.max(0.01, Math.min(1, progress) * 359.99).toFixed(2)}"/>
+    ${(() => {
+      const deg = Math.min(1, Math.max(0, progress)) * 359.99;
+      if (deg < 0.6) return "";
+      const len = 2 * Math.PI * r2 * (deg / 360);
+      return `<path id="dial-prog" d="${arc(r2, 0, deg)}" fill="none" stroke="var(--now)" stroke-width="9" stroke-linecap="round" style="filter:drop-shadow(0 0 6px rgba(255,106,26,0.35))" data-len="${len.toFixed(1)}"/>`;
+    })()}
     <line x1="${cx}" y1="${cy - R - 9}" x2="${cx}" y2="${cy - R - 4}" stroke="var(--ink-3)" stroke-width="1"/>
   </svg>`;
 }
+/* The arc is already drawn at its true length. This only wipes it in, and the
+   timer guarantees the clean end state even where rAF never runs (hidden tab). */
 function animateDial(root) {
   const p = $("#dial-prog", root); if (!p) return;
-  const target = parseFloat(p.dataset.target);
-  if (target <= 0.5) { p.setAttribute("opacity", "0"); return; }
-  const cx = 150, cy = 150, r = 112;
-  const arc = a1 => { const t = (a1 - 90) * Math.PI / 180; const x0 = cx, y0 = cy - r; return `M${x0},${y0}A${r},${r} 0 ${a1 > 180 ? 1 : 0} 1 ${(cx + r * Math.cos(t)).toFixed(2)},${(cy + r * Math.sin(t)).toFixed(2)}`; };
-  const finish = () => p.setAttribute("d", arc(target));
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return finish();
-  let t0 = null;
-  const frame = ts => { if (!p.isConnected) return; if (!t0) t0 = ts; const k = Math.min(1, (ts - t0) / 900); const e = 1 - Math.pow(1 - k, 4); p.setAttribute("d", arc(Math.max(0.01, target * e))); if (k < 1) requestAnimationFrame(frame); };
-  requestAnimationFrame(frame);
-  setTimeout(finish, 1100);
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const len = parseFloat(p.dataset.len);
+  if (!(len > 0)) return;
+  p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+  p.style.transition = "stroke-dashoffset .9s cubic-bezier(0.22,1,0.36,1)";
+  requestAnimationFrame(() => { p.style.strokeDashoffset = "0"; });
+  setTimeout(() => { if (!p.isConnected) return; p.style.transition = ""; p.style.strokeDasharray = ""; p.style.strokeDashoffset = ""; }, 1100);
 }
 
 /* weather: Bangkok forecast → expected easy pace at the HR cap (Ely 2007 heat effect, ±10 %) */
@@ -845,7 +849,10 @@ function wireSwipe(el, fn) {
 }
 function openSeason() {
   const cur = currentWeekIndex();
-  showSheet(sheetFrame({ title: "Season", sub: `${fmtShort(parseISO(ATHLETE.planStart))} → 13 Dec`, body: `<div class="tbl">${PLAN.map(w => `<button type="button" class="tr ${w.weekNum < cur ? "dim" : ""}" data-w="${w.weekNum}" style="grid-template-columns:44px 1fr auto"><b class="${inPlanWindow() && w.weekNum === cur ? "now" : ""}">W${w.weekNum}</b><span>${fmtShort(parseISO(w.startDate))} · ${w.phase.name}${w.isRecovery ? " · down" : ""}${w.race ? ` · ${raceShort(w.race)}` : w.label ? ` · ${escapeHtml(w.label)}` : ""}</span><span class="right"><b>${w.targetKm} km</b><small>long ${w.longRunKm} km</small></span></button>`).join("")}</div>
+  const maxKm = Math.max(...PLAN.map(w => w.targetKm));
+  const shape = `<div class="bars season">${PLAN.map(w => `<div class="b"><i class="${inPlanWindow() && w.weekNum === cur ? "now" : w.race ? "race" : w.isRecovery ? "down" : ""}" style="height:${(w.targetKm / maxKm * 100).toFixed(1)}%"></i><span class="cap ${inPlanWindow() && w.weekNum === cur ? "now" : ""}">${w.weekNum}</span></div>`).join("")}</div>
+    <div class="legend">${PHASES.map(p => `<span>${p.name} W${p.weeks[0]}–${p.weeks[1]}</span>`).join("")}</div>`;
+  showSheet(sheetFrame({ title: "Season", sub: `${fmtShort(parseISO(ATHLETE.planStart))} → 13 Dec`, body: shape + `<div class="tbl">${PLAN.map(w => `<button type="button" class="tr ${w.weekNum < cur ? "dim" : ""}" data-w="${w.weekNum}" style="grid-template-columns:44px 1fr auto"><b class="${inPlanWindow() && w.weekNum === cur ? "now" : ""}">W${w.weekNum}</b><span>${fmtShort(parseISO(w.startDate))} · ${w.phase.name}${w.isRecovery ? " · down" : ""}${w.race ? ` · ${raceShort(w.race)}` : w.label ? ` · ${escapeHtml(w.label)}` : ""}</span><span class="right"><b>${w.targetKm} km</b><small>long ${w.longRunKm} km</small></span></button>`).join("")}</div>
     <div class="note">${PLAN_OBJ.slip ? `Gate slipped ${PLAN_OBJ.slip} week${PLAN_OBJ.slip > 1 ? "s" : ""} · ` : ""}${PHASES.map(p => `${p.name} W${p.weeks[0]}–${p.weeks[1]}`).join(" · ")}</div>` }));
   wire($("#sheet-root"), "[data-w]", "click", b => { State.week = parseInt(b.dataset.w, 10); closeSheet(); renderPlan(); });
 }
@@ -889,6 +896,48 @@ function computeGuard(wIdx) {
   return { week, acwr, guard, jump, lr, lrOk, flags, level, short };
 }
 function addDaysISO(iso, n) { return FujiRecords.addDaysISO(iso, n); }
+/* The 14-week long-run build: the planned curve with what was actually run on it. */
+function longRunChart(rows, curWeek) {
+  const W = 340, H = 150, L = 6, R = 6, T = 16, B = 26;
+  const iw = W - L - R, ih = H - T - B;
+  const max = Math.max(...rows.map(r => Math.max(r.plannedKm, r.km || 0)), 10) * 1.06;
+  const X = i => L + (rows.length === 1 ? iw / 2 : i / (rows.length - 1) * iw);
+  const Y = km => T + ih - km / max * ih;
+  const line = rows.map((r, i) => `${X(i).toFixed(1)},${Y(r.plannedKm).toFixed(1)}`).join(" ");
+  const gridAt = [30, 42.2].filter(v => v <= max).map(v => `<text x="${L}" y="${(Y(v) + 3).toFixed(1)}" font-size="9" font-family="SF Mono, ui-monospace, Menlo, monospace" fill="var(--ink-3)">${v} km</text><line x1="${L + 40}" x2="${W - R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--ink-5)" stroke-dasharray="2 4"/>`).join("");
+  const races = rows.map((r, i) => r.race ? `<line x1="${X(i).toFixed(1)}" x2="${X(i).toFixed(1)}" y1="${T - 6}" y2="${(T + ih).toFixed(1)}" stroke="var(--now)" stroke-opacity="0.45" stroke-dasharray="2 3"/>` : "").join("");
+  const dots = rows.map((r, i) => {
+    const isNow = r.week === curWeek;
+    if (r.done && r.km) {
+      const c = isNow ? "var(--now)" : r.flagged ? "var(--now)" : "var(--ink)";
+      return `<circle cx="${X(i).toFixed(1)}" cy="${Y(r.km).toFixed(1)}" r="${r.flagged && !isNow ? 3 : 4}" fill="${r.flagged && !isNow ? "none" : c}" stroke="${c}" stroke-width="1.5"${isNow ? ' style="filter:drop-shadow(0 0 5px var(--now-glow))"' : ""}/>`;
+    }
+    return `<circle cx="${X(i).toFixed(1)}" cy="${Y(r.plannedKm).toFixed(1)}" r="${isNow ? 4 : 2.5}" fill="${isNow ? "var(--now)" : "var(--bg)"}" stroke="${isNow ? "var(--now)" : "var(--ink-4)"}" stroke-width="1.5"/>`;
+  }).join("");
+  const ticks = rows.map((r, i) => (i === 0 || r.race || r.week === curWeek || i === rows.length - 1) ? `<text x="${X(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="9" font-family="SF Mono, ui-monospace, Menlo, monospace" fill="${r.week === curWeek ? "var(--now)" : "var(--ink-3)"}">W${r.week}</text>` : "").join("");
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Long run distance planned and run, week by week">
+    ${gridAt}${races}
+    <polyline points="${line}" fill="none" stroke="var(--ink-4)" stroke-width="1.5" stroke-linejoin="round"/>
+    ${dots}${ticks}
+  </svg></div>`;
+}
+
+/* Weekly aerobic time: what the run and the bike each paid for, against the plan. */
+function loadChart(rows) {
+  const max = Math.max(...rows.map(r => Math.max(r.runMin + r.bikeMin, (r.planRunMin || 0) + (r.planBikeMin || 0))), 60);
+  return `<div class="bars load">${rows.map(r => {
+    const total = r.runMin + r.bikeMin;
+    const plan = (r.planRunMin || 0) + (r.planBikeMin || 0);
+    const h = v => (v / max * 100).toFixed(1);
+    return `<div class="b">${total ? `<span class="val ${r.current ? "now" : ""}">${(total / 60).toFixed(1)}</span>` : ""}
+      ${plan ? `<i class="plan" style="height:${h(plan)}%"></i>` : ""}
+      ${r.bikeMin ? `<i class="bike" style="height:${h(total)}%"></i>` : ""}
+      ${r.runMin ? `<i class="${r.current ? "now" : ""}" style="height:${h(r.runMin)}%"></i>` : ""}
+      <span class="cap ${r.current ? "now" : ""}">${r.planWeek ? "W" + r.planWeek : fmtShort(parseISO(r.start))}</span></div>`;
+  }).join("")}</div>
+  <div class="legend"><span><i></i>run</span><span><i class="bk"></i>bike</span><span><i class="n"></i>this week</span><span><i class="p"></i>plan</span></div>`;
+}
+
 /* Training-intensity distribution: three bars, the phase target marked on each. */
 function tidMarkup(t) {
   const rows = [["Z1", t.z1, t.target[0], "easy · bike · long-run base"], ["Z2", t.z2, t.target[1], "goal pace · cruise intervals"], ["Z3", t.z3, t.target[2], "strides · hill tops"]];
@@ -919,6 +968,7 @@ function renderData() {
   }).join("");
   const g = inPlanWindow() ? computeGuard(currentWeekIndex()) : null;
   const lrRows = FujiRecords.longRunRows(PLAN_OBJ, log, GUARDS);
+  const lrDone = lrRows.filter(r => r.done).length;
   const trend = FujiRecords.easyPaceTrend(acts, { hrMin: 140, hrMax: 158, minKm: 6 });
   const foot = FujiRecords.footStrip(footLog(), today, 14);
   const body = FujiRecords.bodyStats(readinessLog());
@@ -936,6 +986,7 @@ function renderData() {
     <div class="two">
     <div>
     ${sec("Weekly km", "actual · plan", `<div class="bars">${bars}</div><div class="legend"><span><i></i>run km</span><span><i class="n"></i>this week</span><span><i class="p"></i>plan</span></div>`)}
+    ${sec("Time on task", "run · bike · hours", loadChart(FujiRecords.weeklyLoad(FujiRecords.minutesByDate(acts, log), PLAN_OBJ, { today, back: isPhone() ? 5 : 8, ahead: 2 })))}
     ${g ? sec("Load guard", `W${g.week.weekNum}`, `<div class="guard"><div class="g">
         <div><div class="gl">ACWR · km</div><div class="gv ${g.acwr && g.acwr.caution ? "hot" : ""}">${g.acwr ? g.acwr.ratio.toFixed(2) : "—"}</div><div class="gs">${g.acwr ? `${g.acwr.acute} km vs ${g.acwr.chronic} km avg` : "trailing average under 15 km"}</div></div>
         <div><div class="gl">Week vs trailing</div><div class="gv ${g.guard.caution ? "hot" : ""}">${g.guard.ratio !== null ? g.guard.ratio.toFixed(2) + "×" : "—"}</div><div class="gs">${g.week.targetKm} km planned · cap ${g.guard.capKm ?? "—"} km</div></div>
@@ -943,7 +994,7 @@ function renderData() {
         <div><div class="gl">Latest long run</div><div class="gv ${g.lr && g.lr.intel && !g.lrOk ? "hot" : ""}">${g.lr && g.lr.intel ? (g.lrOk ? "clean" : "flag") : "—"}</div><div class="gs">${g.lr && g.lr.intel ? `${fmtKm(g.lr.distanceKm)} km · stops ${g.lr.intel.stopPct}% · cadence ${g.lr.intel.cadenceStartSpm}→${g.lr.intel.cadenceEndSpm}` : "sync, then analyze long runs"}</div></div>
       </div></div>${g.flags.length ? `<div>${g.flags.slice(0, 5).map(f => `<div class="flag ${f.cls}">${escapeHtml(f.text)}</div>`).join("")}</div>` : `<div class="flag">No guard tripped. Continuous long run, easy days easy, same shoe.</div>`}`) : ""}
     ${inPlanWindow() ? sec("Intensity", `logged vs ${PLAN[currentWeekIndex() - 1].phase.name} target`, tidMarkup(FujiRecords.tidForWeek(PLAN[currentWeekIndex() - 1], log))) : ""}
-    ${sec("Long runs", `stop % · guard ${GUARDS.stopPctMax}`, `<div class="tbl">${lrRows.map(lrRow).join("")}</div>`)}
+    ${sec("Long run build", `4 km → 42.2 km${lrDone ? ` · ${lrDone} run` : ""}`, longRunChart(lrRows, inPlanWindow() ? currentWeekIndex() : 0) + `<div class="tbl">${lrRows.map(lrRow).join("")}</div>`)}
     </div>
     <div>
     ${sec("Easy pace at HR 140–158", "runs ≥ 6 km · monthly median", trend.length >= 2 ? `<div class="spark">${sparkSvg(trend.map(t => ({ v: t.paceSec })), { invert: true })}<span class="lbl" style="left:0;top:-16px">${fmtPace(trend[0].paceSec)}</span><span class="lbl" style="right:0;top:-16px;color:var(--ink)">${fmtPace(trend[trend.length - 1].paceSec)}</span><span class="lbl" style="left:0;bottom:-16px">${MON[parseInt(trend[0].month.slice(5), 10) - 1]}</span><span class="lbl" style="right:0;bottom:-16px">${MON[parseInt(trend[trend.length - 1].month.slice(5), 10) - 1]}</span></div>` : `<div class="empty">${acts.length ? "Not enough steady runs yet." : "Sync Strava to see the trend."}</div>`)}
